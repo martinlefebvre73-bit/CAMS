@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-stone-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C.A.M.S. — Estimation de Rénovation et Nettoyage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            400: '#E5C158',
+                            500: '#D4AF37',
+                            600: '#B89028',
+                            700: '#8C6C1B',
+                        },
+                        beige: {
+                            50: '#FAF8F5',
+                            100: '#F5F0E6',
+                            200: '#EAE1D0',
+                            300: '#DDD0B8',
+                            800: '#3D372E',
+                            900: '#28241E',
+                        },
+                        noir: {
+                            800: '#18181B',
+                            900: '#0F0F11',
+                            950: '#050505',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #050505 !important; color: #FAF8F5 !important; }
+            .print-card { background: #0F0F11 !important; border: 1px solid #333 !important; box-shadow: none !important; color: white !important; }
+            .print-header { background: #050505 !important; color: white !important; -webkit-print-color-adjust: exact; }
+            input, select, textarea { border: none !important; background: transparent !important; appearance: none; color: white !important; }
+            .gold-badge { border: 1px solid #D4AF37 !important; color: #D4AF37 !important; }
+            @page { size: landscape; margin: 1cm; }
+        }
+        
+        .custom-scroll::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #0F0F11;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased bg-black text-beige-100 min-h-full flex flex-col selection:bg-gold-500 selection:text-black">
+
+    <!-- Header & Navigation -->
+    <header class="bg-noir-900 border-b border-gold-500/30 sticky top-0 z-30 shadow-2xl no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20 text-black font-black text-2xl tracking-tighter">
+                    CAMS
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                        <span>ESTIMATION DE TRAVAUX</span>
+                        <span class="text-xs bg-gold-500/20 text-gold-400 border border-gold-500/40 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">Pro</span>
+                    </h1>
+                    <p class="text-xs text-beige-300">Entreprise C.A.M.S. | Peinture, Préparation & Nettoyage Sur Mesure</p>
+                </div>
+            </div>
+
+            <!-- Header Action Buttons -->
+            <div class="flex items-center gap-2.5 w-full md:w-auto justify-end flex-wrap">
+                <button id="btnSaveFirebase" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 text-xs sm:text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Sauvegarder</span>
+                </button>
+                <button id="btnOpenSavedProjects" class="px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                    <i class="fa-solid fa-folder-open text-amber-400"></i>
+                    <span>Autres Projets</span>
+                </button>
+                <button onclick="toggleSettingsModal()" class="px-3 py-2 rounded-lg bg-noir-800 hover:bg-stone-800 border border-stone-700 text-xs sm:text-sm font-medium transition flex items-center gap-2 text-beige-200 hover:text-white">
+                    <i class="fa-solid fa-sliders text-gold-400"></i>
+                    <span class="hidden sm:inline">Paramètres</span>
+                </button>
+                <button onclick="resetData()" class="px-3 py-2 rounded-lg bg-noir-800 hover:bg-rose-950/40 border border-stone-700 hover:border-rose-800 text-xs sm:text-sm font-medium text-stone-300 hover:text-rose-300 transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span class="hidden lg:inline">Réinitialiser</span>
+                </button>
+                <button onclick="window.print()" class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black font-bold text-xs sm:text-sm shadow-lg shadow-gold-500/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Imprimer / PDF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+        <!-- Project Header Info -->
+        <section class="bg-noir-900 border border-stone-800 rounded-xl p-5 shadow-2xl relative overflow-hidden print-card">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div class="md:col-span-2">
+                    <label for="projectName" class="block text-xs font-semibold text-gold-400 uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-folder-open mr-1.5"></i> Nom du Projet / Adresse de Chantier
+                    </label>
+                    <input type="text" id="projectName" placeholder="ex: Résidence M. Tremblay — 1245 Rue de la Montagne" 
+                           class="w-full bg-black border border-stone-700 rounded-lg px-4 py-2.5 text-white font-medium focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 transition placeholder-stone-500 text-sm sm:text-base">
+                </div>
+                <div class="bg-black/80 border border-stone-800 p-3 rounded-lg flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-stone-400 uppercase font-medium">Taux Horaire</div>
+                        <div class="text-lg font-bold text-gold-400" id="displayTauxHoraire">30,00 $ / h</div>
+                    </div>
+                    <div class="h-8 w-px bg-stone-800"></div>
+                    <div>
+                        <div class="text-xs text-stone-400 uppercase font-medium">Format 5G</div>
+                        <div class="text-lg font-bold text-gold-400" id="displayPrixGalon">255,00 $</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 1: Painting -->
+        <section class="bg-noir-900 border border-stone-800 rounded-xl p-5 shadow-xl print-card">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-3 border-b border-stone-800">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-gold-500/10 border border-gold-500/20 rounded-lg text-gold-400">
+                        <i class="fa-solid fa-paint-roller text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-wide">1. Travaux de Peinture & Préparation</h2>
+                        <p class="text-xs text-stone-400">Calcul automatique des surfaces, du temps de main-d'œuvre et des galons requis</p>
+                    </div>
+                </div>
+                <button onclick="addRoom()" class="no-print px-3.5 py-2 rounded-lg bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-400 hover:text-gold-300 font-semibold text-xs transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Ajouter une pièce</span>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto custom-scroll">
+                <table class="w-full text-left text-xs text-stone-300 border-collapse min-w-[1150px]">
+                    <thead>
+                        <tr class="bg-black/90 text-stone-300 uppercase tracking-wider font-semibold border-b border-stone-800">
+                            <th class="p-2.5 rounded-tl-lg min-w-[150px]">Pièce</th>
+                            <th class="p-2.5 w-28 text-center text-gold-400 font-bold">Longueur (pi)</th>
+                            <th class="p-2.5 w-28 text-center text-gold-400 font-bold">Largeur (pi)</th>
+                            <th class="p-2.5 w-28 text-center text-gold-400 font-bold">Hauteur (pi)</th>
+                            <th class="p-2.5 w-24 text-center">Plafond ?</th>
+                            <th class="p-2.5 min-w-[120px]">État Murs</th>
+                            <th class="p-2.5 w-24 text-center">Apprêt ?</th>
+                            <th class="p-2.5 w-20 text-center">Plaques</th>
+                            <th class="p-2.5 w-20 text-center">Couches</th>
+                            <th class="p-2.5 text-right font-medium text-stone-400">Surf. Murs</th>
+                            <th class="p-2.5 text-right font-medium text-stone-400">Surf. Plaf.</th>
+                            <th class="p-2.5 text-right font-semibold text-gold-400">Surf. Tot.</th>
+                            <th class="p-2.5 text-right font-semibold text-stone-200">Prép (h)</th>
+                            <th class="p-2.5 text-right font-semibold text-stone-200">Peint (h)</th>
+                            <th class="p-2.5 text-right font-bold text-gold-400">Total (h)</th>
+                            <th class="p-2.5 text-right font-bold text-amber-400">Galons</th>
+                            <th class="p-2.5 text-center no-print w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="paintingRows" class="divide-y divide-stone-800/80 font-medium">
+                        <!-- Dynamic Rows Injected Here -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-black font-bold text-white border-t-2 border-gold-500/40">
+                            <td colspan="9" class="p-3 text-right uppercase tracking-wider text-xs text-gold-400">Total Peinture :</td>
+                            <td class="p-3 text-right text-stone-400" id="totSurfMurs">0 pi²</td>
+                            <td class="p-3 text-right text-stone-400" id="totSurfPlaf">0 pi²</td>
+                            <td class="p-3 text-right text-gold-400 font-extrabold" id="totSurfTot">0 pi²</td>
+                            <td class="p-3 text-right text-stone-300" id="totTempsPrep">0.0 h</td>
+                            <td class="p-3 text-right text-stone-300" id="totTempsPeint">0.0 h</td>
+                            <td class="p-3 text-right text-gold-400 text-sm font-black" id="totTempsPeintTotal">0.0 h</td>
+                            <td class="p-3 text-right text-amber-400 text-sm font-black" id="totGalons">0.0 Gal</td>
+                            <td class="p-3 no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 2: Cleaning -->
+        <section class="bg-noir-900 border border-stone-800 rounded-xl p-5 shadow-xl print-card">
+            <div class="flex items-center gap-3 mb-4 pb-3 border-b border-stone-800">
+                <div class="p-2.5 bg-gold-500/10 border border-gold-500/20 rounded-lg text-gold-400">
+                    <i class="fa-solid fa-broom text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white tracking-wide">2. Travaux de Nettoyage en Profondeur</h2>
+                    <p class="text-xs text-stone-400">Nettoyage complet post-rénovation synchronisé avec la liste des pièces</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scroll">
+                <table class="w-full text-left text-xs text-stone-300 border-collapse min-w-[1000px]">
+                    <thead>
+                        <tr class="bg-black/90 text-stone-300 uppercase tracking-wider font-semibold border-b border-stone-800">
+                            <th class="p-2.5 rounded-tl-lg min-w-[140px]">Pièce / Élément</th>
+                            <th class="p-2.5 text-right w-24">Sol (pi²)</th>
+                            <th class="p-2.5 text-right w-28 text-stone-400">Plancher (h)</th>
+                            <th class="p-2.5 text-center w-24">Armoires (h)</th>
+                            <th class="p-2.5 text-center w-24">Hotte (h)</th>
+                            <th class="p-2.5 text-center w-20">Nbr Bains</th>
+                            <th class="p-2.5 text-right w-24 text-stone-400">Bains (h)</th>
+                            <th class="p-2.5 text-center w-20">Nbr Dch.</th>
+                            <th class="p-2.5 text-right w-24 text-stone-400">Douches (h)</th>
+                            <th class="p-2.5 text-center w-28">Incl. Fenêtres</th>
+                            <th class="p-2.5 text-center w-28">Fenêtres (h)</th>
+                            <th class="p-2.5 text-right font-bold text-gold-400 w-28">Total Net. (h)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cleaningRows" class="divide-y divide-stone-800/80 font-medium">
+                        <!-- Dynamic Rows Injected Here -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-black font-bold text-white border-t-2 border-gold-500/40">
+                            <td class="p-3 uppercase tracking-wider text-xs text-gold-400">Total Nettoyage :</td>
+                            <td class="p-3 text-right text-stone-400" id="totCleaningSol">0 pi²</td>
+                            <td class="p-3 text-right text-stone-300" id="totCleaningPlancher">0.0 h</td>
+                            <td class="p-3 text-center text-stone-300" id="totCleaningArmoires">0.0 h</td>
+                            <td class="p-3 text-center text-stone-300" id="totCleaningHotte">0.0 h</td>
+                            <td class="p-3 text-center text-stone-300" id="totCleaningNbrBains">0</td>
+                            <td class="p-3 text-right text-stone-300" id="totCleaningBains">0.0 h</td>
+                            <td class="p-3 text-center text-stone-300" id="totCleaningNbrDouches">0</td>
+                            <td class="p-3 text-right text-stone-300" id="totCleaningDouches">0.0 h</td>
+                            <td class="p-3 text-center text-stone-400">—</td>
+                            <td class="p-3 text-center text-stone-300" id="totCleaningFenêtres">0.0 h</td>
+                            <td class="p-3 text-right text-gold-400 text-sm font-black" id="totCleaningTotal">0.0 h</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 3: Varia -->
+        <section class="bg-noir-900 border border-stone-800 rounded-xl p-5 shadow-xl print-card">
+            <div class="flex items-center gap-3 mb-4 pb-3 border-b border-stone-800">
+                <div class="p-2.5 bg-gold-500/10 border border-gold-500/20 rounded-lg text-gold-400">
+                    <i class="fa-solid fa-file-lines text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white tracking-wide">3. Varia — Détails des Travaux Spécifiques & Frais Supplémentaires</h2>
+                    <p class="text-xs text-stone-400">Notes, travaux particuliers de tirage de joints, réparations, transport et suppléments</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-2">
+                    <label for="variaDetails" class="block text-xs font-semibold text-gold-400 uppercase tracking-wider">
+                        Description & Notes de Travaux Spécifiques
+                    </label>
+                    <textarea id="variaDetails" rows="4" placeholder="Ex: Réparation majeure de trous dans le placoplâtre au salon, calfeutrage complet des contours de portes et plinthes, déplacement et protection du mobilier lourd, manutention..." 
+                              class="w-full bg-black border border-stone-700 rounded-lg p-3 text-white focus:outline-none focus:border-gold-500 transition text-xs sm:text-sm placeholder-stone-600 resize-y"></textarea>
+                </div>
+                <div class="space-y-4 bg-black/60 border border-stone-800 p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <label for="variaHours" class="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1">
+                            Heures Varia Supplémentaires (h)
+                        </label>
+                        <input type="number" id="variaHours" step="0.5" min="0" value="0" onchange="calculateAll()"
+                               class="w-full bg-noir-800 border border-stone-700 rounded-lg px-3 py-2 text-gold-400 font-bold focus:outline-none focus:border-gold-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="variaExtraCost" class="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1">
+                            Frais Matériaux / Divers ($)
+                        </label>
+                        <input type="number" id="variaExtraCost" step="5" min="0" value="0" onchange="calculateAll()"
+                               class="w-full bg-noir-800 border border-stone-700 rounded-lg px-3 py-2 text-gold-400 font-bold focus:outline-none focus:border-gold-500 text-sm">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Summary & Budget -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-gold-500/10 border border-gold-500/20 rounded-lg text-gold-400">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white tracking-wide">4. Synthèse, Planification & Budget Global</h2>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div class="bg-noir-900 border border-stone-800 rounded-xl p-4 shadow-lg print-card flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-stone-400 flex items-center justify-between">
+                            Peinture & Prépa
+                            <i class="fa-solid fa-paint-brush text-gold-500/70"></i>
+                        </span>
+                        <div class="text-2xl font-black text-white mt-2" id="kpiTempsPeinture">0.0 h</div>
+                        <div class="text-xs text-stone-400 mt-1" id="kpiTempsPlaques">dont 0.0h pour plaques/prises</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-stone-800/80 text-xs text-stone-400">
+                        Main-d'œuvre spécialisée
+                    </div>
+                </div>
+
+                <div class="bg-noir-900 border border-stone-800 rounded-xl p-4 shadow-lg print-card flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-stone-400 flex items-center justify-between">
+                            Nettoyage Profond
+                            <i class="fa-solid fa-sparkles text-gold-500/70"></i>
+                        </span>
+                        <div class="text-2xl font-black text-white mt-2" id="kpiTempsNettoyage">0.0 h</div>
+                        <div class="text-xs text-stone-400 mt-1">Sols, Bains, Fenêtres & Armoires</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-stone-800/80 text-xs text-stone-400">
+                        Finition étincelante
+                    </div>
+                </div>
+
+                <div class="bg-noir-900 border border-stone-800 rounded-xl p-4 shadow-lg print-card flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-stone-400 flex items-center justify-between">
+                            Durée Estimée
+                            <i class="fa-solid fa-calendar-days text-gold-500/70"></i>
+                        </span>
+                        <div class="text-2xl font-black text-gold-400 mt-2" id="kpiJoursTravailles">0.0 Jours</div>
+                        <div class="text-xs text-stone-400 mt-1" id="kpiDureeSéchage">Chantier complet (~0.0j avec séchage)</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-stone-800/80 text-xs text-stone-400">
+                        Base de 7 heures travaillées / jour
+                    </div>
+                </div>
+
+                <div class="bg-noir-900 border border-stone-800 rounded-xl p-4 shadow-lg print-card flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-stone-400 flex items-center justify-between">
+                            Matériel Peinture
+                            <i class="fa-solid fa-bucket text-gold-500/70"></i>
+                        </span>
+                        <div class="text-2xl font-black text-amber-400 mt-2" id="kpiChaudières">0 Chaudière(s)</div>
+                        <div class="text-xs text-stone-400 mt-1" id="kpiGalonsTotal">Total: 0.0 Galons US</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-stone-800/80 text-xs text-stone-400">
+                        Format économique 5 Galons
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Total Financial Card -->
+            <div class="bg-gradient-to-br from-noir-900 via-black to-noir-900 border-2 border-gold-500/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden print-card">
+                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    
+                    <div class="space-y-3 md:col-span-2 border-b md:border-b-0 md:border-r border-stone-800 pb-4 md:pb-0 md:pr-6">
+                        <h3 class="text-sm font-bold uppercase tracking-widest text-gold-400 flex items-center gap-2">
+                            <i class="fa-solid fa-calculator"></i> Décomposition des Coûts
+                        </h3>
+                        <div class="flex justify-between items-center text-sm py-1 border-b border-stone-800/60">
+                            <span class="text-stone-300">Main-d'œuvre (<span id="kpiTotalHeuresMainOeuvre">0.0</span> h @ <span id="kpiTauxHoraireTxt">30</span>$/h incl. Varia) :</span>
+                            <span class="font-bold text-white" id="costMainOeuvre">0,00 $</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm py-1 border-b border-stone-800/60">
+                            <span class="text-stone-300">Coût Matériel Peinture (<span id="kpiChaudiereTxt">0</span> chaudières 5G @ <span id="kpiPrixChaudiereTxt">255</span>$) :</span>
+                            <span class="font-bold text-white" id="costPeinture">0,00 $</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm py-1 border-b border-stone-800/60">
+                            <span class="text-stone-300">Frais Matériaux / Divers Varia :</span>
+                            <span class="font-bold text-white" id="costVariaExtra">0,00 $</span>
+                        </div>
+                        <div class="text-xs text-stone-500 italic pt-1">
+                            * Les estimations excluent les taxes applicables et les fournitures mineures (rubans, bâches).
+                        </div>
+                    </div>
+
+                    <div class="text-center md:text-right flex flex-col justify-center">
+                        <span class="text-xs uppercase font-extrabold text-gold-400 tracking-wider">Coût Total Estimé du Chantier</span>
+                        <div class="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-amber-500 mt-1" id="grandTotal">
+                            0,00 $
+                        </div>
+                        <p class="text-xs text-stone-400 mt-2">Estimation valide pour 30 jours</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-noir-900 border-t border-stone-800 py-6 text-center text-xs text-stone-500 no-print mt-8">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 Entreprise C.A.M.S. — Tous droits réservés. Calculateur professionnel de rénovation & nettoyage.</p>
+        </div>
+    </footer>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-noir-900 border border-gold-500/40 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            
+            <div class="flex justify-between items-center pb-4 border-b border-stone-800">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-gold-400"></i>
+                    <span>Paramètres de Rendement & Tarifs</span>
+                </h3>
+                <button onclick="toggleSettingsModal()" class="text-stone-400 hover:text-white text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-5 text-xs">
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Rendement Découpage/Prépa (pi²/h)</label>
+                    <input type="number" id="paramRendementPrep" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Rendement Apprêt (pi²/h)</label>
+                    <input type="number" id="paramRendementAppret" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Rendement Peinture Finition (pi²/h)</label>
+                    <input type="number" id="paramRendementFinition" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Couverture Peinture (pi²/galon)</label>
+                    <input type="number" id="paramCouvertureGalon" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Temps / Plaque de prise (minutes)</label>
+                    <input type="number" id="paramTempsPlaque" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Rendement Nettoyage Plancher (pi²/h)</label>
+                    <input type="number" id="paramRendementNettoyage" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Temps Séchage entre Couches (h)</label>
+                    <input type="number" id="paramTempsSechage" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-stone-300 font-semibold mb-1">Taux Horaire ($/h)</label>
+                    <input type="number" id="paramTauxHoraire" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-stone-300 font-semibold mb-1">Prix Format 5 Galons ($)</label>
+                    <input type="number" id="paramPrixGalon" class="w-full bg-black border border-stone-700 rounded-lg p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3 border-t border-stone-800">
+                <button onclick="restoreDefaultSettings()" class="px-4 py-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold">
+                    Rétablir valeurs par défaut
+                </button>
+                <button onclick="saveSettings()" class="px-5 py-2 rounded-lg bg-gold-500 hover:bg-gold-400 text-black text-xs font-bold shadow-md">
+                    Enregistrer les paramètres
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Saved Projects Modal -->
+    <div id="projectsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-noir-900 border border-gold-500/40 rounded-2xl max-w-3xl w-full p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+            
+            <div class="flex justify-between items-center pb-4 border-b border-stone-800">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-folder-open text-amber-400"></i>
+                        <span>Projets Sauvegardés dans le Cloud</span>
+                    </h3>
+                    <p class="text-xs text-stone-400">Sélectionnez une estimation précédente pour la restaurer ou la gérer.</p>
+                </div>
+                <button id="btnCloseProjectsModal" class="text-stone-400 hover:text-white text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="projectsListContainer" class="py-4 overflow-y-auto custom-scroll flex-grow space-y-3">
+                <div class="text-center py-8 text-stone-400">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-gold-400"></i>
+                    <p class="text-sm">Chargement des projets sauvegardés...</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t border-stone-800 text-xs text-stone-500">
+                <span>Total stocké dans Firebase Firestore</span>
+                <button id="btnRefreshProjects" class="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Actualiser</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Firebase SDK Setup & Firestore Sync -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+            authDomain: "cams-cf723.firebaseapp.com",
+            projectId: "cams-cf723",
+            storageBucket: "cams-cf723.firebasestorage.app",
+            messagingSenderId: "1037636451682",
+            appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+            measurementId: "G-8Q2V3660XZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        async function saveToFirebase() {
+            const btn = document.getElementById('btnSaveFirebase');
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Sauvegarde...</span>`;
+
+                const projectName = document.getElementById('projectName').value.trim() || "Projet Sans Nom";
+                const variaDetails = document.getElementById('variaDetails').value;
+                const variaHours = parseFloat(document.getElementById('variaHours').value) || 0;
+                const variaExtraCost = parseFloat(document.getElementById('variaExtraCost').value) || 0;
+
+                const currentGrandTotalText = document.getElementById('grandTotal').innerText;
+
+                const estimationData = {
+                    projectName: projectName,
+                    settings: window.settings,
+                    rooms: window.rooms,
+                    varia: {
+                        details: variaDetails,
+                        hours: variaHours,
+                        extraCost: variaExtraCost
+                    },
+                    formattedTotal: currentGrandTotalText,
+                    createdAt: serverTimestamp()
+                };
+
+                const docRef = await addDoc(collection(db, "estimation"), estimationData);
+                alert(`Estimation "${projectName}" enregistrée avec succès dans le Cloud !`);
+            } catch (error) {
+                console.error("Erreur de sauvegarde Firebase: ", error);
+                alert("Une erreur s'est produite lors de la sauvegarde : " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        async function loadSavedProjects() {
+            const container = document.getElementById('projectsListContainer');
+            container.innerHTML = `
+                <div class="text-center py-8 text-stone-400">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-gold-400"></i>
+                    <p class="text-sm">Chargement des projets...</p>
+                </div>
+            `;
+
+            try {
+                const q = query(collection(db, "estimation"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    container.innerHTML = `
+                        <div class="text-center py-10 border border-dashed border-stone-800 rounded-xl">
+                            <i class="fa-solid fa-folder-open text-4xl text-stone-600 mb-2"></i>
+                            <p class="text-stone-400 text-sm font-medium">Aucun projet sauvegardé pour le moment.</p>
+                            <p class="text-stone-600 text-xs mt-1">Créez une estimation et cliquez sur "Sauvegarder".</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const docId = docSnap.id;
+
+                    let dateStr = "Date inconnue";
+                    if (data.createdAt && data.createdAt.toDate) {
+                        dateStr = data.createdAt.toDate().toLocaleDateString('fr-CA', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+
+                    const roomCount = data.rooms ? data.rooms.length : 0;
+                    const totalVal = data.formattedTotal || "—";
+
+                    const card = document.createElement('div');
+                    card.className = "bg-black/80 border border-stone-800 hover:border-gold-500/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition shadow-md";
+
+                    card.innerHTML = `
+                        <div class="space-y-1">
+                            <h4 class="font-bold text-white text-base flex items-center gap-2">
+                                <span>${escapeHtml(data.projectName || 'Projet Sans Nom')}</span>
+                            </h4>
+                            <div class="flex items-center gap-3 text-xs text-stone-400 flex-wrap">
+                                <span><i class="fa-solid fa-calendar text-gold-500/80 mr-1"></i> ${dateStr}</span>
+                                <span><i class="fa-solid fa-door-open text-gold-500/80 mr-1"></i> ${roomCount} pièce(s)</span>
+                                <span class="text-gold-400 font-semibold">${totalVal}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button data-id="${docId}" class="btn-load-project px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-black text-xs font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Charger</span>
+                            </button>
+                            <button data-id="${docId}" data-name="${escapeHtml(data.projectName || '')}" class="btn-delete-project px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800 text-xs font-semibold transition flex items-center gap-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    card.querySelector('.btn-load-project').addEventListener('click', () => {
+                        restoreProjectData(data);
+                        toggleProjectsModal(false);
+                    });
+
+                    card.querySelector('.btn-delete-project').addEventListener('click', async (e) => {
+                        const projName = e.currentTarget.getAttribute('data-name');
+                        if (confirm(`Voulez-vous vraiment supprimer définitivement le projet "${projName}" ?`)) {
+                            await deleteProjectFromFirebase(docId);
+                            loadSavedProjects();
+                        }
+                    });
+
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Erreur lors de la récupération des projets:", error);
+                container.innerHTML = `
+                    <div class="text-center py-6 text-rose-400 text-sm">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                        Erreur de chargement: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function deleteProjectFromFirebase(docId) {
+            try {
+                await deleteDoc(doc(db, "estimation", docId));
+            } catch (err) {
+                alert("Erreur lors de la suppression : " + err.message);
+            }
+        }
+
+        function restoreProjectData(data) {
+            if (data.projectName) {
+                document.getElementById('projectName').value = data.projectName;
+            }
+            if (data.settings) {
+                window.settings = { ...DEFAULT_SETTINGS, ...data.settings };
+                loadSettingsToInputs();
+            }
+            if (data.rooms && Array.isArray(data.rooms)) {
+                window.rooms = JSON.parse(JSON.stringify(data.rooms));
+            }
+            if (data.varia) {
+                document.getElementById('variaDetails').value = data.varia.details || "";
+                document.getElementById('variaHours').value = data.varia.hours || 0;
+                document.getElementById('variaExtraCost').value = data.varia.extraCost || 0;
+            }
+
+            renderTables();
+            calculateAll();
+            alert(`Projet "${data.projectName || 'Projet'}" chargé avec succès !`);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        document.getElementById('btnSaveFirebase').addEventListener('click', saveToFirebase);
+        document.getElementById('btnOpenSavedProjects').addEventListener('click', () => {
+            toggleProjectsModal(true);
+            loadSavedProjects();
+        });
+        document.getElementById('btnCloseProjectsModal').addEventListener('click', () => toggleProjectsModal(false));
+        document.getElementById('btnRefreshProjects').addEventListener('click', loadSavedProjects);
+
+        window.toggleProjectsModal = function(show) {
+            const modal = document.getElementById('projectsModal');
+            if (show === undefined) {
+                modal.classList.toggle('hidden');
+            } else if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        };
+    </script>
+
+    <!-- App Engine Logic & Calculations -->
+    <script>
+        const DEFAULT_SETTINGS = {
+            rendementPrep: 175,
+            rendementAppret: 150,
+            rendementFinition: 200,
+            couvertureGalon: 400,
+            tempsPlaque: 3,
+            rendementNettoyage: 250,
+            tempsSechage: 3,
+            tauxHoraire: 30,
+            prixGalon: 255
+        };
+
+        window.settings = { ...DEFAULT_SETTINGS };
+
+        const INITIAL_ROOMS = [
+            { name: "Salon", length: 18, width: 14, height: 8, ceiling: true, condition: 1, primer: false, plates: 6, coats: 2, armoires: 0, hotte: 0, baths: 0, showers: 0, windowsIncluded: true, windowsTime: 0.5 },
+            { name: "Cuisine", length: 12, width: 10, height: 8, ceiling: true, condition: 1.5, primer: true, plates: 8, coats: 2, armoires: 2.5, hotte: 0.5, baths: 0, showers: 0, windowsIncluded: true, windowsTime: 0.5 },
+            { name: "Salle à manger", length: 12, width: 10, height: 8, ceiling: true, condition: 1, primer: false, plates: 4, coats: 2, armoires: 0, hotte: 0, baths: 0, showers: 0, windowsIncluded: true, windowsTime: 0.5 },
+            { name: "Chambre principale", length: 14, width: 12, height: 8, ceiling: true, condition: 1, primer: false, plates: 5, coats: 2, armoires: 0, hotte: 0, baths: 0, showers: 0, windowsIncluded: true, windowsTime: 0.5 },
+            { name: "Chambre 2", length: 11, width: 10, height: 8, ceiling: true, condition: 1, primer: false, plates: 4, coats: 2, armoires: 0, hotte: 0, baths: 0, showers: 0, windowsIncluded: true, windowsTime: 0.25 },
+            { name: "Chambre 3", length: 10, width: 10, height: 8, ceiling: true, condition: 1, primer: false, plates: 4, coats: 2, armoires: 0, hotte: 0, baths: 0, showers: 0, windowsIncluded: true, windowsTime: 0.25 },
+            { name: "Salle de bain", length: 9, width: 7, height: 8, ceiling: true, condition: 1.5, primer: true, plates: 3, coats: 2, armoires: 0.5, hotte: 0, baths: 1, showers: 1, windowsIncluded: false, windowsTime: 0 },
+            { name: "Hall d'entrée", length: 8, width: 6, height: 8, ceiling: true, condition: 1, primer: false, plates: 2, coats: 2, armoires: 0, hotte: 0, baths: 0, showers: 0, windowsIncluded: false, windowsTime: 0 }
+        ];
+
+        window.rooms = JSON.parse(JSON.stringify(INITIAL_ROOMS));
+
+        window.onload = function() {
+            loadSettingsToInputs();
+            renderTables();
+            calculateAll();
+        };
+
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function loadSettingsToInputs() {
+            document.getElementById('paramRendementPrep').value = settings.rendementPrep;
+            document.getElementById('paramRendementAppret').value = settings.rendementAppret;
+            document.getElementById('paramRendementFinition').value = settings.rendementFinition;
+            document.getElementById('paramCouvertureGalon').value = settings.couvertureGalon;
+            document.getElementById('paramTempsPlaque').value = settings.tempsPlaque;
+            document.getElementById('paramRendementNettoyage').value = settings.rendementNettoyage;
+            document.getElementById('paramTempsSechage').value = settings.tempsSechage;
+            document.getElementById('paramTauxHoraire').value = settings.tauxHoraire;
+            document.getElementById('paramPrixGalon').value = settings.prixGalon;
+
+            document.getElementById('displayTauxHoraire').innerText = formatCurrency(settings.tauxHoraire) + ' / h';
+            document.getElementById('displayPrixGalon').innerText = formatCurrency(settings.prixGalon);
+        }
+
+        function saveSettings() {
+            settings.rendementPrep = parseFloat(document.getElementById('paramRendementPrep').value) || 175;
+            settings.rendementAppret = parseFloat(document.getElementById('paramRendementAppret').value) || 150;
+            settings.rendementFinition = parseFloat(document.getElementById('paramRendementFinition').value) || 200;
+            settings.couvertureGalon = parseFloat(document.getElementById('paramCouvertureGalon').value) || 400;
+            settings.tempsPlaque = parseFloat(document.getElementById('paramTempsPlaque').value) || 3;
+            settings.rendementNettoyage = parseFloat(document.getElementById('paramRendementNettoyage').value) || 250;
+            settings.tempsSechage = parseFloat(document.getElementById('paramTempsSechage').value) || 3;
+            settings.tauxHoraire = parseFloat(document.getElementById('paramTauxHoraire').value) || 30;
+            settings.prixGalon = parseFloat(document.getElementById('paramPrixGalon').value) || 255;
+
+            loadSettingsToInputs();
+            toggleSettingsModal();
+            calculateAll();
+        }
+
+        function restoreDefaultSettings() {
+            settings = { ...DEFAULT_SETTINGS };
+            loadSettingsToInputs();
+            calculateAll();
+        }
+
+        function resetData() {
+            rooms = JSON.parse(JSON.stringify(INITIAL_ROOMS));
+            settings = { ...DEFAULT_SETTINGS };
+            document.getElementById('projectName').value = "";
+            document.getElementById('variaDetails').value = "";
+            document.getElementById('variaHours').value = 0;
+            document.getElementById('variaExtraCost').value = 0;
+            loadSettingsToInputs();
+            renderTables();
+            calculateAll();
+        }
+
+        function addRoom() {
+            rooms.push({
+                name: "Nouvelle pièce " + (rooms.length + 1),
+                length: 10,
+                width: 10,
+                height: 8,
+                ceiling: true,
+                condition: 1,
+                primer: false,
+                plates: 4,
+                coats: 2,
+                armoires: 0,
+                hotte: 0,
+                baths: 0,
+                showers: 0,
+                windowsIncluded: false,
+                windowsTime: 0
+            });
+            renderTables();
+            calculateAll();
+        }
+
+        function removeRoom(index) {
+            if(rooms.length <= 1) {
+                return;
+            }
+            rooms.splice(index, 1);
+            renderTables();
+            calculateAll();
+        }
+
+        function renderTables() {
+            renderPaintingTable();
+            renderCleaningTable();
+        }
+
+        function renderPaintingTable() {
+            const tbody = document.getElementById('paintingRows');
+            tbody.innerHTML = '';
+
+            rooms.forEach((room, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-noir-800/80 transition";
+
+                tr.innerHTML = `
+                    <td class="p-2">
+                        <input type="text" value="${room.name}" onchange="updateRoom(${idx}, 'name', this.value)" 
+                               class="w-full bg-black border border-stone-800 rounded px-2 py-1 text-white focus:border-gold-500 font-medium">
+                    </td>
+                    <td class="p-2">
+                        <input type="number" step="0.5" value="${room.length}" onchange="updateRoom(${idx}, 'length', parseFloat(this.value)||0)" 
+                               class="w-full bg-black border border-stone-800 rounded px-3 py-1.5 text-gold-400 font-bold text-center text-sm shadow-inner">
+                    </td>
+                    <td class="p-2">
+                        <input type="number" step="0.5" value="${room.width}" onchange="updateRoom(${idx}, 'width', parseFloat(this.value)||0)" 
+                               class="w-full bg-black border border-stone-800 rounded px-3 py-1.5 text-gold-400 font-bold text-center text-sm shadow-inner">
+                    </td>
+                    <td class="p-2">
+                        <input type="number" step="0.5" value="${room.height}" onchange="updateRoom(${idx}, 'height', parseFloat(this.value)||0)" 
+                               class="w-full bg-black border border-stone-800 rounded px-3 py-1.5 text-gold-400 font-bold text-center text-sm shadow-inner">
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateRoom(${idx}, 'ceiling', this.value === 'true')" 
+                                class="bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center focus:border-gold-500">
+                            <option value="true" ${room.ceiling ? 'selected' : ''}>Oui</option>
+                            <option value="false" ${!room.ceiling ? 'selected' : ''}>Non</option>
+                        </select>
+                    </td>
+                    <td class="p-2">
+                        <select onchange="updateRoom(${idx}, 'condition', parseFloat(this.value))" 
+                                class="w-full bg-black border border-stone-800 rounded px-1.5 py-1 text-white focus:border-gold-500">
+                            <option value="1" ${room.condition === 1 ? 'selected' : ''}>Bon [x1]</option>
+                            <option value="1.5" ${room.condition === 1.5 ? 'selected' : ''}>Moyen [x1.5]</option>
+                            <option value="2.5" ${room.condition === 2.5 ? 'selected' : ''}>Mauvais [x2.5]</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateRoom(${idx}, 'primer', this.value === 'true')" 
+                                class="bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center focus:border-gold-500">
+                            <option value="true" ${room.primer ? 'selected' : ''}>Oui</option>
+                            <option value="false" ${!room.primer ? 'selected' : ''}>Non</option>
+                        </select>
+                    </td>
+                    <td class="p-2">
+                        <input type="number" min="0" value="${room.plates}" onchange="updateRoom(${idx}, 'plates', parseInt(this.value)||0)" 
+                               class="w-full bg-black border border-stone-800 rounded px-2 py-1 text-white text-center">
+                    </td>
+                    <td class="p-2">
+                        <input type="number" min="1" max="4" value="${room.coats}" onchange="updateRoom(${idx}, 'coats', parseInt(this.value)||1)" 
+                               class="w-full bg-black border border-stone-800 rounded px-2 py-1 text-white text-center">
+                    </td>
+                    <td class="p-2 text-right text-stone-400" id="surfMurs_${idx}">0 pi²</td>
+                    <td class="p-2 text-right text-stone-400" id="surfPlaf_${idx}">0 pi²</td>
+                    <td class="p-2 text-right font-semibold text-gold-400" id="surfTot_${idx}">0 pi²</td>
+                    <td class="p-2 text-right text-stone-300" id="tempsPrep_${idx}">0.0 h</td>
+                    <td class="p-2 text-right text-stone-300" id="tempsPeint_${idx}">0.0 h</td>
+                    <td class="p-2 text-right font-bold text-gold-400" id="tempsTotal_${idx}">0.0 h</td>
+                    <td class="p-2 text-right font-bold text-amber-400" id="galons_${idx}">0.0 Gal</td>
+                    <td class="p-2 text-center no-print">
+                        <button onclick="removeRoom(${idx})" class="text-stone-500 hover:text-rose-400 transition p-1" title="Supprimer la pièce">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCleaningTable() {
+            const tbody = document.getElementById('cleaningRows');
+            tbody.innerHTML = '';
+
+            rooms.forEach((room, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-noir-800/80 transition";
+
+                tr.innerHTML = `
+                    <td class="p-2 font-medium text-stone-200">
+                        ${room.name}
+                    </td>
+                    <td class="p-2 text-right text-stone-300" id="cleanSol_${idx}">
+                        0 pi²
+                    </td>
+                    <td class="p-2 text-right text-stone-400" id="cleanPlancherH_${idx}">
+                        0.0 h
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="0.25" min="0" value="${room.armoires}" onchange="updateRoom(${idx}, 'armoires', parseFloat(this.value)||0)" 
+                               class="w-16 bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="0.25" min="0" value="${room.hotte}" onchange="updateRoom(${idx}, 'hotte', parseFloat(this.value)||0)" 
+                               class="w-16 bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" min="0" value="${room.baths}" onchange="updateRoom(${idx}, 'baths', parseInt(this.value)||0)" 
+                               class="w-14 bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center">
+                    </td>
+                    <td class="p-2 text-right text-stone-400" id="cleanBainsH_${idx}">
+                        0.0 h
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" min="0" value="${room.showers}" onchange="updateRoom(${idx}, 'showers', parseInt(this.value)||0)" 
+                               class="w-14 bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center">
+                    </td>
+                    <td class="p-2 text-right text-stone-400" id="cleanShowersH_${idx}">
+                        0.0 h
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateRoom(${idx}, 'windowsIncluded', this.value === 'true')" 
+                                class="bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center focus:border-gold-500">
+                            <option value="true" ${room.windowsIncluded ? 'selected' : ''}>Oui</option>
+                            <option value="false" ${!room.windowsIncluded ? 'selected' : ''}>Non</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" step="0.25" min="0" value="${room.windowsTime}" onchange="updateRoom(${idx}, 'windowsTime', parseFloat(this.value)||0)" 
+                               class="w-16 bg-black border border-stone-800 rounded px-1.5 py-1 text-white text-center ${!room.windowsIncluded ? 'opacity-40 pointer-events-none' : ''}">
+                    </td>
+                    <td class="p-2 text-right font-bold text-gold-400" id="cleanTotalH_${idx}">
+                        0.0 h
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateRoom(index, field, value) {
+            rooms[index][field] = value;
+            if(field === 'name') {
+                renderCleaningTable();
+            }
+            calculateAll();
+        }
+
+        function calculateAll() {
+            let totalSurfMurs = 0;
+            let totalSurfPlaf = 0;
+            let totalSurfTot = 0;
+
+            let totalTempsPrep = 0;
+            let totalTempsPeint = 0;
+            let totalTempsPeintTotal = 0;
+            let totalGalonsExact = 0;
+            let totalTempsPlaques = 0;
+
+            let totalCleaningSol = 0;
+            let totalCleaningPlancher = 0;
+            let totalCleaningArmoires = 0;
+            let totalCleaningHotte = 0;
+            let totalCleaningNbrBains = 0;
+            let totalCleaningBains = 0;
+            let totalCleaningNbrDouches = 0;
+            let totalCleaningDouches = 0;
+            let totalCleaningFenêtres = 0;
+            let totalCleaningTotal = 0;
+
+            rooms.forEach((room, idx) => {
+                const surfMurs = 2 * (room.length + room.width) * room.height * 0.85;
+                const surfPlaf = room.ceiling ? (room.length * room.width) : 0;
+                const surfTot = surfMurs + surfPlaf;
+
+                const tempsPlaquesRoom = (room.plates * settings.tempsPlaque) / 60;
+                const tempsPrep = (surfTot / settings.rendementPrep * room.condition) + tempsPlaquesRoom;
+
+                const tempsAppret = room.primer ? (surfTot / settings.rendementAppret) : 0;
+                const tempsFinition = (surfTot * room.coats) / settings.rendementFinition;
+                const tempsPeint = tempsAppret + tempsFinition;
+
+                const tempsTotalPeintRoom = tempsPrep + tempsPeint;
+
+                const galonsAppret = room.primer ? (surfTot / settings.couvertureGalon) : 0;
+                const galonsFinition = (surfTot * room.coats) / settings.couvertureGalon;
+                const galonsRoom = galonsAppret + galonsFinition;
+
+                totalSurfMurs += surfMurs;
+                totalSurfPlaf += surfPlaf;
+                totalSurfTot += surfTot;
+                totalTempsPrep += tempsPrep;
+                totalTempsPeint += tempsPeint;
+                totalTempsPeintTotal += tempsTotalPeintRoom;
+                totalGalonsExact += galonsRoom;
+                totalTempsPlaques += tempsPlaquesRoom;
+
+                document.getElementById(`surfMurs_${idx}`).innerText = `${Math.round(surfMurs)} pi²`;
+                document.getElementById(`surfPlaf_${idx}`).innerText = `${Math.round(surfPlaf)} pi²`;
+                document.getElementById(`surfTot_${idx}`).innerText = `${Math.round(surfTot)} pi²`;
+                document.getElementById(`tempsPrep_${idx}`).innerText = `${tempsPrep.toFixed(1)} h`;
+                document.getElementById(`tempsPeint_${idx}`).innerText = `${tempsPeint.toFixed(1)} h`;
+                document.getElementById(`tempsTotal_${idx}`).innerText = `${tempsTotalPeintRoom.toFixed(1)} h`;
+                document.getElementById(`galons_${idx}`).innerText = `${galonsRoom.toFixed(1)} G`;
+
+                const surfSol = room.length * room.width;
+                const plancherH = surfSol / settings.rendementNettoyage;
+                const bainsH = room.baths * 0.33;
+                const douchesH = room.showers * 1.0;
+                const windowsH = room.windowsIncluded ? room.windowsTime : 0;
+
+                const cleaningTotalRoom = plancherH + room.armoires + room.hotte + bainsH + douchesH + windowsH;
+
+                totalCleaningSol += surfSol;
+                totalCleaningPlancher += plancherH;
+                totalCleaningArmoires += room.armoires;
+                totalCleaningHotte += room.hotte;
+                totalCleaningNbrBains += room.baths;
+                totalCleaningBains += bainsH;
+                totalCleaningNbrDouches += room.showers;
+                totalCleaningDouches += douchesH;
+                totalCleaningFenêtres += windowsH;
+                totalCleaningTotal += cleaningTotalRoom;
+
+                document.getElementById(`cleanSol_${idx}`).innerText = `${Math.round(surfSol)} pi²`;
+                document.getElementById(`cleanPlancherH_${idx}`).innerText = `${plancherH.toFixed(1)} h`;
+                document.getElementById(`cleanBainsH_${idx}`).innerText = `${bainsH.toFixed(1)} h`;
+                document.getElementById(`cleanShowersH_${idx}`).innerText = `${douchesH.toFixed(1)} h`;
+                document.getElementById(`cleanTotalH_${idx}`).innerText = `${cleaningTotalRoom.toFixed(1)} h`;
+            });
+
+            document.getElementById('totSurfMurs').innerText = `${Math.round(totalSurfMurs)} pi²`;
+            document.getElementById('totSurfPlaf').innerText = `${Math.round(totalSurfPlaf)} pi²`;
+            document.getElementById('totSurfTot').innerText = `${Math.round(totalSurfTot)} pi²`;
+            document.getElementById('totTempsPrep').innerText = `${totalTempsPrep.toFixed(1)} h`;
+            document.getElementById('totTempsPeint').innerText = `${totalTempsPeint.toFixed(1)} h`;
+            document.getElementById('totTempsPeintTotal').innerText = `${totalTempsPeintTotal.toFixed(1)} h`;
+            document.getElementById('totGalons').innerText = `${totalGalonsExact.toFixed(1)} Gal`;
+
+            document.getElementById('totCleaningSol').innerText = `${Math.round(totalCleaningSol)} pi²`;
+            document.getElementById('totCleaningPlancher').innerText = `${totalCleaningPlancher.toFixed(1)} h`;
+            document.getElementById('totCleaningArmoires').innerText = `${totalCleaningArmoires.toFixed(1)} h`;
+            document.getElementById('totCleaningHotte').innerText = `${totalCleaningHotte.toFixed(1)} h`;
+            document.getElementById('totCleaningNbrBains').innerText = `${totalCleaningNbrBains}`;
+            document.getElementById('totCleaningBains').innerText = `${totalCleaningBains.toFixed(1)} h`;
+            document.getElementById('totCleaningNbrDouches').innerText = `${totalCleaningNbrDouches}`;
+            document.getElementById('totCleaningDouches').innerText = `${totalCleaningDouches.toFixed(1)} h`;
+            document.getElementById('totCleaningFenêtres').innerText = `${totalCleaningFenêtres.toFixed(1)} h`;
+            document.getElementById('totCleaningTotal').innerText = `${totalCleaningTotal.toFixed(1)} h`;
+
+            const variaHours = parseFloat(document.getElementById('variaHours').value) || 0;
+            const variaExtraCost = parseFloat(document.getElementById('variaExtraCost').value) || 0;
+
+            const mainOeuvreTotaleHeures = totalTempsPeintTotal + totalCleaningTotal + variaHours;
+            const joursTravailles7h = mainOeuvreTotaleHeures / 7;
+            const dureeEstimeeSéchage = ((totalTempsPeintTotal * 1.35) + totalCleaningTotal + variaHours) / 7;
+
+            const chaudièresRequises = Math.ceil(totalGalonsExact / 5);
+
+            const costMainOeuvre = mainOeuvreTotaleHeures * settings.tauxHoraire;
+            const costPeinture = chaudièresRequises * settings.prixGalon;
+            const grandTotal = costMainOeuvre + costPeinture + variaExtraCost;
+
+            document.getElementById('kpiTempsPeinture').innerText = `${totalTempsPeintTotal.toFixed(1)} h`;
+            document.getElementById('kpiTempsPlaques').innerText = `dont ${totalTempsPlaques.toFixed(1)}h pour plaques/prises`;
+
+            document.getElementById('kpiTempsNettoyage').innerText = `${totalCleaningTotal.toFixed(1)} h`;
+
+            document.getElementById('kpiJoursTravailles').innerText = `${joursTravailles7h.toFixed(1)} Jours`;
+            document.getElementById('kpiDureeSéchage').innerText = `Chantier complet (~${dureeEstimeeSéchage.toFixed(1)}j avec séchage)`;
+
+            document.getElementById('kpiChaudières').innerText = `${chaudièresRequises} Chaudière(s)`;
+            document.getElementById('kpiGalonsTotal').innerText = `Total estimé: ${totalGalonsExact.toFixed(1)} Galons US`;
+
+            document.getElementById('kpiTotalHeuresMainOeuvre').innerText = mainOeuvreTotaleHeures.toFixed(1);
+            document.getElementById('kpiTauxHoraireTxt').innerText = settings.tauxHoraire;
+            document.getElementById('costMainOeuvre').innerText = formatCurrency(costMainOeuvre);
+
+            document.getElementById('kpiChaudiereTxt').innerText = chaudièresRequises;
+            document.getElementById('kpiPrixChaudiereTxt').innerText = settings.prixGalon;
+            document.getElementById('costPeinture').innerText = formatCurrency(costPeinture);
+
+            document.getElementById('costVariaExtra').innerText = formatCurrency(variaExtraCost);
+            document.getElementById('grandTotal').innerText = formatCurrency(grandTotal);
+        }
+
+        function formatCurrency(val) {
+            return val.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+        }
+    </script>
+</body>
+</html>
