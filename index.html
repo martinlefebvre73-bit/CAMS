@@ -241,10 +241,22 @@
                             Accédez aux grilles tarifaires internes, aux chartes de qualité pour la rénovation, ainsi qu'aux modèles de contrats et fiches de suivi de chantier standardisés par la direction.
                         </p>
                     </div>
-                    <div>
-                        <button onclick="alert('Module documentaire accessible aux collaborateurs authentifiés.')" class="w-full px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors">
-                            Consulter les documents
-                        </button>
+                    <div class="relative">
+                        <!-- Conteneur avec position relative pour gérer le menu secondaire au clic -->
+                        <div class="relative inline-block w-full">
+                            <button id="consultDocsBtn" onclick="toggleDocMenu(event)" class="w-full px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-between">
+                                <span>Consulter les documents</span>
+                                <svg class="w-4 h-4 transition-transform duration-200" id="chevronIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+
+                            <!-- Menu secondaire (déroulant) masqué par défaut -->
+                            <div id="docMenu" class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2">
+                                <a href="inspection.html" class="flex items-center px-5 py-3 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-3"></span>
+                                    <span>Inspection avant/après appartement</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -295,5 +307,26 @@
         </div>
     </footer>
 
+    <!-- Script pour la gestion du menu déroulant secondaire -->
+    <script>
+        function toggleDocMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('docMenu');
+            const chevron = document.getElementById('chevronIcon');
+            
+            menu.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        // Fermer le menu si l'utilisateur clique en dehors
+        window.addEventListener('click', function() {
+            const menu = document.getElementById('docMenu');
+            const chevron = document.getElementById('chevronIcon');
+            if (!menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        });
+    </script>
 </body>
 </html>
