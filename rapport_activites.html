@@ -263,14 +263,18 @@
                     <span class="text-xs px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 border border-gold-500/30 font-semibold">Synthèse Financière ($)</span>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-charcoal-900/60 border border-charcoal-700 p-5 rounded-xl">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-charcoal-900/60 border border-charcoal-700 p-5 rounded-xl">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Taux Horaire Main d'Œuvre ($/h)</label>
-                        <input type="number" id="hourlyRate" step="1" value="50" oninput="updateAllTotals()" class="w-full bg-charcoal-800 border border-charcoal-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none gold-glow transition-all">
+                        <input type="number" id="hourlyRate" step="1" value="25" oninput="updateAllTotals()" class="w-full bg-charcoal-800 border border-charcoal-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none gold-glow transition-all">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">TVA Applicable (%)</label>
-                        <input type="number" id="taxRate" step="0.5" value="20" oninput="updateAllTotals()" class="w-full bg-charcoal-800 border border-charcoal-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none gold-glow transition-all">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">TPS Applicable (%)</label>
+                        <input type="number" id="tpsRate" step="0.1" value="0" oninput="updateAllTotals()" class="w-full bg-charcoal-800 border border-charcoal-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none gold-glow transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">TVQ Applicable (%)</label>
+                        <input type="number" id="tvqRate" step="0.1" value="0" oninput="updateAllTotals()" class="w-full bg-charcoal-800 border border-charcoal-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none gold-glow transition-all">
                     </div>
                 </div>
 
@@ -288,7 +292,7 @@
                         <p id="summaryMaterialsCost" class="text-lg font-bold text-gray-200">0.00 $</p>
                     </div>
                     <div class="bg-charcoal-900 border border-charcoal-700 p-4 rounded-xl text-center">
-                        <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Taxes estimées</p>
+                        <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Taxes estimées (TPS+TVQ)</p>
                         <p id="summaryTaxCost" class="text-lg font-bold text-gray-200">0.00 $</p>
                     </div>
                 </div>
@@ -373,7 +377,8 @@
                 projectLocation: document.getElementById('projectLocation').value,
                 reportPeriod: document.getElementById('reportPeriod').value,
                 hourlyRate: parseFloat(document.getElementById('hourlyRate').value) || 0,
-                taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
+                tpsRate: parseFloat(document.getElementById('tpsRate').value) || 0,
+                tvqRate: parseFloat(document.getElementById('tvqRate').value) || 0,
                 
                 workDays: Array.from(document.querySelectorAll('#workDaysTableBody tr')).map(row => ({
                     date: row.querySelector('.work-date')?.value || '',
@@ -616,7 +621,8 @@
 
         function updateAllTotals() {
             const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
-            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const tpsRate = parseFloat(document.getElementById('tpsRate').value) || 0;
+            const tvqRate = parseFloat(document.getElementById('tvqRate').value) || 0;
 
             let totalWorkHours = 0;
             document.querySelectorAll('#workDaysTableBody tr').forEach(row => {
@@ -650,10 +656,12 @@
             document.getElementById('summaryMaterialsCost').textContent = `${materialsSubtotal.toFixed(2)} $`;
 
             const subtotalHT = workCost + totalTransportCost + materialsSubtotal;
-            const taxAmount = subtotalHT * (taxRate / 100);
-            const grandTotalTTC = subtotalHT + taxAmount;
+            const tpsAmount = subtotalHT * (tpsRate / 100);
+            const tvqAmount = subtotalHT * (tvqRate / 100);
+            const totalTaxAmount = tpsAmount + tvqAmount;
+            const grandTotalTTC = subtotalHT + totalTaxAmount;
 
-            document.getElementById('summaryTaxCost').textContent = `${taxAmount.toFixed(2)} $`;
+            document.getElementById('summaryTaxCost').textContent = `${totalTaxAmount.toFixed(2)} $`;
             document.getElementById('summaryGrandTotal').textContent = `${grandTotalTTC.toFixed(2)} $`;
         }
 
