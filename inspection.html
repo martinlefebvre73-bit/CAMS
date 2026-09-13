@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport d’inspection du logement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --gold: #D4AF37;
+            --gold-light: #E5C158;
+            --gold-dark: #AA8C2C;
+            --text-main: #E0E0E0;
+            --text-muted: #A0A0A0;
+            --border-color: #333333;
+            --input-bg: #2a2a2a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border: 1px solid var(--gold-dark);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        h1 {
+            color: var(--gold);
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        /* Custom Gold Checkbox Styling */
+        .checkbox-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--input-bg);
+            border: 2px solid var(--gold-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            display: grid;
+            place-content: center;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+
+        .checkbox-item input[type="checkbox"]::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em var(--gold);
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background: var(--input-bg);
+            border-color: var(--gold);
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        .checkbox-item:hover input[type="checkbox"] {
+            border-color: var(--gold);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="text-center border-b-2 border-amber-500 pb-5 mb-8">
+        <h1>Rapport d’inspection du logement</h1>
+        <div class="flex justify-center items-center gap-4 flex-wrap mt-4 text-lg">
+            <label for="address" class="text-amber-400 font-semibold">Adresse du logement :</label>
+            <input type="text" id="address" placeholder="Ex: 123 Rue Principale, Apt 4" class="bg-zinc-800 border border-amber-600 rounded px-3 py-2 text-zinc-100 w-80 focus:border-amber-400 outline-none">
+            <button id="search-modal-btn" class="bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-amber-600 font-semibold px-4 py-2 rounded transition-colors text-sm flex items-center gap-2">
+                📂 Autre dossier
+            </button>
+        </div>
+        <div class="flex justify-center gap-10 mt-6 bg-amber-500/5 p-4 rounded-lg border border-dashed border-amber-600">
+            <label class="checkbox-item flex items-center gap-2 cursor-pointer font-semibold text-amber-200">
+                <input type="checkbox" name="inspection_type" value="arrivee"> Inspection à l’arrivée du résident
+            </label>
+            <label class="checkbox-item flex items-center gap-2 cursor-pointer font-semibold text-amber-200">
+                <input type="checkbox" name="inspection_type" value="depart"> Inspection au départ du résident
+            </label>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Entrée / Passage -->
+        <div class="bg-white/[0.02] border border-zinc-800 rounded-lg p-5 hover:border-amber-600 transition-colors">
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 mb-4 text-lg font-semibold tracking-wide">Entrée/passage</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Plâtre"> Plâtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Gicleurs"> Gicleurs</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Luminaire"> Luminaire</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Ventilation"> Ventilation</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Détecteur de fumée"> Détecteur de fumée</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Avertisseur mini-Horn"> Avertisseur mini-Horn</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Prise(s) électrique(s)"> Prise(s) électrique(s)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Porte et poignée"> Porte et poignée</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Portes persiennes"> Portes persiennes</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Plancher"> Plancher</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="entree" data-item="Peinture"> Peinture</label>
+            </div>
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 my-4 text-lg font-semibold tracking-wide">Divers</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="divers" data-item="Tablettes et garde-robe"> Tablettes et garde-robe</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="divers" data-item="Module armoires"> Module armoires</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="divers" data-item="Laveuse/sécheuse"> Laveuse/sécheuse</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="divers" data-item="Entrée laveuse/sécheuse"> Entrée laveuse/sécheuse</label>
+            </div>
+        </div>
+
+        <!-- Salle de bain -->
+        <div class="bg-white/[0.02] border border-zinc-800 rounded-lg p-5 hover:border-amber-600 transition-colors">
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 mb-4 text-lg font-semibold tracking-wide">Salle de bain</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Plâtre"> Plâtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Gicleurs"> Gicleurs</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Luminaire"> Luminaire</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Ventilation"> Ventilation</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Pharmacie/miroir"> Pharmacie/miroir</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Vanité"> Vanité</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Tuiles céramiques murales"> Tuiles céramiques murales</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Robinetterie/lavabo/support de douche"> Robinetterie/lavabo/support de douche</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Barres de sécurité (2)"> Barres de sécurité (2)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Barres à serviette et pôle"> Barres à serviette et pôle</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Tirette d’appel d’urgence"> Tirette d’appel d’urgence</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Porte et poignée"> Porte et poignée</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Toilette et bain"> Toilette et bain</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Douche"> Douche</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Chauffage et plinthe électrique"> Chauffage et plinthe électrique</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Prise(s) électrique(s)"> Prise(s) électrique(s)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Plancher céramique"> Plancher céramique</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Mitigeurs à 43 degrés"> Mitigeurs à 43 degrés</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="sdb" data-item="Peinture"> Peinture</label>
+            </div>
+        </div>
+
+        <!-- Cuisine -->
+        <div class="bg-white/[0.02] border border-zinc-800 rounded-lg p-5 hover:border-amber-600 transition-colors">
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 mb-4 text-lg font-semibold tracking-wide">Cuisine</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Plâtre"> Plâtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Gicleurs"> Gicleurs</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Luminaire"> Luminaire</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Hotte/ventilateur"> Hotte/ventilateur</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Armoires"> Armoires</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Comptoir"> Comptoir</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Prise(s) électrique(s)"> Prise(s) électrique(s)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Robinetterie/évier"> Robinetterie/évier</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Entrée lave-vaisselle"> Entrée lave-vaisselle</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Module de remplacement du lave-vaisselle"> Module remplacement lave-vaisselle</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Plancher céramique"> Plancher céramique</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Cuisinière"> Cuisinière</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Réfrigérateur"> Réfrigérateur</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="cuisine" data-item="Peinture"> Peinture</label>
+            </div>
+        </div>
+
+        <!-- Chambre 1 -->
+        <div class="bg-white/[0.02] border border-zinc-800 rounded-lg p-5 hover:border-amber-600 transition-colors">
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 mb-4 text-lg font-semibold tracking-wide">Chambre 1</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Plâtre"> Plâtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Gicleurs"> Gicleurs</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Luminaire"> Luminaire</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Ventilation"> Ventilation</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Fenêtre"> Fenêtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Porte-fenêtre"> Porte-fenêtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Tirette d’appel d’urgence"> Tirette d’appel d’urgence</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Porte et poignée"> Porte et poignée</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Chauffage et plinthe électrique"> Chauffage et plinthe électrique</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Prise(s) électrique(s)"> Prise(s) électrique(s)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Prise téléphonique et câble télévision"> Prise téléphonique et câble TV</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Plancher"> Plancher</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre1" data-item="Peinture"> Peinture</label>
+            </div>
+        </div>
+
+        <!-- Chambre 2 -->
+        <div class="bg-white/[0.02] border border-zinc-800 rounded-lg p-5 hover:border-amber-600 transition-colors">
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 mb-4 text-lg font-semibold tracking-wide">Chambre 2</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Plâtre"> Plâtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Gicleurs"> Gicleurs</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Luminaire"> Luminaire</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Ventilation"> Ventilation</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Fenêtre"> Fenêtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Porte-fenêtre"> Porte-fenêtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Tirette d’appel d’urgence"> Tirette d’appel d’urgence</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Porte et poignée"> Porte et poignée</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Chauffage et plinthe électrique"> Chauffage et plinthe électrique</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Prise(s) électrique(s)"> Prise(s) électrique(s)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Prise téléphonique et câble télévision"> Prise téléphonique et câble TV</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Plancher"> Plancher</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="chambre2" data-item="Peinture"> Peinture</label>
+            </div>
+        </div>
+
+        <!-- Salon -->
+        <div class="bg-white/[0.02] border border-zinc-800 rounded-lg p-5 hover:border-amber-600 transition-colors">
+            <h3 class="text-amber-400 border-b border-amber-600/50 pb-2 mb-4 text-lg font-semibold tracking-wide">Salon</h3>
+            <div class="flex flex-col gap-3">
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Plâtre"> Plâtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Gicleurs"> Gicleurs</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Luminaire"> Luminaire</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Ventilation"> Ventilation</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Fenêtre"> Fenêtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Porte-fenêtre"> Porte-fenêtre</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Chauffage et plinthe électrique"> Chauffage et plinthe électrique</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Prise(s) électrique(s)"> Prise(s) électrique(s)</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Prise téléphonique et câble télévision"> Prise téléphonique et câble TV</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Plancher"> Plancher</label>
+                <label class="checkbox-item flex items-center gap-3 cursor-pointer text-sm"><input type="checkbox" data-cat="salon" data-item="Peinture"> Peinture</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-black/30 border border-amber-600/50 rounded-lg p-6 mb-8">
+        <h3 class="text-amber-400 text-xl font-semibold mb-4 tracking-wide">Aspects à vérifier</h3>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="w-1/4">Élément</th>
+                        <th class="w-3/4">Critères de vérification</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Armoires</strong></td><td>Vérifier si les pentures sont endommagées, à peinturer, éraflées, etc.</td></tr>
+                    <tr><td><strong>Céramique</strong></td><td>Vérifier qu'il n'y a pas de céramique brisée ou craquée, etc.</td></tr>
+                    <tr><td><strong>Cuisinière</strong></td><td>Vérifier pour des dommages apparents et s'assurer du bon fonctionnement de l’appareil.</td></tr>
+                    <tr><td><strong>Détecteur de fumée</strong></td><td>Vérifier le bon fonctionnement de l’appareil.</td></tr>
+                    <tr><td><strong>Fenêtre</strong></td><td>Vérifier pour tout dommage au mécanisme de la manivelle, qu'aucune vitre n'est fendue ou brisée.</td></tr>
+                    <tr><td><strong>Hotte/ventilateur</strong></td><td>Vérifier pour tout dommage apparent et s'assurer du bon fonctionnement de l’appareil.</td></tr>
+                    <tr><td><strong>Laveuse/sécheuse</strong></td><td>Vérifier pour toute fuite d’eau, tout dommage apparent et s'assurer du bon fonctionnement de l’appareil.</td></tr>
+                    <tr><td><strong>Lave-vaisselle</strong></td><td>Vérifier pour toute fuite d’eau et tout dommage apparent. Vérifier le bon fonctionnement de l’appareil.</td></tr>
+                    <tr><td><strong>Luminaire</strong></td><td>Vérifier pour tout dommage ou ampoules brûlées.</td></tr>
+                    <tr><td><strong>Mitigeurs</strong></td><td>Vérifier que les mitigeurs sont bien ajustés à 43 degrés Celsius (109,4 °F).</td></tr>
+                    <tr><td><strong>Pharmacie</strong></td><td>Vérifier que les miroirs ne sont pas ébréchés et que les pentures ne sont pas endommagées.</td></tr>
+                    <tr><td><strong>Plancher</strong></td><td>Vérifier pour des éraflures profondes, des dégâts d’eau, etc. Faire l’installation des quarts de rond.</td></tr>
+                    <tr><td><strong>Plâtre</strong></td><td>Vérifier pour tout trou, dégât d’eau, plafond défoncé et vérifier la tapisserie sur les murs, etc.</td></tr>
+                    <tr><td><strong>Plinthe électrique</strong></td><td>Vérifier pour tout dommage à l’enveloppe ou aux ailettes.</td></tr>
+                    <tr><td><strong>Porte</strong></td><td>Vérifier s’il n’y a pas de trou, elle n’est pas défoncée ou défaite de ses gonds, etc.</td></tr>
+                    <tr><td><strong>Porte-fenêtre</strong></td><td>Vérifier si la moustiquaire n’est pas endommagée, que la vitre n'est pas fendue ou brisée, etc.</td></tr>
+                    <tr><td><strong>Prise électrique</strong></td><td>Vérifier pour tout court-circuit, s’assurer que la prise n’est pas desserrée et qu’elle est en bon état.</td></tr>
+                    <tr><td><strong>Réfrigérateur</strong></td><td>Vérifier pour tous les dommages qui pourraient être apparents et vérifier que celui-ci fonctionne bien.</td></tr>
+                    <tr><td><strong>Robinetterie</strong></td><td>Vérifier pour toute possibilité de fuite d’eau au-dessous ou au-dessus de la vanité ou du module. Vérifier si le support de douche n’est pas brisé.</td></tr>
+                    <tr><td><strong>Tuile</strong></td><td>Vérifier s’il y a des trous, des tuiles brisées, du coulis à refaire, etc.</td></tr>
+                    <tr><td><strong>Vanité</strong></td><td>Vérifier pour des éraflures profondes, des dégâts d’eau, etc.</td></tr>
+                    <tr><td><strong>Peinture</strong></td><td>Vérifier si la peinture doit être refaite.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <div class="flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+                <label for="inspector-comments" class="text-amber-300 font-semibold text-lg">Commentaires de l’inspecteur :</label>
+                <button type="button" id="voice-dictation-btn" class="bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-amber-600 px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-2 transition-colors">
+                    🎤 <span id="voice-btn-text">Activer la dictée vocale</span>
+                </button>
+            </div>
+            <textarea id="inspector-comments" placeholder="Notes ou observations détaillées de l'inspecteur..." class="w-full h-56 bg-zinc-800 border border-amber-600 rounded-lg p-3 text-zinc-100 focus:border-amber-400 outline-none resize-y text-base"></textarea>
+        </div>
+    </div>
+
+    <!-- Photo Attachments Section -->
+    <div class="bg-black/30 border border-amber-600/50 rounded-lg p-6 mb-8">
+        <h3 class="text-amber-400 text-xl font-semibold mb-4 tracking-wide">Photos de l'inspection</h3>
+        <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-4">
+                <label for="photo-upload" class="bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold px-4 py-2 rounded cursor-pointer transition-colors text-sm flex items-center gap-2">
+                    📷 Ajouter des photos
+                </label>
+                <input type="file" id="photo-upload" accept="image/*" multiple class="hidden">
+                <span id="photo-count" class="text-xs text-zinc-400">Aucune photo sélectionnée</span>
+            </div>
+            <div id="photo-preview-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
+                <!-- Dynamic photo previews will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Signatures and Save Button -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-zinc-800 pt-6 items-center">
+        <div class="flex flex-col gap-2">
+            <label for="signature" class="text-amber-400 font-semibold">Signature :</label>
+            <input type="text" id="signature" placeholder="Nom ou signature numérique" class="bg-zinc-800 border border-amber-600 rounded px-3 py-2 text-zinc-100 focus:border-amber-400 outline-none">
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="inspection-date" class="text-amber-400 font-semibold">Date :</label>
+            <input type="date" id="inspection-date" class="bg-zinc-800 border border-amber-600 rounded px-3 py-2 text-zinc-100 focus:border-amber-400 outline-none">
+        </div>
+    </div>
+
+    <div class="mt-8 text-center">
+        <button id="save-btn" class="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-950 font-bold px-8 py-3 rounded-lg shadow-lg transition-all transform hover:scale-105 uppercase tracking-wider text-sm">
+            Sauvegarde
+        </button>
+        <div id="status-message" class="mt-3 text-sm font-medium"></div>
+    </div>
+</div>
+
+<div id="search-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-zinc-900 border border-amber-600 rounded-xl p-6 max-w-lg w-full mx-4 shadow-2xl">
+        <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+            <h3 class="text-amber-400 text-lg font-bold">Rechercher un dossier par adresse</h3>
+            <button id="close-modal-btn" class="text-zinc-400 hover:text-amber-400 text-xl font-bold">&times;</button>
+        </div>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="modal-search-input" placeholder="Entrez l'adresse..." class="flex-1 bg-zinc-800 border border-amber-600 rounded px-3 py-2 text-zinc-100 focus:border-amber-400 outline-none">
+            <button id="modal-search-btn" class="bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold px-4 py-2 rounded transition-colors">Rechercher</button>
+        </div>
+        <div id="modal-search-status" class="text-xs text-amber-300 mb-2"></div>
+        <div id="modal-results-list" class="max-h-60 overflow-y-auto flex flex-col gap-2">
+            <!-- Dynamic search results will appear here -->
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+        authDomain: "cams-cf723.firebaseapp.com",
+        projectId: "cams-cf723",
+        storageBucket: "cams-cf723.firebasestorage.app",
+        messagingSenderId: "1037636451682",
+        appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+        measurementId: "G-8Q2V3660XZ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    // State for photos
+    let attachedPhotos = [];
+
+    // Authenticate user safely before Firestore operations
+    async function initAuth() {
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (err) {
+            console.error("Authentication error:", err);
+        }
+    }
+    initAuth();
+
+    // Voice Dictation (Speech Recognition API)
+    const voiceBtn = document.getElementById('voice-dictation-btn');
+    const voiceBtnText = document.getElementById('voice-btn-text');
+    const commentsTextarea = document.getElementById('inspector-comments');
+    let recognition = null;
+    let isRecording = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            if (finalTranscript) {
+                commentsTextarea.value += (commentsTextarea.value ? ' ' : '') + finalTranscript;
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error", event.error);
+            stopRecording();
+        };
+
+        recognition.onend = () => {
+            if (isRecording) {
+                try { recognition.start(); } catch(e) {}
+            }
+        };
+
+        voiceBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+    } else {
+        voiceBtn.style.display = 'none';
+    }
+
+    function startRecording() {
+        isRecording = true;
+        voiceBtn.classList.add('bg-red-600/20', 'border-red-500', 'text-red-400');
+        voiceBtn.classList.remove('bg-zinc-800', 'text-amber-400', 'border-amber-600');
+        voiceBtnText.textContent = "Arrêter l'enregistrement (En écoute...)";
+        try { recognition.start(); } catch(e) {}
+    }
+
+    function stopRecording() {
+        isRecording = false;
+        voiceBtn.classList.remove('bg-red-600/20', 'border-red-500', 'text-red-400');
+        voiceBtn.classList.add('bg-zinc-800', 'text-amber-400', 'border-amber-600');
+        voiceBtnText.textContent = "Activer la dictée vocale";
+        try { recognition.stop(); } catch(e) {}
+    }
+
+    // Photo Upload Handling
+    const photoUploadInput = document.getElementById('photo-upload');
+    const photoPreviewContainer = document.getElementById('photo-preview-container');
+    const photoCountSpan = document.getElementById('photo-count');
+
+    photoUploadInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (uploadEvent) => {
+                const base64Data = uploadEvent.target.result;
+                attachedPhotos.push({
+                    name: file.name,
+                    data: base64Data
+                });
+                renderPhotos();
+            };
+            reader.readAsDataURL(file);
+        });
+        photoUploadInput.value = ''; // reset input
+    });
+
+    function renderPhotos() {
+        photoPreviewContainer.innerHTML = '';
+        photoCountSpan.textContent = `${attachedPhotos.length} photo(s) ajoutée(s)`;
+
+        attachedPhotos.forEach((photo, index) => {
+            const card = document.createElement('div');
+            card.className = "relative bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden group aspect-square flex items-center justify-center";
+            card.innerHTML = `
+                <img src="${photo.data}" alt="${photo.name}" class="w-full h-full object-cover">
+                <button type="button" class="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors" data-index="${index}">&times;</button>
+            `;
+
+            card.querySelector('button').addEventListener('click', () => {
+                attachedPhotos.splice(index, 1);
+                renderPhotos();
+            });
+
+            photoPreviewContainer.appendChild(card);
+        });
+    }
+
+    // Set default date to today if empty
+    const dateInput = document.getElementById('inspection-date');
+    if (dateInput && !dateInput.value) {
+        dateInput.valueAsDate = new Date();
+    }
+
+    // Save functionality into 'inspection' collection
+    document.getElementById('save-btn').addEventListener('click', async () => {
+        const statusDiv = document.getElementById('status-message');
+        statusDiv.textContent = "Enregistrement en cours...";
+        statusDiv.className = "mt-3 text-sm font-medium text-amber-400";
+
+        try {
+            const address = document.getElementById('address').value.trim();
+            if (!address) {
+                statusDiv.textContent = "Veuillez entrer une adresse valide.";
+                statusDiv.className = "mt-3 text-sm font-medium text-red-400";
+                return;
+            }
+
+            const inspectionTypes = Array.from(document.querySelectorAll('input[name="inspection_type"]:checked')).map(el => el.value);
+            
+            const checkboxes = {};
+            document.querySelectorAll('.checkbox-item input[type="checkbox"][data-cat]').forEach(cb => {
+                const cat = cb.getAttribute('data-cat');
+                const item = cb.getAttribute('data-item');
+                if (!checkboxes[cat]) checkboxes[cat] = {};
+                checkboxes[cat][item] = cb.checked;
+            });
+
+            const comments = document.getElementById('inspector-comments').value;
+            const signature = document.getElementById('signature').value;
+            const date = document.getElementById('inspection-date').value;
+
+            const reportData = {
+                address,
+                inspectionTypes,
+                checkboxes,
+                comments,
+                signature,
+                date,
+                photos: attachedPhotos,
+                updatedAt: new Date().toISOString()
+            };
+
+            // Save to public collection path under 'inspection'
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'inspection');
+            await addDoc(colRef, reportData);
+
+            statusDiv.textContent = "Rapport sauvegardé avec succès dans Firebase ('inspection') !";
+            statusDiv.className = "mt-3 text-sm font-medium text-emerald-400";
+            
+            setTimeout(() => {
+                statusDiv.textContent = "";
+            }, 5000);
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde :", error);
+            statusDiv.textContent = "Erreur lors de la sauvegarde. Veuillez réessayer.";
+            statusDiv.className = "mt-3 text-sm font-medium text-red-400";
+        }
+    });
+
+    // Modal elements for "Autre dossier"
+    const modal = document.getElementById('search-modal');
+    const searchModalBtn = document.getElementById('search-modal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const modalSearchBtn = document.getElementById('modal-search-btn');
+    const modalSearchInput = document.getElementById('modal-search-input');
+    const modalSearchStatus = document.getElementById('modal-search-status');
+    const modalResultsList = document.getElementById('modal-results-list');
+
+    searchModalBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modalSearchInput.value = '';
+        modalResultsList.innerHTML = '';
+        modalSearchStatus.textContent = '';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+
+    // Search functionality by address in 'inspection' collection
+    modalSearchBtn.addEventListener('click', async () => {
+        const queryText = modalSearchInput.value.trim().toLowerCase();
+        modalSearchStatus.textContent = "Recherche en cours...";
+        modalResultsList.innerHTML = '';
+
+        try {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'inspection');
+            const snapshot = await getDocs(colRef);
+            
+            let matches = [];
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.address && data.address.toLowerCase().includes(queryText)) {
+                    matches.push({ id: docSnap.id, ...data });
+                }
+            });
+
+            if (matches.length === 0) {
+                modalSearchStatus.textContent = "Aucun dossier trouvé pour cette adresse.";
+                return;
+            }
+
+            modalSearchStatus.textContent = `${matches.length} dossier(s) trouvé(s) :`;
+            matches.forEach(match => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "bg-zinc-800 border border-zinc-700 hover:border-amber-500 rounded p-3 cursor-pointer flex justify-between items-center transition-colors";
+                itemDiv.innerHTML = `
+                    <div>
+                        <div class="text-amber-400 font-semibold text-sm">${match.address}</div>
+                        <div class="text-xs text-zinc-400">Date : ${match.date || 'N/A'} | Types : ${(match.inspectionTypes || []).join(', ')}</div>
+                    </div>
+                    <button class="bg-amber-600 text-zinc-950 font-bold px-3 py-1 text-xs rounded hover:bg-amber-500">Charger</button>
+                `;
+                
+                itemDiv.addEventListener('click', () => {
+                    loadReportIntoForm(match);
+                    modal.classList.add('hidden');
+                });
+
+                modalResultsList.appendChild(itemDiv);
+            });
+        } catch (err) {
+            console.error("Erreur de recherche :", err);
+            modalSearchStatus.textContent = "Erreur lors de la recherche.";
+        }
+    });
+
+    // Function to load retrieved data back into form
+    function loadReportIntoForm(data) {
+        document.getElementById('address').value = data.address || '';
+        document.getElementById('inspector-comments').value = data.comments || '';
+        document.getElementById('signature').value = data.signature || '';
+        document.getElementById('inspection-date').value = data.date || '';
+
+        // Reset and populate inspection type checkboxes
+        document.querySelectorAll('input[name="inspection_type"]').forEach(cb => {
+            cb.checked = (data.inspectionTypes || []).includes(cb.value);
+        });
+
+        // Reset and populate item checkboxes
+        const savedCheckboxes = data.checkboxes || {};
+        document.querySelectorAll('.checkbox-item input[type="checkbox"][data-cat]').forEach(cb => {
+            const cat = cb.getAttribute('data-cat');
+            const item = cb.getAttribute('data-item');
+            if (savedCheckboxes[cat] && savedCheckboxes[cat][item] !== undefined) {
+                cb.checked = savedCheckboxes[cat][item];
+            } else {
+                cb.checked = false;
+            }
+        });
+
+        // Load attached photos
+        attachedPhotos = data.photos || [];
+        renderPhotos();
+
+        const statusDiv = document.getElementById('status-message');
+        statusDiv.textContent = `Dossier pour "${data.address}" chargé avec succès !`;
+        statusDiv.className = "mt-3 text-sm font-medium text-emerald-400";
+        setTimeout(() => {
+            statusDiv.textContent = "";
+        }, 5000);
+    }
+</script>
+
+</body>
+</html>
