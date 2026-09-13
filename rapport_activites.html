@@ -348,7 +348,7 @@
                 app = initializeApp(firebaseConfig);
                 try { getAnalytics(app); } catch(e) {}
                 db = getFirestore(app);
-                console.log("Firebase initialized successfully for collection 'estimation'");
+                console.log("Firebase initialized successfully for collection 'temps'");
             } catch (e) {
                 console.warn("Firebase initialization warning (running in standalone offline mode):", e);
             }
