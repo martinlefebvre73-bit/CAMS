@@ -30,8 +30,6 @@
     <!-- FontAwesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- html2pdf.js for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -78,7 +76,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-wider gold-gradient-text">C.A.M.S.</h1>
-                    <p class="text-xs text-gray-400">Rapport d'activité ($) • Firebase 'estimation' • PDF</p>
+                    <p class="text-xs text-gray-400">Rapport d'activité ($) • Firebase 'estimation' • Courriel Texte avec Lien</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -144,7 +142,7 @@
                         <h2 class="text-lg font-bold text-gold-400 flex items-center gap-2">
                             <i class="fa-solid fa-clock"></i> 2. Espace Heures Travaillées par Jour
                         </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Déclarez vos heures effectives par jour de la semaine</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Déclarez vos heures effectives par jour de la semaine[cite: 1]</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span id="totalWorkHoursBadge" class="text-xs px-3 py-1.5 rounded-full bg-charcoal-700 text-gold-400 border border-charcoal-600 font-semibold">Total : 0.00 h</span>
@@ -179,7 +177,7 @@
                         <h2 class="text-lg font-bold text-gold-400 flex items-center gap-2">
                             <i class="fa-solid fa-truck-fast"></i> 3. Espace Transport par Jour ($)
                         </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Suivi journalier du temps de route et frais de déplacement en dollars ($)</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Suivi journalier du temps de route et frais de déplacement en dollars ($)[cite: 1]</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span id="totalTransportBadge" class="text-xs px-3 py-1.5 rounded-full bg-charcoal-700 text-gold-400 border border-charcoal-600 font-semibold">Route : 0.00 h | 0.00 $</span>
@@ -215,7 +213,7 @@
                         <h2 class="text-lg font-bold text-gold-400 flex items-center gap-2">
                             <i class="fa-solid fa-boxes-stacked"></i> 4. Espace Matériels & Fournitures ($)
                         </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Liste des consommables et équipements ($)</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Liste des consommables et équipements ($)[cite: 1]</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="startDictationMaterialVoice()" class="text-xs px-3.5 py-2 rounded-xl bg-charcoal-700 hover:bg-gold-500 hover:text-charcoal-900 text-gold-400 border border-charcoal-600 transition-all flex items-center gap-1.5 font-semibold">
@@ -304,7 +302,7 @@
                     </div>
                     <div class="flex gap-3 w-full sm:w-auto">
                         <button type="button" onclick="submitAndDispatchReport()" class="flex-1 sm:flex-none px-8 py-3.5 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-charcoal-900 font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-gold-500/30 transition-all flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Expédier (Firebase 'estimation' & PDF vers entreprise.cams@gmail.com)
+                            <i class="fa-solid fa-paper-plane"></i> Expédier (Firebase 'estimation' & Info Texte + Lien vers entreprise.cams@gmail.com)
                         </button>
                     </div>
                 </div>
@@ -314,7 +312,7 @@
     </main>
 
     <footer class="border-t border-charcoal-600 bg-charcoal-800 text-center py-6 mt-12 text-xs text-gray-400">
-        <p>C.A.M.S. — Thème Noir & Or — Enregistrement Firebase 'estimation' & Copie PDF vers entreprise.cams@gmail.com</p>
+        <p>C.A.M.S. — Thème Noir & Or — Enregistrement Firebase 'estimation' & Transmission Texte avec lien vers entreprise.cams@gmail.com[cite: 1]</p>
     </footer>
 
     <!-- Firebase SDK Setup & Firestore Sync -->
@@ -350,7 +348,7 @@
                 app = initializeApp(firebaseConfig);
                 try { getAnalytics(app); } catch(e) {}
                 db = getFirestore(app);
-                console.log("Firebase initialized successfully for collection 'temps'");
+                console.log("Firebase initialized successfully for collection 'estimation'");
             } catch (e) {
                 console.warn("Firebase initialization warning (running in standalone offline mode):", e);
             }
@@ -359,7 +357,6 @@
         window.submitAndDispatchReport = async function() {
             const techNameInput = document.getElementById('technicianName').value.trim();
             const projectName = document.getElementById('projectName').value.trim();
-            const dateStr = new Date().toISOString().split('T')[0];
             const technician = techNameInput || "Technicien";
             
             if (!projectName) {
@@ -374,7 +371,7 @@
             try {
                 if (btn) {
                     btn.disabled = true;
-                    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Sauvegarde...</span>`;
+                    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Enregistrement...</span>`;
                 }
 
                 showToast("Sauvegarde dans Firebase collection 'estimation'...", "success");
@@ -399,16 +396,22 @@
                 }));
 
                 const currentGrandTotalText = document.getElementById('summaryGrandTotal').textContent;
+                const clientName = document.getElementById('clientName').value;
+                const projectLocation = document.getElementById('projectLocation').value;
+                const reportPeriod = document.getElementById('reportPeriod').value;
+                const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+                const tpsRate = parseFloat(document.getElementById('tpsRate').value) || 0;
+                const tvqRate = parseFloat(document.getElementById('tvqRate').value) || 0;
 
                 const estimationData = {
                     projectName: projectName,
-                    clientName: document.getElementById('clientName').value,
-                    projectLocation: document.getElementById('projectLocation').value,
-                    reportPeriod: document.getElementById('reportPeriod').value,
+                    clientName: clientName,
+                    projectLocation: projectLocation,
+                    reportPeriod: reportPeriod,
                     technician: technician,
-                    hourlyRate: parseFloat(document.getElementById('hourlyRate').value) || 0,
-                    tpsRate: parseFloat(document.getElementById('tpsRate').value) || 0,
-                    tvqRate: parseFloat(document.getElementById('tvqRate').value) || 0,
+                    hourlyRate: hourlyRate,
+                    tpsRate: tpsRate,
+                    tvqRate: tvqRate,
                     workDays: workDays,
                     transportDays: transportDays,
                     materials: materials,
@@ -416,35 +419,67 @@
                     createdAt: serverTimestamp()
                 };
 
+                let docId = "offline_mode";
                 if (db) {
-                    await addDoc(collection(db, "estimation"), estimationData);
+                    const docRef = await addDoc(collection(db, "estimation"), estimationData);
+                    docId = docRef.id;
                 }
 
                 showToast(`Estimation "${projectName}" enregistrée avec succès dans le Cloud !`, "success");
 
-                showToast("Génération du PDF pour C.A.M.S. en cours...", "success");
+                // URL de base de votre application en ligne (ex: Firebase Hosting / GitHub Pages)
+                const appBaseUrl = "https://cams-cf723.web.app/rapport_activites.html";
+                const reportLink = `${appBaseUrl}?id=${docId}&projet=${encodeURIComponent(projectName)}`;
+
+                // Préparation et envoi exclusif du contenu textuel incluant le lien vers le fichier d'origine
+                const emailSubject = encodeURIComponent(`Rapport d'activité C.A.M.S. - ${projectName} (${technician})`);
                 
-                const sanitizedTech = technician.replace(/[^a-zA-Z0-9]/g, '_');
-                const pdfFilename = `${sanitizedTech}_${dateStr}.pdf`;
+                let emailBodyText = `Bonjour,\n\nVoici le résumé complet des informations du rapport d'activité pour le projet "${projectName}" :\n\n`;
+                emailBodyText += `--- 1. INFORMATIONS GÉNÉRALES ---\n`;
+                emailBodyText += `• Projet : ${projectName}\n`;
+                emailBodyText += `• Client : ${clientName || 'N/A'}\n`;
+                emailBodyText += `• Lieu : ${projectLocation || 'N/A'}\n`;
+                emailBodyText += `• Période : ${reportPeriod || 'N/A'}\n`;
+                emailBodyText += `• Intervenant : ${technician}\n\n`;
 
-                const element = document.getElementById('chantierForm');
-                const opt = {
-                    margin:       10,
-                    filename:     pdfFilename,
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
+                emailBodyText += `--- 2. HEURES TRAVAILLÉES ---\n`;
+                workDays.forEach((wd, index) => {
+                    emailBodyText += `  [${index + 1}] Date : ${wd.date || 'N/A'} | Heures : ${wd.hours}h | Description : ${wd.description || 'N/A'}\n`;
+                });
+                emailBodyText += `• Total Heures Main d'Œuvre : ${document.getElementById('summaryWorkCost').textContent}\n\n`;
 
-                await html2pdf().from(element).set(opt).save();
-                showToast(`PDF "${pdfFilename}" généré avec succès !`, "success");
+                emailBodyText += `--- 3. TRANSPORT & DÉPLACEMENTS ---\n`;
+                transportDays.forEach((td, index) => {
+                    emailBodyText += `  [${index + 1}] Date : ${td.date || 'N/A'} | Route : ${td.hours}h | Frais : ${td.cost} $ | Notes : ${td.notes || 'N/A'}\n`;
+                });
+                emailBodyText += `• Total Transport : ${document.getElementById('summaryTransportCost').textContent}\n\n`;
 
+                emailBodyText += `--- 4. MATÉRIELS & FOURNITURES ---\n`;
+                materials.forEach((mat, index) => {
+                    emailBodyText += `  [${index + 1}] Qté : ${mat.quantity} | ${mat.description} | Prix unitaire : ${mat.unitPrice} $ | Ligne : ${(mat.quantity * mat.unitPrice).toFixed(2)} $\n`;
+                });
+                emailBodyText += `• Total Matériels : ${document.getElementById('summaryMaterialsCost').textContent}\n\n`;
+
+                emailBodyText += `--- 5. SYNTHÈSE FINANCIÈRE ---\n`;
+                emailBodyText += `• Taux horaire : ${hourlyRate} $/h\n`;
+                emailBodyText += `• Taxes estimées (TPS ${tpsRate}% + TVQ ${tvqRate}%) : ${document.getElementById('summaryTaxCost').textContent}\n`;
+                emailBodyText += `• Total Général Estimé (TTC) : ${currentGrandTotalText}\n\n`;
+
+                emailBodyText += `--- ACCÈS & ORIGINE ---\n`;
+                emailBodyText += `• Ouvrir le fichier d'origine en ligne : ${reportLink}\n`;
+                emailBodyText += `• ID Firestore : ${docId}\n\n`;
+
+                emailBodyText += `Cordialement,\n${technician} (C.A.M.S.)`;
+
+                const mailtoLink = `mailto:entreprise.cams@gmail.com?subject=${emailSubject}&body=${encodeURIComponent(emailBodyText)}`;
+                
                 setTimeout(() => {
-                    showToast(`Copie PDF expédiée avec succès à entreprise.cams@gmail.com`, "success");
-                }, 1500);
+                    window.location.href = mailtoLink;
+                    showToast(`Courriel texte avec lien ouvert vers entreprise.cams@gmail.com`, "success");
+                }, 800);
 
             } catch (error) {
-                console.error("Erreur lors de la sauvegarde Firebase ou génération PDF :", error);
+                console.error("Erreur lors de la sauvegarde Firebase :", error);
                 showToast("Une erreur s'est produite : " + error.message, "error");
             } finally {
                 if (btn) {
