@@ -78,7 +78,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-wider gold-gradient-text">C.A.M.S.</h1>
-                    <p class="text-xs text-gray-400">Rapport d'activité ($) • Firebase 'temps' • PDF</p>
+                    <p class="text-xs text-gray-400">Rapport d'activité ($) • Firebase 'estimation' • PDF</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -304,7 +304,7 @@
                     </div>
                     <div class="flex gap-3 w-full sm:w-auto">
                         <button type="button" onclick="submitAndDispatchReport()" class="flex-1 sm:flex-none px-8 py-3.5 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-charcoal-900 font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-gold-500/30 transition-all flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Expédier (Firebase 'temps' & PDF vers entreprise.cams@gmail.com)
+                            <i class="fa-solid fa-paper-plane"></i> Expédier (Firebase 'estimation' & PDF vers entreprise.cams@gmail.com)
                         </button>
                     </div>
                 </div>
@@ -314,15 +314,16 @@
     </main>
 
     <footer class="border-t border-charcoal-600 bg-charcoal-800 text-center py-6 mt-12 text-xs text-gray-400">
-        <p>C.A.M.S. — Thème Noir & Or — Enregistrement Firebase 'temps' & Copie PDF vers entreprise.cams@gmail.com</p>
+        <p>C.A.M.S. — Thème Noir & Or — Enregistrement Firebase 'estimation' & Copie PDF vers entreprise.cams@gmail.com</p>
     </footer>
 
+    <!-- Firebase SDK Setup & Firestore Sync -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        let app, db, auth, userId;
+        let app, db;
 
         window.addEventListener('DOMContentLoaded', async () => {
             const todayStr = new Date().toISOString().split('T')[0];
@@ -336,22 +337,22 @@
             updateAllTotals();
 
             try {
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", projectId: "demo" };
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+                    authDomain: "cams-cf723.firebaseapp.com",
+                    projectId: "cams-cf723",
+                    storageBucket: "cams-cf723.firebasestorage.app",
+                    messagingSenderId: "1037636451682",
+                    appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+                    measurementId: "G-8Q2V3660XZ"
+                };
+
                 app = initializeApp(firebaseConfig);
+                try { getAnalytics(app); } catch(e) {}
                 db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-                console.log("Firebase initialized successfully. User ID:", userId);
+                console.log("Firebase initialized successfully for collection 'temps'");
             } catch (e) {
                 console.warn("Firebase initialization warning (running in standalone offline mode):", e);
-                userId = crypto.randomUUID();
             }
         });
 
@@ -367,77 +368,90 @@
                 return;
             }
 
-            showToast("Sauvegarde dans Firebase collection 'temps'...", "success");
+            const btn = document.querySelector('button[onclick="submitAndDispatchReport()"]');
+            const originalContent = btn ? btn.innerHTML : '';
 
-            const formData = {
-                company: "C.A.M.S.",
-                technician: technician,
-                projectName: projectName,
-                clientName: document.getElementById('clientName').value,
-                projectLocation: document.getElementById('projectLocation').value,
-                reportPeriod: document.getElementById('reportPeriod').value,
-                hourlyRate: parseFloat(document.getElementById('hourlyRate').value) || 0,
-                tpsRate: parseFloat(document.getElementById('tpsRate').value) || 0,
-                tvqRate: parseFloat(document.getElementById('tvqRate').value) || 0,
-                
-                workDays: Array.from(document.querySelectorAll('#workDaysTableBody tr')).map(row => ({
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Sauvegarde...</span>`;
+                }
+
+                showToast("Sauvegarde dans Firebase collection 'estimation'...", "success");
+
+                const workDays = Array.from(document.querySelectorAll('#workDaysTableBody tr')).map(row => ({
                     date: row.querySelector('.work-date')?.value || '',
                     hours: parseFloat(row.querySelector('.work-hours')?.value) || 0,
                     description: row.querySelector('.work-desc')?.value || ''
-                })),
+                }));
 
-                transportDays: Array.from(document.querySelectorAll('#transportDaysTableBody tr')).map(row => ({
+                const transportDays = Array.from(document.querySelectorAll('#transportDaysTableBody tr')).map(row => ({
                     date: row.querySelector('.trans-date')?.value || '',
                     hours: parseFloat(row.querySelector('.trans-hours')?.value) || 0,
                     cost: parseFloat(row.querySelector('.trans-cost')?.value) || 0,
                     notes: row.querySelector('.trans-notes')?.value || ''
-                })),
+                }));
 
-                materials: Array.from(document.querySelectorAll('#materialsTableBody tr')).map(row => ({
+                const materials = Array.from(document.querySelectorAll('#materialsTableBody tr')).map(row => ({
                     quantity: parseFloat(row.querySelector('.mat-qty')?.value) || 0,
                     description: row.querySelector('.mat-desc')?.value || '',
                     unitPrice: parseFloat(row.querySelector('.mat-price')?.value) || 0
-                })),
+                }));
 
-                grandTotal: document.getElementById('summaryGrandTotal').textContent,
-                createdAt: new Date().toISOString(),
-                submittedByUserId: userId
-            };
+                const currentGrandTotalText = document.getElementById('summaryGrandTotal').textContent;
 
-            try {
+                const estimationData = {
+                    projectName: projectName,
+                    clientName: document.getElementById('clientName').value,
+                    projectLocation: document.getElementById('projectLocation').value,
+                    reportPeriod: document.getElementById('reportPeriod').value,
+                    technician: technician,
+                    hourlyRate: parseFloat(document.getElementById('hourlyRate').value) || 0,
+                    tpsRate: parseFloat(document.getElementById('tpsRate').value) || 0,
+                    tvqRate: parseFloat(document.getElementById('tvqRate').value) || 0,
+                    workDays: workDays,
+                    transportDays: transportDays,
+                    materials: materials,
+                    formattedTotal: currentGrandTotalText,
+                    createdAt: serverTimestamp()
+                };
+
                 if (db) {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    // Sauvegarde dans la collection 'temps'
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'temps'), formData);
+                    await addDoc(collection(db, "estimation"), estimationData);
                 }
-            } catch (err) {
-                console.error("Firestore save error:", err);
-            }
 
-            showToast("Génération du PDF pour C.A.M.S. en cours...", "success");
-            
-            const sanitizedTech = technician.replace(/[^a-zA-Z0-9]/g, '_');
-            const pdfFilename = `${sanitizedTech}_${dateStr}.pdf`;
+                showToast(`Estimation "${projectName}" enregistrée avec succès dans le Cloud !`, "success");
 
-            const element = document.getElementById('chantierForm');
-            const opt = {
-                margin:       10,
-                filename:     pdfFilename,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+                showToast("Génération du PDF pour C.A.M.S. en cours...", "success");
+                
+                const sanitizedTech = technician.replace(/[^a-zA-Z0-9]/g, '_');
+                const pdfFilename = `${sanitizedTech}_${dateStr}.pdf`;
 
-            try {
+                const element = document.getElementById('chantierForm');
+                const opt = {
+                    margin:       10,
+                    filename:     pdfFilename,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
                 await html2pdf().from(element).set(opt).save();
                 showToast(`PDF "${pdfFilename}" généré avec succès !`, "success");
-            } catch (pdfErr) {
-                console.error("PDF generation error:", pdfErr);
-            }
 
-            setTimeout(() => {
-                showToast(`Copie PDF expédiée avec succès à entreprise.cams@gmail.com`, "success");
-            }, 1500);
+                setTimeout(() => {
+                    showToast(`Copie PDF expédiée avec succès à entreprise.cams@gmail.com`, "success");
+                }, 1500);
+
+            } catch (error) {
+                console.error("Erreur lors de la sauvegarde Firebase ou génération PDF :", error);
+                showToast("Une erreur s'est produite : " + error.message, "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+            }
         };
     </script>
 
