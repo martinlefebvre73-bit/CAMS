@@ -78,7 +78,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-wider gold-gradient-text">C.A.M.S.</h1>
-                    <p class="text-xs text-gray-400">Rapport d'activité ($) • Firebase 'charges' • PDF</p>
+                    <p class="text-xs text-gray-400">Rapport d'activité ($) • Firebase 'temps' • PDF</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -304,7 +304,7 @@
                     </div>
                     <div class="flex gap-3 w-full sm:w-auto">
                         <button type="button" onclick="submitAndDispatchReport()" class="flex-1 sm:flex-none px-8 py-3.5 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-charcoal-900 font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-gold-500/30 transition-all flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Expédier (Firebase & PDF vers C.A.M.S.)
+                            <i class="fa-solid fa-paper-plane"></i> Expédier (Firebase 'temps' & PDF vers entreprise.cams@gmail.com)
                         </button>
                     </div>
                 </div>
@@ -314,7 +314,7 @@
     </main>
 
     <footer class="border-t border-charcoal-600 bg-charcoal-800 text-center py-6 mt-12 text-xs text-gray-400">
-        <p>C.A.M.S. — Thème Noir & Or — Enregistrement Firebase 'charges' & Copie PDF vers entreprise.cams@gmail.com</p>
+        <p>C.A.M.S. — Thème Noir & Or — Enregistrement Firebase 'temps' & Copie PDF vers entreprise.cams@gmail.com</p>
     </footer>
 
     <script type="module">
@@ -367,7 +367,7 @@
                 return;
             }
 
-            showToast("Sauvegarde dans Firebase collection 'charges'...", "success");
+            showToast("Sauvegarde dans Firebase collection 'temps'...", "success");
 
             const formData = {
                 company: "C.A.M.S.",
@@ -407,7 +407,8 @@
             try {
                 if (db) {
                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'charges'), formData);
+                    // Sauvegarde dans la collection 'temps'
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'temps'), formData);
                 }
             } catch (err) {
                 console.error("Firestore save error:", err);
