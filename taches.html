@@ -212,6 +212,14 @@
         </div>
     </div>
 
+    <!-- Modal Visionneuse Plein Écran pour les Photos -->
+    <div id="photoModal" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 no-print" onclick="closePhotoModal()">
+        <div class="relative max-w-4xl max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
+            <button onclick="closePhotoModal()" class="absolute -top-12 right-0 text-gold hover:text-white font-serif text-2xl px-3 py-1">&times; Fermer</button>
+            <img id="modal-img" src="" class="max-w-full max-h-[85vh] object-contain rounded-2xl border gold-border shadow-2xl" alt="Agrandissement chantier">
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-luxuryBlack py-8 border-t gold-border text-center text-xs text-beigeMuted no-print">
         <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -394,7 +402,7 @@
             input.click();
         }
 
-        // --- FONCTION DE COMPRESSION AUTOMATIQUE DES IMAGES ---
+        // --- COMPRESSION DES IMAGES ---
         function compressImage(file, maxWidth = 800, quality = 0.7) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -404,7 +412,6 @@
                         let width = img.width;
                         let height = img.height;
 
-                        // Redimensionnement proportionnel si l'image dépasse la largeur maximale
                         if (width > maxWidth) {
                             height = Math.round((height * maxWidth) / width);
                             width = maxWidth;
@@ -417,7 +424,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // Exportation au format compressé JPEG
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                         resolve(compressedDataUrl);
                     };
@@ -435,7 +441,6 @@
             if (!task.photos) task.photos = [];
 
             for (let file of files) {
-                // Compression de l'image avant de l'ajouter au tableau pour éviter de saturer Firestore
                 const compressedPhoto = await compressImage(file);
                 task.photos.push(compressedPhoto);
             }
@@ -451,12 +456,52 @@
             }
         }
 
+        // --- SUPPRESSION D'UNE PHOTO ---
+        window.deletePhoto = async function(taskId, photoIndex) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !task.photos) return;
+
+            if (confirm("Voulez-vous supprimer cette photo ?")) {
+                task.photos.splice(photoIndex, 1);
+                renderTasks();
+
+                try {
+                    const taskRef = doc(db, TASKS_COLLECTION, taskId);
+                    await updateDoc(taskRef, { photos: task.photos });
+                } catch (error) {
+                    console.error("Erreur lors de la suppression de la photo : ", error);
+                    alert("Erreur lors de la synchronisation de la suppression.");
+                }
+            }
+        }
+
+        // --- VISIONNEUSE PLEIN ÉCRAN (LIGHTBOX) ---
+        window.openPhotoModal = function(photoUrl) {
+            const modal = document.getElementById('photoModal');
+            const modalImg = document.getElementById('modal-img');
+            modalImg.src = photoUrl;
+            modal.classList.remove('hidden');
+        }
+
+        window.closePhotoModal = function() {
+            const modal = document.getElementById('photoModal');
+            modal.classList.add('hidden');
+        }
+
+        // Écouteur global pour fermer la visionneuse avec la touche Échap (Esc)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePhotoModal();
+                closeRecoveryModal();
+            }
+        });
+
         function updateTotal() {
             const total = tasks.reduce((sum, task) => sum + (parseFloat(task.hours) || 0), 0);
             document.getElementById('total-time').innerText = total.toFixed(2) + ' h';
         }
 
-        // --- FONCTIONS SAUVEGARDE & RÉCUPÉRATION ---
+        // --- SAUVEGARDE & RÉCUPÉRATION ---
         window.saveProjectToFirebase = async function() {
             const address = document.getElementById('project-address').value.trim();
             const date = document.getElementById('project-date').value;
@@ -480,7 +525,7 @@
                 alert("Projet sauvegardé avec succès dans Firebase sous le nom :\n" + projectName);
             } catch (error) {
                 console.error("Erreur lors de la sauvegarde :", error);
-                alert("Erreur lors de la sauvegarde (vérifiez la taille totale des photos du projet).");
+                alert("Erreur lors de la sauvegarde.");
             }
         }
 
@@ -620,7 +665,7 @@
 
                     tasksHtml += `
                         <div class="bg-luxuryCard p-6 rounded-2xl border gold-border shadow-xl space-y-4">
-                            <!-- Ligne principale : Sélection pièce, Titre, Heures et Suppression -->
+                            <!-- Ligne principale -->
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                                 <div class="md:col-span-3">
                                     <label class="block text-[10px] uppercase tracking-wider text-beigeMuted mb-1">Pièce</label>
@@ -778,9 +823,12 @@
                                 </div>
 
                                 <div class="flex flex-wrap gap-3 pt-2">
-                                    ${task.photos && task.photos.length > 0 ? task.photos.map(photo => `
-                                        <div class="relative group">
-                                            <img src="${photo}" class="w-16 h-16 object-cover rounded-xl border gold-border shadow-md" alt="Aperçu chantier">
+                                    ${task.photos && task.photos.length > 0 ? task.photos.map((photo, index) => `
+                                        <div class="relative group inline-block">
+                                            <img src="${photo}" onclick="openPhotoModal('${photo}')" class="w-20 h-20 object-cover rounded-xl border gold-border shadow-md cursor-pointer hover:opacity-80 transition-opacity" title="Cliquer pour agrandir" alt="Aperçu chantier">
+                                            <button onclick="deletePhoto('${task.id}',${index})" title="Supprimer la photo" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-900 border border-red-500 text-white text-xs flex items-center justify-center opacity-90 hover:opacity-100 hover:scale-110 transition-all shadow-lg no-print">
+                                                &times;
+                                            </button>
                                         </div>
                                     `).join('') : '<p class="text-xs text-beigeMuted italic">Aucune photo pour le moment.</p>'}
                                 </div>
