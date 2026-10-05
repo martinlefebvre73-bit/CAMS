@@ -402,8 +402,8 @@
             input.click();
         }
 
-        // --- COMPRESSION DES IMAGES ---
-        function compressImage(file, maxWidth = 800, quality = 0.7) {
+        // --- COMPRESSION ACCRUE DES IMAGES (Max 600px, Qualité 50%) ---
+        function compressImage(file, maxWidth = 600, quality = 0.5) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -488,7 +488,6 @@
             modal.classList.add('hidden');
         }
 
-        // Écouteur global pour fermer la visionneuse avec la touche Échap (Esc)
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closePhotoModal();
