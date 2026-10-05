@@ -205,14 +205,16 @@
 
     <!-- Internal Tools Section -->
     <section id="internal-tools" class="py-24 bg-luxuryCard border-t border-b gold-border relative">
-        <div class="max-w-5xl mx-auto px-6">
+        <div class="max-w-7xl mx-auto px-6">
             <div class="text-center max-w-3xl mx-auto mb-16">
                 <span class="text-gold text-xs tracking-[0.3em] uppercase font-semibold">Workspace Collaborateur</span>
                 <h2 class="font-serif text-3xl sm:text-4xl font-bold mt-3 mb-4">Outils Internes & Chiffrage</h2>
                 <p class="text-beigeMuted font-light">Espace dédié aux équipes commerciales, techniques et administratives pour établir et simuler les projets clients.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <!-- Grille d'outils à 3 éléments (Estimation, Projet/Tâches, Documentation) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+                <!-- Outil 1 : Estimation -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -220,7 +222,7 @@
                         </div>
                         <h3 class="font-serif text-2xl font-bold mb-3 text-gold-light">Outil d'Estimation Interne</h3>
                         <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Utilisez le simulateur de devis et d'estimation pour préparer rapidement les propositions budgétaires lors de vos rendez-vous clients ou de l'analyse préliminaire des dossiers.
+                            Utilisez le simulateur de devis et d'estimation pour préparer rapidement les propositions budgétaires lors de vos rendez-vous clients.
                         </p>
                     </div>
                     <div>
@@ -231,6 +233,26 @@
                     </div>
                 </div>
 
+                <!-- Outil 2 : Projet / Tâches (AJOUTÉ) -->
+                <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
+                    <div>
+                        <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2m-6 9l2 2 4-4"></path></svg>
+                        </div>
+                        <h3 class="font-serif text-2xl font-bold mb-3 text-gold-light">Gestion de Projet & Tâches</h3>
+                        <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
+                            Gérez les chantiers pièce par pièce, évaluez les temps d'intervention, suivez les corps de métiers et synchronisez vos données en temps réel.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="taches.html" class="inline-flex items-center justify-center w-full px-6 py-4 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
+                            <span>Ouvrir Projet</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Outil 3 : Documentation & Procédures -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -238,24 +260,21 @@
                         </div>
                         <h3 class="font-serif text-2xl font-bold mb-3 text-gold-light">Documentation & Procédures</h3>
                         <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Accédez aux grilles tarifaires internes, aux chartes de qualité pour la rénovation, ainsi qu'aux modèles de contrats et fiches de suivi de chantier standardisés par la direction.
+                            Accédez aux grilles tarifaires internes, aux chartes de qualité et aux rapports d'activités standardisés par la direction.
                         </p>
                     </div>
                     <div class="relative">
-                        <!-- Conteneur avec position relative pour gérer le menu secondaire au clic -->
                         <div class="relative inline-block w-full">
                             <button id="consultDocsBtn" onclick="toggleDocMenu(event)" class="w-full px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-between">
                                 <span>Consulter les documents</span>
                                 <svg class="w-4 h-4 transition-transform duration-200" id="chevronIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
 
-                            <!-- Menu secondaire (déroulant) masqué par défaut -->
                             <div id="docMenu" class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2 space-y-1">
                                 <a href="inspection.html" class="flex items-center px-5 py-3 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
                                     <span class="w-1.5 h-1.5 rounded-full bg-gold mr-3"></span>
                                     <span>Inspection avant/après appartement</span>
                                 </a>
-                                <!-- Ajout du formulaire Déclarations heures ouvrant rapport_activités -->
                                 <a href="rapport_activites.html" class="flex items-center px-5 py-3 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
                                     <span class="w-1.5 h-1.5 rounded-full bg-gold mr-3"></span>
                                     <span>Déclarations heures</span>
@@ -283,7 +302,6 @@
                 </a>
             </div>
 
-            <!-- Coordonnées bas de page -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 pt-16 border-t gold-border text-left">
                 <div>
                     <h4 class="font-serif text-gold font-bold mb-2 uppercase text-sm tracking-wider">Siège & Bureau Régional</h4>
@@ -323,7 +341,6 @@
             chevron.classList.toggle('rotate-180');
         }
 
-        // Fermer le menu si l'utilisateur clique en dehors
         window.addEventListener('click', function() {
             const menu = document.getElementById('docMenu');
             const chevron = document.getElementById('chevronIcon');
