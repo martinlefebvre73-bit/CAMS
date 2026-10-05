@@ -197,7 +197,13 @@
                 <h3 class="font-serif text-xl font-bold text-gold">Récupérer un projet sauvegardé</h3>
                 <button onclick="closeRecoveryModal()" class="text-beigeMuted hover:text-gold text-lg">&times;</button>
             </div>
-            <div id="saved-projects-list" class="space-y-3 max-h-64 overflow-y-auto pr-2">
+            
+            <!-- Champ de recherche par nom ou date -->
+            <div>
+                <input type="text" id="recovery-search-input" oninput="filterSavedProjects()" placeholder="🔍 Rechercher par nom, adresse ou date..." class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-xs focus:outline-none focus:border-gold transition-colors">
+            </div>
+
+            <div id="saved-projects-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
                 <p class="text-xs text-beigeMuted text-center py-4">Chargement des projets...</p>
             </div>
             <div class="flex justify-end pt-2">
@@ -249,6 +255,7 @@
         ];
 
         let tasks = [];
+        let allSavedProjectsCache = []; // Cache pour la recherche instantanée
 
         async function loadProjectMeta() {
             try {
@@ -417,11 +424,16 @@
 
         // --- FONCTIONS SAUVEGARDE & RÉCUPÉRATION ---
         window.saveProjectToFirebase = async function() {
-            const projectName = prompt("Nommez cette sauvegarde de projet :", "Projet " + new Date().toLocaleDateString());
-            if (!projectName) return;
-
-            const address = document.getElementById('project-address').value;
+            const address = document.getElementById('project-address').value.trim();
             const date = document.getElementById('project-date').value;
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // Nom automatique basé sur le champ projet (adresse) suivi de la date du jour
+            const baseProjectName = address !== "" ? address : "Projet sans adresse";
+            const automaticProjectName = `${baseProjectName} - ${todayStr}`;
+
+            const projectName = prompt("Confirmer ou modifier le nom de cette sauvegarde :", automaticProjectName);
+            if (!projectName) return;
 
             try {
                 const projectData = {
@@ -432,7 +444,7 @@
                     updatedAt: Date.now()
                 };
                 await addDoc(collection(db, SAVED_PROJECTS_COLLECTION), projectData);
-                alert("Projet sauvegardé avec succès dans Firebase !");
+                alert("Projet sauvegardé avec succès dans Firebase sous le nom :\n" + projectName);
             } catch (error) {
                 console.error("Erreur lors de la sauvegarde :", error);
                 alert("Erreur lors de la sauvegarde.");
@@ -441,37 +453,63 @@
 
         window.openRecoveryModal = async function() {
             const modal = document.getElementById('recoveryModal');
-            const listContainer = document.getElementById('saved-projects-list');
+            const searchInput = document.getElementById('recovery-search-input');
+            searchInput.value = ''; // Réinitialiser le champ de recherche
             modal.classList.remove('hidden');
+            
+            const listContainer = document.getElementById('saved-projects-list');
             listContainer.innerHTML = '<p class="text-xs text-beigeMuted text-center py-4">Chargement...</p>';
 
             try {
                 const querySnapshot = await getDocs(collection(db, SAVED_PROJECTS_COLLECTION));
-                if (querySnapshot.empty) {
-                    listContainer.innerHTML = '<p class="text-xs text-beigeMuted text-center py-4">Aucune sauvegarde trouvée.</p>';
-                    return;
-                }
-
-                let html = '';
+                allSavedProjectsCache = [];
                 querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    html += `
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-luxuryBlack border gold-border">
-                            <div>
-                                <h4 class="text-xs font-bold text-gold">${data.name || 'Sans nom'}</h4>
-                                <p class="text-[10px] text-beigeMuted">Adresse : ${data.address || 'Non spécifiée'} | Date : ${data.date || 'N/A'}</p>
-                            </div>
-                            <button onclick="loadSavedProject('${docSnap.id}')" class="px-3 py-1.5 rounded-lg bg-gold text-luxuryBlack font-bold text-[10px] uppercase tracking-wider hover:bg-goldLight transition-all">
-                                Charger
-                            </button>
-                        </div>
-                    `;
+                    allSavedProjectsCache.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
                 });
-                listContainer.innerHTML = html;
+
+                renderProjectsList(allSavedProjectsCache);
             } catch (error) {
                 console.error("Erreur récupération liste :", error);
                 listContainer.innerHTML = '<p class="text-xs text-red-400 text-center py-4">Erreur de chargement.</p>';
             }
+        }
+
+        window.filterSavedProjects = function() {
+            const query = document.getElementById('recovery-search-input').value.toLowerCase().trim();
+            const filtered = allSavedProjectsCache.filter(p => {
+                const name = (p.name || '').toLowerCase();
+                const address = (p.address || '').toLowerCase();
+                const date = (p.date || '').toLowerCase();
+                return name.includes(query) || address.includes(query) || date.includes(query);
+            });
+            renderProjectsList(filtered);
+        }
+
+        function renderProjectsList(projects) {
+            const listContainer = document.getElementById('saved-projects-list');
+            if (projects.length === 0) {
+                listContainer.innerHTML = '<p class="text-xs text-beigeMuted text-center py-4">Aucune sauvegarde trouvée.</p>';
+                return;
+            }
+
+            let html = '';
+            projects.forEach((proj) => {
+                html += `
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-luxuryBlack border gold-border">
+                        <div>
+                            <h4 class="text-xs font-bold text-gold">${proj.name || 'Sans nom'}</h4>
+                            <p class="text-[10px] text-beigeMuted">Adresse : ${proj.address || 'Non spécifiée'} | Date : ${proj.date || 'N/A'}</p>
+                        </div>
+                        <button onclick="loadSavedProject('${proj.id}')" class="px-3 py-1.5 rounded-lg bg-gold text-luxuryBlack font-bold text-[10px] uppercase tracking-wider hover:bg-goldLight transition-all">
+                            Charger
+                        </button>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
         }
 
         window.closeRecoveryModal = function() {
@@ -489,8 +527,6 @@
                     document.getElementById('project-date').value = data.date || '';
                     updateProjectMeta();
 
-                    // Remplacer les tâches actives dans la collection principale 'taches'
-                    // Pour simplifier l'exemple, on remplace le tableau local et on recrée les docs
                     const currentTasksSnapshot = await getDocs(collection(db, TASKS_COLLECTION));
                     for (let d of currentTasksSnapshot.docs) {
                         await deleteDoc(doc(db, TASKS_COLLECTION, d.id));
@@ -499,7 +535,7 @@
                     tasks = [];
                     if (data.tasks && Array.isArray(data.tasks)) {
                         for (let t of data.tasks) {
-                            delete t.id; // Retirer l'ancien ID pour en générer un nouveau
+                            delete t.id;
                             const newDocRef = await addDoc(collection(db, TASKS_COLLECTION), t);
                             tasks.push({ id: newDocRef.id, ...t });
                         }
@@ -528,7 +564,6 @@
                 return;
             }
 
-            // Regroupement des tâches par pièce
             const groupedByRoom = {};
             tasks.forEach(task => {
                 const roomName = task.room || "Autre pièce";
@@ -538,7 +573,6 @@
                 groupedByRoom[roomName].push(task);
             });
 
-            // Affichage par section de pièce
             for (const [room, roomTasks] of Object.entries(groupedByRoom)) {
                 const roomSection = document.createElement('div');
                 roomSection.className = 'bg-luxuryCard/60 p-6 rounded-3xl border gold-border space-y-6 shadow-2xl';
@@ -546,9 +580,10 @@
                 let tasksHtml = '';
                 roomTasks.forEach(task => {
                     const showReparationPeinture = task.elec_ajout_circuit || task.elec_retrait_circuit;
-
-                    // Options de la liste déroulante des pièces pour chaque carte de tâche
                     const roomOptions = AVAILABLE_ROOMS.map(r => `<option value="${r}" ${task.room === r ? 'selected' : ''}>${r}</option>`).join('');
+
+                    const hasDetails = task.details && task.details.trim().length > 0;
+                    const hasPhotos = task.photos && task.photos.length > 0;
 
                     tasksHtml += `
                         <div class="bg-luxuryCard p-6 rounded-2xl border gold-border shadow-xl space-y-4">
@@ -693,12 +728,12 @@
                             </div>
 
                             <!-- Section Détails -->
-                            <div id="details-${task.id}" class="hidden pt-2">
+                            <div id="details-${task.id}" class="pt-2 ${hasDetails ? '' : 'hidden'}">
                                 <textarea class="w-full bg-luxuryBlack border gold-border rounded-xl p-4 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors resize-vertical min-h-[80px]" placeholder="Précisions sur les matériaux, contraintes ou étapes d'exécution..." oninput="updateTaskField('${task.id}', 'details', this.value)">${task.details || ''}</textarea>
                             </div>
 
                             <!-- Section Photos -->
-                            <div id="photos-${task.id}" class="hidden pt-2 space-y-4">
+                            <div id="photos-${task.id}" class="pt-2 space-y-4 ${hasPhotos ? '' : 'hidden'}">
                                 <div class="flex flex-wrap gap-3 items-center no-print">
                                     <button onclick="triggerFileSelect('${task.id}', true)" class="px-4 py-2.5 rounded-xl bg-gold/10 border gold-border text-gold text-xs tracking-wider uppercase hover:bg-gold hover:text-luxuryBlack transition-all">
                                         📸 Prendre une photo
@@ -721,7 +756,6 @@
                     `;
                 });
 
-                // En-tête de la pièce avec son bouton d'ajout de tâche spécifique
                 roomSection.innerHTML = `
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b gold-border pb-4">
                         <div class="flex items-center space-x-3">
