@@ -138,7 +138,7 @@
             <p class="text-beigeMuted text-sm font-light">Organisez et suivez l'évaluation du temps et des corps de métiers pièce par pièce avec synchronisation Firestore.</p>
         </div>
 
-        <!-- Barre de Contrôle Avancée (Sauvegarde, Récupération, Impression) -->
+        <!-- Barre de Contrôle Avancée (Sauvegarde, Récupération, Réinitialisation, Impression) -->
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8 bg-luxuryCard p-4 rounded-2xl border gold-border no-print">
             <div class="flex flex-wrap gap-3 items-center">
                 <button onclick="saveProjectToFirebase()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-wider uppercase shadow-md hover:scale-105 transition-all">
@@ -146,6 +146,9 @@
                 </button>
                 <button onclick="openRecoveryModal()" class="px-5 py-2.5 rounded-xl bg-luxuryBlack border gold-border text-gold font-bold text-xs tracking-wider uppercase hover:bg-gold/10 transition-colors">
                     📂 Récupération
+                </button>
+                <button onclick="resetCurrentProject()" class="px-5 py-2.5 rounded-xl bg-red-950/40 border border-red-800/50 text-red-400 font-bold text-xs tracking-wider uppercase hover:bg-red-900/50 transition-colors">
+                    🔄 Réinitialiser
                 </button>
             </div>
             <div>
@@ -402,7 +405,7 @@
             input.click();
         }
 
-        // --- COMPRESSION ACCRUE DES IMAGES (Max 600px, Qualité 50%) ---
+        // --- COMPRESSION DES IMAGES ---
         function compressImage(file, maxWidth = 600, quality = 0.5) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -456,7 +459,6 @@
             }
         }
 
-        // --- SUPPRESSION D'UNE PHOTO ---
         window.deletePhoto = async function(taskId, photoIndex) {
             const task = tasks.find(t => t.id === taskId);
             if (!task || !task.photos) return;
@@ -498,6 +500,32 @@
         function updateTotal() {
             const total = tasks.reduce((sum, task) => sum + (parseFloat(task.hours) || 0), 0);
             document.getElementById('total-time').innerText = total.toFixed(2) + ' h';
+        }
+
+        // --- RÉINITIALISATION DU FORMULAIRE ET DES TÂCHES ---
+        window.resetCurrentProject = async function() {
+            if (!confirm("Attention : cela va vider l'adresse, la date et effacer toutes les tâches de l'espace actuel. Continuer ?")) return;
+
+            try {
+                // Vider les métadonnées dans Firestore
+                document.getElementById('project-address').value = '';
+                document.getElementById('project-date').value = '';
+                await setDoc(META_DOC_REF, { address: '', date: '' }, { merge: true });
+
+                // Supprimer toutes les tâches de la collection Firestore active
+                const currentTasksSnapshot = await getDocs(collection(db, TASKS_COLLECTION));
+                for (let d of currentTasksSnapshot.docs) {
+                    await deleteDoc(doc(db, TASKS_COLLECTION, d.id));
+                }
+
+                tasks = [];
+                renderTasks();
+                updateTotal();
+                alert("Le projet a été réinitialisé avec succès.");
+            } catch (error) {
+                console.error("Erreur lors de la réinitialisation :", error);
+                alert("Erreur lors de la réinitialisation.");
+            }
         }
 
         // --- SAUVEGARDE & RÉCUPÉRATION ---
