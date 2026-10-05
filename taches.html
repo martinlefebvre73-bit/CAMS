@@ -67,12 +67,47 @@
             filter: invert(1) sepia(1) saturate(500%) hue-rotate(5deg);
             cursor: pointer;
         }
+
+        /* Configuration d'impression Portrait 8.5 x 11 pouces */
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 10mm;
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+            header, footer, .no-print {
+                display: none !important;
+            }
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            .bg-luxuryCard, .bg-luxuryBlack, .bg-luxuryCard\/60 {
+                background-color: #ffffff !important;
+                border: 1px solid #cccccc !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+            }
+            .text-beigeSoft, .text-beigeMuted, .text-gold, .text-gold-light {
+                color: #000000 !important;
+            }
+            input, textarea, select {
+                background: transparent !important;
+                border: none !important;
+                color: #000000 !important;
+                padding: 0 !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-luxuryBlack text-beigeSoft font-sans antialiased selection:bg-gold selection:text-luxuryBlack min-h-screen flex flex-col justify-between">
 
     <!-- Header / Navigation -->
-    <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
+    <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300 no-print">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="index.html" class="flex items-center space-x-3 group">
                 <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
@@ -103,6 +138,23 @@
             <p class="text-beigeMuted text-sm font-light">Organisez et suivez l'évaluation du temps et des corps de métiers pièce par pièce avec synchronisation Firestore.</p>
         </div>
 
+        <!-- Barre de Contrôle Avancée (Sauvegarde, Récupération, Impression) -->
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8 bg-luxuryCard p-4 rounded-2xl border gold-border no-print">
+            <div class="flex flex-wrap gap-3 items-center">
+                <button onclick="saveProjectToFirebase()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-wider uppercase shadow-md hover:scale-105 transition-all">
+                    💾 Sauvegarde
+                </button>
+                <button onclick="openRecoveryModal()" class="px-5 py-2.5 rounded-xl bg-luxuryBlack border gold-border text-gold font-bold text-xs tracking-wider uppercase hover:bg-gold/10 transition-colors">
+                    📂 Récupération
+                </button>
+            </div>
+            <div>
+                <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-luxuryBlack border gold-border text-beigeSoft font-bold text-xs tracking-wider uppercase hover:bg-gold/10 transition-colors flex items-center space-x-2">
+                    <span>🖨️ Imprimer (Portrait)</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Section Informations du Projet -->
         <div class="bg-luxuryCard p-6 rounded-2xl mb-8 border gold-border shadow-xl">
             <span class="text-xs uppercase tracking-widest text-gold font-semibold block mb-4">Informations du Chantier</span>
@@ -119,7 +171,7 @@
         </div>
 
         <!-- Barre d'actions supérieure globale -->
-        <div class="flex justify-between items-center mb-8 bg-luxuryCard p-4 rounded-2xl border gold-border">
+        <div class="flex justify-between items-center mb-8 bg-luxuryCard p-4 rounded-2xl border gold-border no-print">
             <span class="text-xs uppercase tracking-widest text-gold font-semibold">Structure du Chantier</span>
             <button onclick="addNewTask()" class="px-6 py-3 rounded-full bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-105 transition-all">
                 + Ajouter une tâche
@@ -138,8 +190,24 @@
         </div>
     </main>
 
+    <!-- Modal de Récupération de Projet -->
+    <div id="recoveryModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+        <div class="bg-luxuryCard border gold-border rounded-2xl p-6 max-w-lg w-full space-y-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b gold-border pb-4">
+                <h3 class="font-serif text-xl font-bold text-gold">Récupérer un projet sauvegardé</h3>
+                <button onclick="closeRecoveryModal()" class="text-beigeMuted hover:text-gold text-lg">&times;</button>
+            </div>
+            <div id="saved-projects-list" class="space-y-3 max-h-64 overflow-y-auto pr-2">
+                <p class="text-xs text-beigeMuted text-center py-4">Chargement des projets...</p>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeRecoveryModal()" class="px-5 py-2 rounded-xl bg-luxuryBlack border gold-border text-xs text-beigeSoft uppercase tracking-wider">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="bg-luxuryBlack py-8 border-t gold-border text-center text-xs text-beigeMuted">
+    <footer class="bg-luxuryBlack py-8 border-t gold-border text-center text-xs text-beigeMuted no-print">
         <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p>&copy; 2026 C.A.M.S. Espace Interne Réservé au Personnel.</p>
             <div class="flex space-x-6 text-xs uppercase tracking-widest">
@@ -166,6 +234,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const TASKS_COLLECTION = "taches";
+        const SAVED_PROJECTS_COLLECTION = "projets_sauvegardes";
         const META_DOC_REF = doc(db, "projet_meta", "details");
 
         const AVAILABLE_ROOMS = [
@@ -346,6 +415,107 @@
             document.getElementById('total-time').innerText = total.toFixed(2) + ' h';
         }
 
+        // --- FONCTIONS SAUVEGARDE & RÉCUPÉRATION ---
+        window.saveProjectToFirebase = async function() {
+            const projectName = prompt("Nommez cette sauvegarde de projet :", "Projet " + new Date().toLocaleDateString());
+            if (!projectName) return;
+
+            const address = document.getElementById('project-address').value;
+            const date = document.getElementById('project-date').value;
+
+            try {
+                const projectData = {
+                    name: projectName,
+                    address: address,
+                    date: date,
+                    tasks: tasks,
+                    updatedAt: Date.now()
+                };
+                await addDoc(collection(db, SAVED_PROJECTS_COLLECTION), projectData);
+                alert("Projet sauvegardé avec succès dans Firebase !");
+            } catch (error) {
+                console.error("Erreur lors de la sauvegarde :", error);
+                alert("Erreur lors de la sauvegarde.");
+            }
+        }
+
+        window.openRecoveryModal = async function() {
+            const modal = document.getElementById('recoveryModal');
+            const listContainer = document.getElementById('saved-projects-list');
+            modal.classList.remove('hidden');
+            listContainer.innerHTML = '<p class="text-xs text-beigeMuted text-center py-4">Chargement...</p>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, SAVED_PROJECTS_COLLECTION));
+                if (querySnapshot.empty) {
+                    listContainer.innerHTML = '<p class="text-xs text-beigeMuted text-center py-4">Aucune sauvegarde trouvée.</p>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    html += `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-luxuryBlack border gold-border">
+                            <div>
+                                <h4 class="text-xs font-bold text-gold">${data.name || 'Sans nom'}</h4>
+                                <p class="text-[10px] text-beigeMuted">Adresse : ${data.address || 'Non spécifiée'} | Date : ${data.date || 'N/A'}</p>
+                            </div>
+                            <button onclick="loadSavedProject('${docSnap.id}')" class="px-3 py-1.5 rounded-lg bg-gold text-luxuryBlack font-bold text-[10px] uppercase tracking-wider hover:bg-goldLight transition-all">
+                                Charger
+                            </button>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            } catch (error) {
+                console.error("Erreur récupération liste :", error);
+                listContainer.innerHTML = '<p class="text-xs text-red-400 text-center py-4">Erreur de chargement.</p>';
+            }
+        }
+
+        window.closeRecoveryModal = function() {
+            document.getElementById('recoveryModal').classList.add('hidden');
+        }
+
+        window.loadSavedProject = async function(savedDocId) {
+            if (!confirm("Charger ce projet va remplacer les tâches actuelles affichées. Continuer ?")) return;
+
+            try {
+                const docSnap = await getDoc(doc(db, SAVED_PROJECTS_COLLECTION, savedDocId));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('project-address').value = data.address || '';
+                    document.getElementById('project-date').value = data.date || '';
+                    updateProjectMeta();
+
+                    // Remplacer les tâches actives dans la collection principale 'taches'
+                    // Pour simplifier l'exemple, on remplace le tableau local et on recrée les docs
+                    const currentTasksSnapshot = await getDocs(collection(db, TASKS_COLLECTION));
+                    for (let d of currentTasksSnapshot.docs) {
+                        await deleteDoc(doc(db, TASKS_COLLECTION, d.id));
+                    }
+
+                    tasks = [];
+                    if (data.tasks && Array.isArray(data.tasks)) {
+                        for (let t of data.tasks) {
+                            delete t.id; // Retirer l'ancien ID pour en générer un nouveau
+                            const newDocRef = await addDoc(collection(db, TASKS_COLLECTION), t);
+                            tasks.push({ id: newDocRef.id, ...t });
+                        }
+                    }
+
+                    renderTasks();
+                    updateTotal();
+                    closeRecoveryModal();
+                    alert("Projet chargé avec succès !");
+                }
+            } catch (error) {
+                console.error("Erreur chargement projet :", error);
+                alert("Erreur lors du chargement du projet.");
+            }
+        }
+
         function renderTasks() {
             const container = document.getElementById('tasks-container');
             container.innerHTML = '';
@@ -401,7 +571,7 @@
                                         <span class="text-xs uppercase tracking-widest text-gold">h</span>
                                     </div>
                                 </div>
-                                <div class="md:col-span-2 flex items-end justify-end h-full pt-4 md:pt-0">
+                                <div class="md:col-span-2 flex items-end justify-end h-full pt-4 md:pt-0 no-print">
                                     <button onclick="deleteTask('${task.id}')" class="w-full px-4 py-3 rounded-xl bg-red-950/40 border border-red-800/50 text-red-400 text-xs tracking-wider uppercase hover:bg-red-900/50 transition-colors text-center">Suppr.</button>
                                 </div>
                             </div>
@@ -513,7 +683,7 @@
                             </div>
 
                             <!-- Boutons pour basculer vers Détails ou Photos -->
-                            <div class="flex flex-wrap gap-3 pt-2 border-t gold-border">
+                            <div class="flex flex-wrap gap-3 pt-2 border-t gold-border no-print">
                                 <button onclick="toggleSection('${task.id}', 'details')" class="px-4 py-2 rounded-xl bg-luxuryBlack border gold-border text-gold text-xs tracking-wider uppercase hover:bg-gold/10 transition-colors flex items-center space-x-2">
                                     <span>📝 Détails</span>
                                 </button>
@@ -529,7 +699,7 @@
 
                             <!-- Section Photos -->
                             <div id="photos-${task.id}" class="hidden pt-2 space-y-4">
-                                <div class="flex flex-wrap gap-3 items-center">
+                                <div class="flex flex-wrap gap-3 items-center no-print">
                                     <button onclick="triggerFileSelect('${task.id}', true)" class="px-4 py-2.5 rounded-xl bg-gold/10 border gold-border text-gold text-xs tracking-wider uppercase hover:bg-gold hover:text-luxuryBlack transition-all">
                                         📸 Prendre une photo
                                     </button>
@@ -559,7 +729,7 @@
                             <h2 class="font-serif text-xl font-bold text-gold-light tracking-wide">${room}</h2>
                             <span class="text-xs px-2.5 py-1 rounded-full bg-gold/10 border gold-border text-gold">${roomTasks.length} tâche(s)</span>
                         </div>
-                        <button onclick="addNewTask('${room}')" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs tracking-wider uppercase hover:bg-gold hover:text-luxuryBlack transition-all">
+                        <button onclick="addNewTask('${room}')" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs tracking-wider uppercase hover:bg-gold hover:text-luxuryBlack transition-all no-print">
                             + Ajouter une tâche pour cette pièce
                         </button>
                     </div>
