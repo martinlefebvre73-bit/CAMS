@@ -507,12 +507,10 @@
             if (!confirm("Attention : cela va vider l'adresse, la date et effacer toutes les tâches de l'espace actuel. Continuer ?")) return;
 
             try {
-                // Vider les métadonnées dans Firestore
                 document.getElementById('project-address').value = '';
                 document.getElementById('project-date').value = '';
                 await setDoc(META_DOC_REF, { address: '', date: '' }, { merge: true });
 
-                // Supprimer toutes les tâches de la collection Firestore active
                 const currentTasksSnapshot = await getDocs(collection(db, TASKS_COLLECTION));
                 for (let d of currentTasksSnapshot.docs) {
                     await deleteDoc(doc(db, TASKS_COLLECTION, d.id));
@@ -528,7 +526,7 @@
             }
         }
 
-        // --- SAUVEGARDE & RÉCUPÉRATION ---
+        // --- SAUVEGARDE & VÉRIFICATION DU NOM UNIQUE ---
         window.saveProjectToFirebase = async function() {
             const address = document.getElementById('project-address').value.trim();
             const date = document.getElementById('project-date').value;
@@ -541,6 +539,17 @@
             if (!projectName) return;
 
             try {
+                // Vérifier si un formulaire avec le même nom existe déjà dans Firestore
+                const querySnapshot = await getDocs(collection(db, SAVED_PROJECTS_COLLECTION));
+                let existingDocId = null;
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (data.name && data.name.trim().toLowerCase() === projectName.trim().toLowerCase()) {
+                        existingDocId = docSnap.id;
+                    }
+                });
+
                 const projectData = {
                     name: projectName,
                     address: address,
@@ -548,8 +557,22 @@
                     tasks: tasks,
                     updatedAt: Date.now()
                 };
-                await addDoc(collection(db, SAVED_PROJECTS_COLLECTION), projectData);
-                alert("Projet sauvegardé avec succès dans Firebase sous le nom :\n" + projectName);
+
+                if (existingDocId) {
+                    // Si le nom existe déjà, demander confirmation pour remplacer
+                    const replaceConfirm = confirm(`Un formulaire portant le nom "${projectName}" existe déjà.\n\nVoulez-vous remplacer le formulaire existant ?`);
+                    if (!replaceConfirm) {
+                        return; // Annuler si l'utilisateur refuse de remplacer
+                    }
+
+                    // Mettre à jour le document existant
+                    await updateDoc(doc(db, SAVED_PROJECTS_COLLECTION, existingDocId), projectData);
+                    alert("Formulaire existant mis à jour et remplacé avec succès !");
+                } else {
+                    // Sinon, créer un nouveau document
+                    await addDoc(collection(db, SAVED_PROJECTS_COLLECTION), projectData);
+                    alert("Projet sauvegardé avec succès dans Firebase sous le nom :\n" + projectName);
+                }
             } catch (error) {
                 console.error("Erreur lors de la sauvegarde :", error);
                 alert("Erreur lors de la sauvegarde.");
