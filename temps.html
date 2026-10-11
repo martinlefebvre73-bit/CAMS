@@ -355,7 +355,6 @@
 
         function parseHours(timeStr) {
             if (!timeStr) return null;
-            // Nettoyer la chaîne (ex: "08h30" -> "08:30", "8h" -> "08:00")
             let cleaned = timeStr.toLowerCase().replace(/h/g, ':').replace(/\s+/g, '');
             if (!cleaned.includes(':')) {
                 cleaned += ':00';
@@ -372,8 +371,6 @@
             const horaireVal = inputElement.value.trim();
             const travailInput = row.querySelector('.row-travail');
 
-            // Recherche de plages horaires (ex: 08h-16h30 ou 8:00 à 16:30)
-            // Gère aussi plusieurs plages séparées par "et" ou "+"
             const regex = /(\d{1,2}[h:]?\d{0,2})\s*(?:à|-)\s*(\d{1,2}[h:]?\d{0,2})/gi;
             let match;
             let totalHours = 0;
@@ -384,7 +381,7 @@
                 const end = parseHours(match[2]);
                 if (start !== null && end !== null) {
                     let diff = end - start;
-                    if (diff < 0) diff += 24; // Gérer le dépassement de minuit si besoin
+                    if (diff < 0) diff += 24;
                     totalHours += diff;
                     found = true;
                 }
@@ -507,6 +504,7 @@
 
         window.addEventListener('DOMContentLoaded', () => { addRow(); addSupplyRow(); });
 
+        // GÉNÉRATION DU PDF AVEC LE THÈME SOMBRE ET DORÉ DE C.A.M.S.
         function generatePDF() {
             const nomProjet = document.getElementById('nomProjet').value;
             if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
@@ -516,22 +514,38 @@
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
 
-            doc.setFillColor(15, 15, 15); doc.rect(0, 0, 210, 40, 'F');
-            doc.setTextColor(212, 175, 55); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("C.A.M.S.", 20, 22);
-            doc.setFontSize(10); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 20, 30);
+            // Fond global de la page PDF en Noir Profond (#050505)
+            doc.setFillColor(5, 5, 5);
+            doc.rect(0, 0, 210, 297, 'F');
 
-            doc.setTextColor(40, 40, 40); doc.setFontSize(11);
-            doc.text(`Projet : ${nomProjet}`, 20, 55);
-            doc.text(`Prestataire : ${prestataire}`, 20, 63);
-            doc.text(`Date de remise : ${dateRemise}`, 20, 71);
+            // En-tête du document
+            doc.setFillColor(15, 15, 15); // Fond de carte (#0f0f0f)
+            doc.rect(15, 15, 180, 25, 'F');
+            doc.setDrawColor(212, 175, 55); // Bordure dorée (#d4af37)
+            doc.setLineWidth(0.5);
+            doc.rect(15, 15, 180, 25, 'S');
 
-            let y = 85;
-            doc.setFont("Helvetica", "bold"); doc.setTextColor(170, 140, 44); doc.text("1. Activités & Temps", 20, y); y += 6;
-            doc.setFillColor(240, 240, 240); doc.rect(20, y, 170, 8, 'F');
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(40, 40, 40);
-            doc.text("Date", 23, y + 6); doc.text("Description", 55, y + 6); doc.text("Horaire", 125, y + 6); doc.text("Travail", 150, y + 6); doc.text("Transp.", 175, y + 6);
+            doc.setTextColor(212, 175, 55); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("C.A.M.S.", 22, 28);
+            doc.setFontSize(9); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 22, 35);
 
-            y += 12; doc.setFont("Helvetica", "normal");
+            // Informations du projet
+            doc.setTextColor(245, 245, 220); doc.setFontSize(10); doc.setFont("Helvetica", "normal");
+            doc.text(`Projet : ${nomProjet}`, 20, 52);
+            doc.text(`Prestataire : ${prestataire}`, 20, 60);
+            doc.text(`Date de remise : ${dateRemise}`, 20, 68);
+
+            let y = 80;
+
+            // Section 1 : Activités & Temps
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("1. Activités & Temps", 20, y); y += 6;
+            
+            // En-tête du tableau d'activités
+            doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
+            doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
+            doc.text("Date", 23, y + 5.5); doc.text("Description", 55, y + 5.5); doc.text("Horaire", 125, y + 5.5); doc.text("Travail", 150, y + 5.5); doc.text("Transp.", 172, y + 5.5);
+
+            y += 10; doc.setFont("Helvetica", "normal"); doc.setTextColor(245, 245, 220);
             let totalTravail = 0, totalTransport = 0;
             document.querySelectorAll('.activity-row').forEach((row) => {
                 const date = row.querySelector('.row-date').value;
@@ -541,18 +555,21 @@
                 const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
                 totalTravail += travail; totalTransport += transport;
 
-                if (y > 260) { doc.addPage(); y = 20; }
-                doc.text(date, 23, y); doc.text(desc.substring(0, 35), 55, y); doc.text(horaire, 125, y); doc.text(travail.toFixed(2) + "h", 150, y); doc.text(transport.toFixed(2) + "h", 175, y);
-                y += 8; doc.setDrawColor(220, 220, 220); doc.line(20, y - 2, 190, y - 2); y += 4;
+                if (y > 260) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+                doc.text(date, 23, y); doc.text(desc.substring(0, 35), 55, y); doc.text(horaire, 125, y); doc.text(travail.toFixed(2) + "h", 150, y); doc.text(transport.toFixed(2) + "h", 172, y);
+                y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
             });
 
-            y += 10; if (y > 230) { doc.addPage(); y = 20; }
-            doc.setFont("Helvetica", "bold"); doc.setTextColor(170, 140, 44); doc.text("2. Achats de Fournitures", 20, y); y += 6;
-            doc.setFillColor(240, 240, 240); doc.rect(20, y, 170, 8, 'F');
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(40, 40, 40);
-            doc.text("Date", 23, y + 6); doc.text("Description de la fourniture", 55, y + 6); doc.text("Montant ($)", 155, y + 6);
+            // Section 2 : Achats de Fournitures
+            y += 8; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("2. Achats de Fournitures", 20, y); y += 6;
+            
+            doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
+            doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
+            doc.text("Date", 23, y + 5.5); doc.text("Description de la fourniture", 55, y + 5.5); doc.text("Montant ($)", 155, y + 5.5);
 
-            y += 12; doc.setFont("Helvetica", "normal");
+            y += 10; doc.setFont("Helvetica", "normal"); doc.setTextColor(245, 245, 220);
             let totalAchats = 0;
             document.querySelectorAll('.supply-row').forEach((row) => {
                 const date = row.querySelector('.supply-date').value;
@@ -560,22 +577,26 @@
                 const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
                 totalAchats += montant;
 
-                if (y > 260) { doc.addPage(); y = 20; }
+                if (y > 260) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
                 doc.text(date, 23, y); doc.text(desc.substring(0, 50), 55, y); doc.text(montant.toFixed(2) + " $", 155, y);
-                y += 8; doc.setDrawColor(220, 220, 220); doc.line(20, y - 2, 190, y - 2); y += 4;
+                y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
             });
 
+            // Pièces jointes
             if (window.compressedFiles && window.compressedFiles.length > 0) {
-                y += 10; if (y > 240) { doc.addPage(); y = 20; }
-                doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+                y += 8; if (y > 240) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+                doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(212, 175, 55);
                 doc.text("Pièces justificatives jointes :", 20, y); y += 6;
-                doc.setFont("Helvetica", "normal"); doc.setFontSize(9);
+                doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(245, 245, 220);
                 window.compressedFiles.forEach(file => { doc.text(`• ${file.name} (Compressé)`, 25, y); y += 6; });
             }
 
-            y += 10; if (y > 240) { doc.addPage(); y = 20; }
-            doc.setFillColor(245, 243, 230); doc.roundedRect(20, y, 170, 25, 2, 2, 'F');
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+            // Bloc des Totaux
+            y += 10; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+            doc.setFillColor(15, 15, 15); doc.roundedRect(20, y, 170, 24, 2, 2, 'F');
+            doc.setDrawColor(212, 175, 55); doc.roundedRect(20, y, 170, 24, 2, 2, 'S');
+            
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(243, 229, 171);
             doc.text(`Total Heures Travaillées : ${totalTravail.toFixed(2)} h`, 25, y + 7);
             doc.text(`Total Heures Transport (à votre discrétion) : ${totalTransport.toFixed(2)} h`, 25, y + 14);
             doc.text(`Total Achats de Fournitures : ${totalAchats.toFixed(2)} $`, 25, y + 21);
@@ -587,6 +608,7 @@
             const prestataire = document.getElementById('prestataire').value;
             const nomProjet = document.getElementById('nomProjet').value || 'Non spécifié';
             const dateRemise = document.getElementById('dateRemise').value;
+            const recoveryUrl = window.location.href.split('?')[0];
             
             let report = `COMPTE RENDU DES ACTIVITÉS — C.A.M.S.\n`;
             report += `════════════════════════════════════\n`;
@@ -627,7 +649,8 @@
             report += `⏱️ Total Travaillé : ${totalTravail.toFixed(2)}h\n`;
             report += `🚗 Total Transport (à votre discrétion) : ${totalTransport.toFixed(2)}h\n`;
             report += `💰 Total Achats : ${totalAchats.toFixed(2)}$\n`;
-            report += `════════════════════════════════════`;
+            report += `════════════════════════════════════\n\n`;
+            report += `🔗 Récupérer ou modifier ce rapport :\n${recoveryUrl}`;
 
             return report;
         }
