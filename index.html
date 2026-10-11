@@ -76,6 +76,21 @@
                 <a href="#about" class="text-beigeSoft hover:text-gold transition-colors">À Propos</a>
                 <a href="#expertise" class="text-beigeSoft hover:text-gold transition-colors">Expertises</a>
                 <a href="#internal-tools" class="text-gold font-semibold hover:text-goldLight transition-colors">Espace Outils</a>
+                
+                <!-- Menu Déroulant Administration -->
+                <div class="relative inline-block">
+                    <button id="adminMenuBtn" onclick="toggleAdminMenu(event)" class="text-beigeSoft hover:text-gold transition-colors flex items-center space-x-1 uppercase focus:outline-none">
+                        <span>Administration</span>
+                        <svg class="w-3.5 h-3.5 transition-transform duration-200" id="adminChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="adminDropdown" class="hidden absolute left-0 mt-3 w-48 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2 space-y-1">
+                        <a href="samineTotal.html" class="flex items-center px-4 py-2 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
+                            <span>Total Semaine</span>
+                        </a>
+                    </div>
+                </div>
+
                 <a href="#contact" class="text-beigeSoft hover:text-gold transition-colors">Contact RH / Admin</a>
             </nav>
 
@@ -212,7 +227,7 @@
                 <p class="text-beigeMuted font-light">Espace dédié aux équipes commerciales, techniques et administratives pour établir et simuler les projets clients[cite: 5].</p>
             </div>
 
-            <!-- Grille d'outils (Estimation, Projet/Tâches, Déclaration Temps, Documentation) -->
+            <!-- Grille d'outils -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
                 <!-- Outil 1 : Estimation -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
@@ -250,7 +265,7 @@
                     </div>
                 </div>
 
-                <!-- Outil 3 : Déclarer le temps passé (POINTE VERS temps.html) -->
+                <!-- Outil 3 : Déclarer le temps passé -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -346,22 +361,52 @@
         </div>
     </footer>
 
-    <!-- Script pour la gestion du menu déroulant secondaire -->
+    <!-- Scripts pour la gestion des menus déroulants -->
     <script>
+        function toggleAdminMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('adminDropdown');
+            const chevron = document.getElementById('adminChevron');
+            const docMenu = document.getElementById('docMenu');
+            
+            // Fermer l'autre menu si ouvert
+            if (docMenu && !docMenu.classList.contains('hidden')) {
+                docMenu.classList.add('hidden');
+                document.getElementById('chevronIcon').classList.remove('rotate-180');
+            }
+
+            menu.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
         function toggleDocMenu(event) {
             event.stopPropagation();
             const menu = document.getElementById('docMenu');
             const chevron = document.getElementById('chevronIcon');
+            const adminMenu = document.getElementById('adminDropdown');
             
+            // Fermer l'autre menu si ouvert
+            if (adminMenu && !adminMenu.classList.contains('hidden')) {
+                adminMenu.classList.add('hidden');
+                document.getElementById('adminChevron').classList.remove('rotate-180');
+            }
+
             menu.classList.toggle('hidden');
             chevron.classList.toggle('rotate-180');
         }
 
         window.addEventListener('click', function() {
-            const menu = document.getElementById('docMenu');
+            const adminMenu = document.getElementById('adminDropdown');
+            const adminChevron = document.getElementById('adminChevron');
+            if (adminMenu && !adminMenu.classList.contains('hidden')) {
+                adminMenu.classList.add('hidden');
+                adminChevron.classList.remove('rotate-180');
+            }
+
+            const docMenu = document.getElementById('docMenu');
             const chevron = document.getElementById('chevronIcon');
-            if (!menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
+            if (docMenu && !docMenu.classList.contains('hidden')) {
+                docMenu.classList.add('hidden');
                 chevron.classList.remove('rotate-180');
             }
         });
