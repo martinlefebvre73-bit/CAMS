@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" class="scroll-smooth">
 <head>
-   <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C.A.M.S. — Portail Interne & Prestige</title>
@@ -73,12 +72,13 @@
                 </div>
             </a>
             
+            <!-- Navigation pour Ordinateurs et Tablettes -->
             <nav class="hidden md:flex items-center space-x-8 text-sm uppercase tracking-widest">
                 <a href="#about" class="text-beigeSoft hover:text-gold transition-colors">À Propos</a>
                 <a href="#expertise" class="text-beigeSoft hover:text-gold transition-colors">Expertises</a>
                 <a href="#internal-tools" class="text-gold font-semibold hover:text-goldLight transition-colors">Espace Outils</a>
                 
-                <!-- Menu Déroulant Administration -->
+                <!-- Menu Déroulant Administration Desktop -->
                 <div class="relative inline-block">
                     <button id="adminMenuBtn" onclick="toggleAdminMenu(event)" class="text-beigeSoft hover:text-gold transition-colors flex items-center space-x-1 uppercase focus:outline-none">
                         <span>Administration</span>
@@ -95,8 +95,24 @@
                 <a href="#contact" class="text-beigeSoft hover:text-gold transition-colors">Contact RH / Admin</a>
             </nav>
 
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gold/10 border gold-border text-xs text-gold">
+            <!-- Bouton Administration visible UNIQUEMENT sur Mobile (Petits écrans) -->
+            <div class="flex md:hidden items-center">
+                <div class="relative inline-block">
+                    <button onclick="toggleMobileAdminMenu(event)" class="px-3 py-1.5 rounded-lg border gold-border bg-gold/10 text-gold text-xs uppercase tracking-wider font-semibold flex items-center space-x-1 focus:outline-none">
+                        <span>Administration</span>
+                        <svg class="w-3 h-3 transition-transform duration-200" id="mobileAdminChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="mobileAdminDropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2 space-y-1">
+                        <a href="samineTotal.html" class="flex items-center px-4 py-2 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
+                            <span>Total Semaine</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden lg:flex items-center space-x-4">
+                <div class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gold/10 border gold-border text-xs text-gold">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>Session Interne Active</span>
                 </div>
@@ -143,11 +159,11 @@
                         En tant que membre du personnel de C.A.M.S., vous incarnez nos valeurs d'intégrité, de précision technique et d'exigence haut de gamme auprès de notre clientèle prestigieuse.
                     </p>
                     <p class="text-beigeMuted leading-relaxed font-light mb-8">
-                        Chaque intervention sur le terrain ou dans le cadre de nos prestations de services reflète notre savoir-faire accumulé depuis 5 ans. Le respect des protocoles de sécurité et de qualité est notre marque de fabrique.
+                        Chaque intervention sur le terrain ou dans le cadre de nos prestations de services reflète notre savoir-faire accumulé depuis 3 ans. Le respect des protocoles de sécurité et de qualité est notre marque de fabrique.
                     </p>
                     <div class="grid grid-cols-2 gap-6 pt-4 border-t gold-border">
                         <div>
-                            <span class="font-serif text-3xl text-gold font-bold">5</span>
+                            <span class="font-serif text-3xl text-gold font-bold">3 ans</span>
                             <p class="text-xs uppercase tracking-wider text-beigeMuted mt-1">Années d'excellence</p>
                         </div>
                         <div>
@@ -329,7 +345,7 @@
                 Pour toute question relative aux plannings, aux notes de frais ou aux procédures techniques, contactez directement le support interne de C.A.M.S.
             </p>
             <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <a href="mailto:entreprise.cams@gmail.com" class="px-10 py-5 rounded-full bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-sm tracking-widest uppercase shadow-xl shadow-gold/20 hover:scale-105 transition-all">
+                <a href="mailto:gestion_cams@hotmail.com" class="px-10 py-5 rounded-full bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-sm tracking-widest uppercase shadow-xl shadow-gold/20 hover:scale-105 transition-all">
                     Contacter les RH / Admin
                 </a>
             </div>
@@ -341,7 +357,7 @@
                 </div>
                 <div>
                     <h4 class="font-serif text-gold font-bold mb-2 uppercase text-sm tracking-wider">Ligne Interne Support</h4>
-                    <p class="text-beigeMuted text-xs leading-relaxed">Téléphone : À déterminer<br>Email : entreprise.cams@gmail.com</p>
+                    <p class="text-beigeMuted text-xs leading-relaxed">Téléphone : À déterminer<br>Email : gestion_cams@hotmail.com</p>
                 </div>
                 <div>
                     <h4 class="font-serif text-gold font-bold mb-2 uppercase text-sm tracking-wider">Disponibilité</h4>
@@ -379,6 +395,15 @@
             chevron.classList.toggle('rotate-180');
         }
 
+        function toggleMobileAdminMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('mobileAdminDropdown');
+            const chevron = document.getElementById('mobileAdminChevron');
+
+            menu.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
         function toggleDocMenu(event) {
             event.stopPropagation();
             const menu = document.getElementById('docMenu');
@@ -400,6 +425,13 @@
             if (adminMenu && !adminMenu.classList.contains('hidden')) {
                 adminMenu.classList.add('hidden');
                 adminChevron.classList.remove('rotate-180');
+            }
+
+            const mobileAdminMenu = document.getElementById('mobileAdminDropdown');
+            const mobileChevron = document.getElementById('mobileAdminChevron');
+            if (mobileAdminMenu && !mobileAdminMenu.classList.contains('hidden')) {
+                mobileAdminMenu.classList.add('hidden');
+                mobileChevron.classList.remove('rotate-180');
             }
 
             const docMenu = document.getElementById('docMenu');
