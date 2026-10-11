@@ -85,7 +85,8 @@
             <div class="p-6 overflow-y-auto space-y-4" id="reportsListContainer">
                 <p class="text-beigeMuted text-xs text-center py-8">Chargement des rapports depuis Firestore...</p>
             </div>
-            <div class="p-4 border-t gold-border bg-luxuryBlack text-right">
+            <div class="p-4 border-t gold-border bg-luxuryBlack flex items-center justify-between">
+                <button type="button" onclick="resetFormForNewReport()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">Nouveau Rapport</button>
                 <button onclick="closeRecoveryModal()" class="px-6 py-2 rounded-xl border gold-border text-gold text-xs uppercase tracking-widest hover:bg-gold/10 transition-colors">Fermer</button>
             </div>
         </div>
@@ -125,7 +126,7 @@
                     </div>
                 </div>
 
-                <!-- Section 1 : Lignes d'Activités & Temps -->
+                <!-- Section 1 : Lignes d'Activités -->
                 <div class="mb-10">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-serif text-xl font-bold text-gold-light">1. Lignes d'Activités & Temps</h3>
@@ -205,7 +206,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
@@ -220,6 +221,9 @@
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
+
+        // Variable globale pour stocker l'ID du document en cours d'édition (si récupéré)
+        window.currentReportId = null;
 
         window.saveReportToFirebase = async function() {
             const nomProjet = document.getElementById('nomProjet').value;
@@ -263,11 +267,20 @@
                 achats: achats,
                 piecesJointes: window.compressedFiles || [],
                 totaux: { totalTravail, totalTransport, totalAchats },
-                createdAt: serverTimestamp()
+                updatedAt: serverTimestamp()
             };
 
             try {
-                await addDoc(collection(db, "temps"), rapportData);
+                if (window.currentReportId) {
+                    // Mise à jour du document existant
+                    const docRef = doc(db, "temps", window.currentReportId);
+                    await updateDoc(docRef, rapportData);
+                } else {
+                    // Création d'un nouveau document si aucun ID n'est chargé
+                    rapportData.createdAt = serverTimestamp();
+                    const docRef = await addDoc(collection(db, "temps"), rapportData);
+                    window.currentReportId = docRef.id;
+                }
                 return true;
             } catch (error) {
                 console.error("Erreur Firestore : ", error);
@@ -294,6 +307,7 @@
 
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
+                    const docId = docSnap.id;
                     const card = document.createElement('div');
                     card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-gold transition-all';
                     
@@ -303,7 +317,7 @@
                             <h4 class="font-serif text-base font-bold text-beigeSoft">${data.projet} — Remise le ${data.dateRemise}</h4>
                             <p class="text-xs text-beigeMuted mt-1">Pièces jointes : ${data.piecesJointes ? data.piecesJointes.length : 0}</p>
                         </div>
-                        <button type="button" onclick='loadReportData(${JSON.stringify(data)})' class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">
+                        <button type="button" onclick='loadReportData("${docId}", ${JSON.stringify(data)})' class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">
                             Modifier / Charger
                         </button>
                     `;
@@ -318,7 +332,22 @@
             document.getElementById('recoveryModal').classList.add('hidden');
         };
 
-        window.loadReportData = function(data) {
+        window.resetFormForNewReport = function() {
+            window.currentReportId = null;
+            document.getElementById('nomProjet').value = '';
+            document.getElementById('dateRemise').valueAsDate = new Date();
+            document.getElementById('rowsContainer').innerHTML = '';
+            document.getElementById('supplyContainer').innerHTML = '';
+            window.compressedFiles = [];
+            document.getElementById('fileListDisplay').innerHTML = '';
+            addRow();
+            addSupplyRow();
+            closeRecoveryModal();
+            alert("Formulaire réinitialisé pour un nouveau rapport.");
+        };
+
+        window.loadReportData = function(docId, data) {
+            window.currentReportId = docId; // Sauvegarde de l'ID pour les futures mises à jour
             document.getElementById('nomProjet').value = data.projet || '';
             document.getElementById('dateRemise').value = data.dateRemise || new Date().toISOString().split('T')[0];
 
@@ -344,7 +373,7 @@
 
             calculateTotals();
             closeRecoveryModal();
-            alert("Rapport chargé avec succès !");
+            alert("Rapport chargé avec succès ! Les modifications mettront à jour ce même rapport.");
         };
     </script>
 
