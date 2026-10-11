@@ -1,0 +1,17 @@
+{
+"name": "Gestion C.A.M.S",
+"short_name": "C.A.M.S",
+"description": "Application de gestion C.A.M.S",
+"start_url": "./index.html",
+"display": "standalone",
+"background_color": "#39383f",
+"theme_color": "#39383f",
+"icons": [
+{
+"src": "logo-cams.jpg",
+"sizes": "192x192 512x512",
+"type": "image/jpeg",
+"purpose": "any maskable"
+}
+]
+}
