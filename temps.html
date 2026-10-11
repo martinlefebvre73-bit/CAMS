@@ -153,6 +153,7 @@
                 <!-- Section 3 : Pièces Justificatives -->
                 <div class="mb-10 pb-8 border-b gold-border">
                     <h3 class="font-serif text-xl font-bold text-gold-light mb-2">3. Pièces Justificatives (Photos & Factures compressées)</h3>
+                    <p class="text-[11px] text-beigeMuted mb-4">Astuce : Double-cliquez sur une pièce jointe pour l'ouvrir dans un nouvel onglet.</p>
                     <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 relative">
                         <input type="file" id="attachments" multiple accept="image/*" onchange="handleFiles(this)" class="w-full text-xs text-beigeMuted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:gold-border file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-gold/10 file:text-gold hover:file:bg-gold hover:file:text-luxuryBlack file:transition-all cursor-pointer">
                         <div id="fileListDisplay" class="mt-4 space-y-2 text-xs text-beigeSoft"></div>
@@ -180,6 +181,9 @@
 
                 <!-- Action Submit Buttons -->
                 <div class="flex flex-col lg:flex-row items-center justify-end gap-4">
+                    <button type="button" onclick="exportWordBilling()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
+                        <span>Export pour Facturation (Word)</span>
+                    </button>
                     <button type="button" onclick="generatePDF()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gold/10 border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold hover:text-luxuryBlack transition-all flex items-center justify-center space-x-2">
                         <span>Générer le PDF</span>
                     </button>
@@ -222,7 +226,6 @@
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // Variable globale pour stocker l'ID du document en cours d'édition (si récupéré)
         window.currentReportId = null;
 
         window.saveReportToFirebase = async function() {
@@ -272,11 +275,9 @@
 
             try {
                 if (window.currentReportId) {
-                    // Mise à jour du document existant
                     const docRef = doc(db, "temps", window.currentReportId);
                     await updateDoc(docRef, rapportData);
                 } else {
-                    // Création d'un nouveau document si aucun ID n'est chargé
                     rapportData.createdAt = serverTimestamp();
                     const docRef = await addDoc(collection(db, "temps"), rapportData);
                     window.currentReportId = docRef.id;
@@ -339,7 +340,7 @@
             document.getElementById('rowsContainer').innerHTML = '';
             document.getElementById('supplyContainer').innerHTML = '';
             window.compressedFiles = [];
-            document.getElementById('fileListDisplay').innerHTML = '';
+            renderFilesDisplay();
             addRow();
             addSupplyRow();
             closeRecoveryModal();
@@ -347,7 +348,7 @@
         };
 
         window.loadReportData = function(docId, data) {
-            window.currentReportId = docId; // Sauvegarde de l'ID pour les futures mises à jour
+            window.currentReportId = docId;
             document.getElementById('nomProjet').value = data.projet || '';
             document.getElementById('dateRemise').value = data.dateRemise || new Date().toISOString().split('T')[0];
 
@@ -362,14 +363,7 @@
             } else { addSupplyRow(); }
 
             window.compressedFiles = data.piecesJointes || [];
-            const display = document.getElementById('fileListDisplay');
-            display.innerHTML = '';
-            window.compressedFiles.forEach(file => {
-                const badge = document.createElement('div');
-                badge.className = 'flex items-center space-x-2 bg-gold/10 border gold-border px-3 py-1.5 rounded-lg text-gold';
-                badge.innerHTML = `<span>📎 ${file.name} (Compressé)</span>`;
-                display.appendChild(badge);
-            });
+            renderFilesDisplay();
 
             calculateTotals();
             closeRecoveryModal();
@@ -377,7 +371,7 @@
         };
     </script>
 
-    <!-- Logique d'interface & Calcul automatique d'heures -->
+    <!-- Logique d'interface & Fonctions Export Word -->
     <script>
         document.getElementById('dateRemise').valueAsDate = new Date();
         window.compressedFiles = [];
@@ -466,11 +460,7 @@
         function removeSupplyRow(supplyId) { document.getElementById(supplyId)?.remove(); calculateTotals(); }
 
         function handleFiles(input) {
-            window.compressedFiles = [];
-            const display = document.getElementById('fileListDisplay');
-            display.innerHTML = '<p class="text-gold text-xs">Compression des images en cours...</p>';
-
-            if (!input.files || input.files.length === 0) { display.innerHTML = ''; return; }
+            if (!input.files || input.files.length === 0) return;
 
             let processedCount = 0;
             const files = input.files;
@@ -502,19 +492,46 @@
 
                         processedCount++;
                         if (processedCount === files.length) {
-                            display.innerHTML = '';
-                            window.compressedFiles.forEach(cf => {
-                                const badge = document.createElement('div');
-                                badge.className = 'flex items-center space-x-2 bg-gold/10 border gold-border px-3 py-1.5 rounded-lg text-gold';
-                                badge.innerHTML = `<span>📎 ${cf.name} (Compressé)</span>`;
-                                display.appendChild(badge);
-                            });
+                            renderFilesDisplay();
+                            input.value = '';
                         }
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        function renderFilesDisplay() {
+            const display = document.getElementById('fileListDisplay');
+            display.innerHTML = '';
+
+            if (!window.compressedFiles || window.compressedFiles.length === 0) {
+                display.innerHTML = '<p class="text-beigeMuted text-xs">Aucune pièce jointe.</p>';
+                return;
+            }
+
+            window.compressedFiles.forEach((file, index) => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center justify-between bg-gold/10 border gold-border px-3 py-2 rounded-xl text-gold group hover:bg-gold/20 transition-all';
+                badge.title = "Double-cliquez pour ouvrir l'image";
+                
+                badge.innerHTML = `
+                    <span class="cursor-pointer truncate flex-1" ondblclick="openAttachment('${file.data}')">📎 ${file.name} <span class="text-[10px] opacity-75">(Double-clic pour ouvrir)</span></span>
+                    <button type="button" onclick="removeAttachment(${index})" class="ml-2 w-6 h-6 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors">✕</button>
+                `;
+                display.appendChild(badge);
+            });
+        }
+
+        window.openAttachment = function(dataUrl) {
+            const win = window.open();
+            win.document.write('<iframe src="' + dataUrl + '" frameborder="0" style="border:0; top:0; left:0; bottom:0; right:0; width:100%; height:100%;" autofit></iframe>');
+        }
+
+        window.removeAttachment = function(index) {
+            window.compressedFiles.splice(index, 1);
+            renderFilesDisplay();
         }
 
         function calculateTotals() {
@@ -531,7 +548,120 @@
             document.getElementById('totalAchatsDisplay').textContent = totalAchats.toFixed(2) + ' $';
         }
 
-        window.addEventListener('DOMContentLoaded', () => { addRow(); addSupplyRow(); });
+        window.addEventListener('DOMContentLoaded', () => { addRow(); addSupplyRow(); renderFilesDisplay(); });
+
+        // EXPORT POUR FACTURATION EN DOCUMENT WORD (.doc)
+        window.exportWordBilling = function() {
+            const nomProjet = document.getElementById('nomProjet').value;
+            if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
+
+            const prestataire = document.getElementById('prestataire').value;
+            const dateRemise = document.getElementById('dateRemise').value;
+
+            let totalTravail = 0;
+            let totalTransport = 0;
+            let totalAchats = 0;
+
+            let activitiesHtml = '';
+            document.querySelectorAll('.activity-row').forEach(row => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                totalTravail += travail;
+                totalTransport += transport;
+
+                activitiesHtml += `<tr>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${date}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${desc}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt; text-align: right;">${travail.toFixed(2)} h</td>
+                </tr>`;
+            });
+
+            let suppliesHtml = '';
+            document.querySelectorAll('.supply-row').forEach(row => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+                totalAchats += montant;
+
+                suppliesHtml += `<tr>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${date}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${desc}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt; text-align: right;">${montant.toFixed(2)} $</td>
+                </tr>`;
+            });
+
+            // Construction du contenu HTML compatible Word (Mime type application/msword)
+            const htmlContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <title>Export Facturation - C.A.M.S.</title>
+                    <style>
+                        body { font-family: 'Calibri', Arial, sans-serif; color: #050505; line-height: 1.6; }
+                        h1 { color: #aa8c2c; font-size: 20pt; text-transform: uppercase; border-bottom: 2px solid #d4af37; padding-bottom: 5px; }
+                        h2 { color: #aa8c2c; font-size: 14pt; margin-top: 20px; }
+                        p { font-size: 11pt; margin: 4px 0; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+                        th { background-color: #0f0f0f; color: #d4af37; border: 1px solid #d4af37; padding: 10px; font-size: 11pt; text-align: left; }
+                        .totals { background-color: #f5f5dc; border: 1px solid #d4af37; padding: 15px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>C.A.M.S. — Résumé pour Facturation</h1>
+                    <p><b>Projet :</b> ${nomProjet}</p>
+                    <p><b>Prestataire :</b> ${prestataire}</p>
+                    <p><b>Date d'export :</b> ${dateRemise}</p>
+
+                    <h2>1. Détails des Tâches & Réalisations</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description des Tâches / Réalisations</th>
+                                <th style="text-align: right;">Temps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${activitiesHtml}
+                        </tbody>
+                    </table>
+
+                    <h2>2. Achats de Fournitures</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description de l'Achat</th>
+                                <th style="text-align: right;">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${suppliesHtml || '<tr><td colspan="3" style="border: 1px solid #d4af37; padding: 8px; text-align: center;">Aucun achat enregistré.</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <div class="totals">
+                        <h2 style="margin-top: 0; color: #aa8c2c;">Récapitulatif Global</h2>
+                        <p><b>Total Heures Travaillées :</b> ${totalTravail.toFixed(2)} h</p>
+                        <p><b>Total Heures Transport :</b> ${totalTransport.toFixed(2)} h</p>
+                        <p><b>Total Achats de Fournitures :</b> ${totalAchats.toFixed(2)} $</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Facturation_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
 
         // GÉNÉRATION DU PDF AVEC LE THÈME SOMBRE ET DORÉ DE C.A.M.S.
         function generatePDF() {
@@ -543,11 +673,9 @@
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
 
-            // Fond global de la page PDF en Noir Profond (#050505)
             doc.setFillColor(5, 5, 5);
             doc.rect(0, 0, 210, 297, 'F');
 
-            // En-tête du document
             doc.setFillColor(15, 15, 15);
             doc.rect(15, 15, 180, 25, 'F');
             doc.setDrawColor(212, 175, 55);
@@ -557,7 +685,6 @@
             doc.setTextColor(212, 175, 55); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("C.A.M.S.", 22, 28);
             doc.setFontSize(9); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 22, 35);
 
-            // Informations du projet
             doc.setTextColor(245, 245, 220); doc.setFontSize(10); doc.setFont("Helvetica", "normal");
             doc.text(`Projet : ${nomProjet}`, 20, 52);
             doc.text(`Prestataire : ${prestataire}`, 20, 60);
@@ -565,10 +692,8 @@
 
             let y = 80;
 
-            // Section 1 : Activités & Temps
             doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("1. Activités & Temps", 20, y); y += 6;
             
-            // En-tête du tableau d'activités
             doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
             doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
             doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
@@ -589,7 +714,6 @@
                 y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
             });
 
-            // Section 2 : Achats de Fournitures
             y += 8; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
             doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("2. Achats de Fournitures", 20, y); y += 6;
             
@@ -611,7 +735,6 @@
                 y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
             });
 
-            // Pièces jointes
             if (window.compressedFiles && window.compressedFiles.length > 0) {
                 y += 8; if (y > 240) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
                 doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(212, 175, 55);
@@ -620,7 +743,6 @@
                 window.compressedFiles.forEach(file => { doc.text(`• ${file.name} (Compressé)`, 25, y); y += 6; });
             }
 
-            // Bloc des Totaux
             y += 10; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
             doc.setFillColor(15, 15, 15); doc.roundedRect(20, y, 170, 24, 2, 2, 'F');
             doc.setDrawColor(212, 175, 55); doc.roundedRect(20, y, 170, 24, 2, 2, 'S');
