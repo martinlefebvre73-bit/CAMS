@@ -8,9 +8,9 @@
 "theme_color": "#39383f",
 "icons": [
 {
-"src": "logo cams.jpg",
+"src": "logo cams.png",
 "sizes": "192x192 512x512",
-"type": "image/jpeg",
+"type": "image/png",
 "purpose": "any maskable"
 }
 ]
