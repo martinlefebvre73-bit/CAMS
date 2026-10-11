@@ -59,16 +59,16 @@
 </head>
 <body class="bg-luxuryBlack text-beigeSoft font-sans antialiased selection:bg-gold selection:text-luxuryBlack">
 
-    <!-- Header / Navigation -->
+    <!-- Header / Navigation avec Logo -->
     <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="#" class="flex items-center space-x-3 group">
-                <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
-                    <span class="font-serif text-gold font-bold text-lg">C</span>
+                <div class="h-12 w-auto overflow-hidden rounded-lg border gold-border flex items-center bg-luxuryCard p-1">
+                    <img src="logo cams.jpg" alt="Gestion C.A.M.S. Logo" class="h-full w-auto object-contain">
                 </div>
                 <div class="flex flex-col">
-                    <span class="font-serif text-2xl font-bold tracking-widest text-gold">C.A.M.S.</span>
-                    <span class="text-[10px] tracking-[0.25em] text-beigeMuted uppercase">Portail Collaborateurs</span>
+                    <span class="font-serif text-xl font-bold tracking-widest text-gold">C.A.M.S.</span>
+                    <span class="text-[9px] tracking-[0.2em] text-beigeMuted uppercase">Portail Collaborateurs</span>
                 </div>
             </a>
             
@@ -369,7 +369,6 @@
             const chevron = document.getElementById('adminChevron');
             const docMenu = document.getElementById('docMenu');
             
-            // Fermer l'autre menu si ouvert
             if (docMenu && !docMenu.classList.contains('hidden')) {
                 docMenu.classList.add('hidden');
                 document.getElementById('chevronIcon').classList.remove('rotate-180');
@@ -385,7 +384,6 @@
             const chevron = document.getElementById('chevronIcon');
             const adminMenu = document.getElementById('adminDropdown');
             
-            // Fermer l'autre menu si ouvert
             if (adminMenu && !adminMenu.classList.contains('hidden')) {
                 adminMenu.classList.add('hidden');
                 document.getElementById('adminChevron').classList.remove('rotate-180');
