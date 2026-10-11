@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C.A.M.S. — Bilan Hebdomadaire</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Serif & Sans-serif elegance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind configuration for custom luxury colors and fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        luxuryBlack: '#050505',
+                        luxuryCard: '#0f0f0f',
+                        gold: '#d4af37',
+                        goldLight: '#f3e5ab',
+                        goldDark: '#aa8c2c',
+                        beigeSoft: '#f5f5dc',
+                        beigeMuted: '#d1d1b8',
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 50%, #aa8c2c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
+        .gold-border:hover { border-color: rgba(212, 175, 55, 0.8); }
+    </style>
+</head>
+<body class="bg-luxuryBlack text-beigeSoft font-sans antialiased selection:bg-gold selection:text-luxuryBlack">
+
+    <!-- Header / Navigation -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
+                    <span class="font-serif text-gold font-bold text-lg">C</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-serif text-2xl font-bold tracking-widest text-gold">C.A.M.S.</span>
+                    <span class="text-[10px] tracking-[0.25em] text-beigeMuted uppercase">Bilan Hebdomadaire</span>
+                </div>
+            </a>
+            <div class="flex items-center space-x-3">
+                <a href="temps.html" class="px-4 py-2 rounded-full bg-gold/10 border gold-border text-xs text-gold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">
+                    Déclaration Temps
+                </a>
+                <a href="index.html" class="px-4 py-2 rounded-full border gold-border text-xs text-gold uppercase tracking-widest hover:bg-gold/10 transition-colors">
+                    Accueil
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Section -->
+    <main class="pt-32 pb-24 px-6 max-w-5xl mx-auto">
+        <div class="text-center mb-12">
+            <span class="inline-block py-1.5 px-4 rounded-full border gold-border bg-gold/5 text-gold text-xs tracking-[0.3em] uppercase mb-4">
+                Suivi des Heures & Dépenses • Semaine (Dimanche au Samedi)
+            </span>
+            <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight mb-4">
+                Total du Temps & Achats par <span class="gold-gradient-text">Semaine</span>
+            </h1>
+            <p class="text-beigeMuted text-sm sm:text-base font-light max-w-2xl mx-auto">
+                Sélectionnez une semaine et filtrez par prestataire pour consulter le cumul des heures et des dépenses de fournitures.
+            </p>
+        </div>
+
+        <!-- Selector Card -->
+        <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Choisir une semaine (Dimanche)</label>
+                    <input type="week" id="weekSelector" onchange="calculateWeeklyTotals()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Filtrer par Prestataire</label>
+                    <select id="prestataireSelector" onchange="calculateWeeklyTotals()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                        <option value="ALL">Tous les prestataires</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t gold-border">
+                <div id="weekRangeDisplay" class="text-xs text-beigeMuted uppercase tracking-wider bg-luxuryBlack border gold-border px-4 py-3 rounded-xl w-full text-center">
+                    Sélectionnez une semaine
+                </div>
+            </div>
+        </div>
+
+        <!-- Totals & Summary Cards -->
+        <div class="bg-luxuryBlack border gold-border rounded-3xl p-8 mb-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-center text-center">
+            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Travaillé</span>
+                <span id="weeklyWorkDisplay" class="font-serif text-2xl font-bold text-beigeSoft">0.00 h</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Transport</span>
+                <span id="weeklyTransportDisplay" class="font-serif text-2xl font-bold text-beigeSoft">0.00 h</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Global (Heures)</span>
+                <span id="weeklyTotalDisplay" class="font-serif text-2xl font-bold text-goldLight">0.00 h</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Fournitures</span>
+                <span id="weeklySuppliesDisplay" class="font-serif text-2xl font-bold text-goldLight">0.00 $</span>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown Container (Activités) -->
+        <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
+            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des activités pour cette sélection</h3>
+            <div id="weeklyDetailsContainer" class="space-y-4">
+                <p class="text-beigeMuted text-xs text-center py-6">Veuillez sélectionner une semaine pour afficher le détail.</p>
+            </div>
+        </div>
+
+        <!-- Detailed Supplies Container (Achats) -->
+        <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des achats de fournitures</h3>
+            <div id="weeklySuppliesContainer" class="space-y-4">
+                <p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture pour cette sélection.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-luxuryBlack py-8 border-t gold-border text-center text-xs text-beigeMuted">
+        <div class="max-w-7xl mx-auto px-6">
+            <p>&copy; 2026 C.A.M.S. Espace Interne Réservé au Personnel.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Script & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+            authDomain: "cams-cf723.firebaseapp.com",
+            projectId: "cams-cf723",
+            storageBucket: "cams-cf723.firebasestorage.app",
+            messagingSenderId: "1037636451682",
+            appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+            measurementId: "G-8Q2V3660XZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allReports = [];
+
+        async function loadAllReports() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "temps"));
+                allReports = [];
+                const prestatairesSet = new Set();
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    allReports.push(data);
+                    if (data.prestataire) {
+                        prestatairesSet.add(data.prestataire);
+                    }
+                });
+
+                const select = document.getElementById('prestataireSelector');
+                prestatairesSet.forEach(prest => {
+                    const opt = document.createElement('option');
+                    opt.value = prest;
+                    opt.textContent = prest;
+                    select.appendChild(opt);
+                });
+
+                setDefaultWeek();
+            } catch (error) {
+                console.error("Erreur de chargement Firestore :", error);
+                document.getElementById('weeklyDetailsContainer').innerHTML = '<p class="text-red-400 text-xs text-center py-6">Erreur de connexion à la base de données.</p>';
+            }
+        }
+
+        function setDefaultWeek() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+            
+            const weekStr = `${year}-W${String(weekNo).padStart(2, '0')}`;
+            document.getElementById('weekSelector').value = weekStr;
+            calculateWeeklyTotals();
+        }
+
+        window.calculateWeeklyTotals = function() {
+            const weekVal = document.getElementById('weekSelector').value;
+            const selectedPrestataire = document.getElementById('prestataireSelector').value;
+            if (!weekVal) return;
+
+            const [yearStr, weekStr] = weekVal.split('-W');
+            const year = parseInt(yearStr, 10);
+            const week = parseInt(weekStr, 10);
+
+            const simple = new Date(year, 0, 1 + (week - 1) * 7);
+            const dow = simple.getDay();
+            const ISOweekStart = new Date(simple);
+            if (dow <= 4) {
+                ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            } else {
+                ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            }
+
+            // Semaine du DIMANCHE au SAMEDI
+            const sunday = new Date(ISOweekStart);
+            sunday.setDate(ISOweekStart.getDate() - 1);
+
+            const saturday = new Date(sunday);
+            saturday.setDate(saturday.getDate() + 6);
+
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            const rangeStr = `Du ${sunday.toLocaleDateString('fr-CA', options)} au ${saturday.toLocaleDateString('fr-CA', options)}`;
+            document.getElementById('weekRangeDisplay').textContent = rangeStr;
+
+            let totalWork = 0;
+            let totalTransport = 0;
+            let totalSupplies = 0;
+            let matchedEntries = [];
+            let matchedSupplies = [];
+
+            allReports.forEach(report => {
+                if (selectedPrestataire !== 'ALL' && report.prestataire !== selectedPrestataire) {
+                    return;
+                }
+
+                // Traiter les activités (heures)
+                if (report.activites && Array.isArray(report.activites)) {
+                    report.activites.forEach(act => {
+                        if (act.date) {
+                            const actDate = new Date(act.date + 'T00:00:00');
+                            if (actDate >= sunday && actDate <= saturday) {
+                                const travail = parseFloat(act.travail) || 0;
+                                const transport = parseFloat(act.transport) || 0;
+                                totalWork += travail;
+                                totalTransport += transport;
+
+                                matchedEntries.push({
+                                    prestataire: report.prestataire || 'Inconnu',
+                                    projet: report.projet || 'Projet sans nom',
+                                    date: act.date,
+                                    description: act.description,
+                                    horaire: act.horaire || '-',
+                                    travail: travail,
+                                    transport: transport
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Traiter les achats de fournitures
+                if (report.achats && Array.isArray(report.achats)) {
+                    report.achats.forEach(sup => {
+                        if (sup.date) {
+                            const supDate = new Date(sup.date + 'T00:00:00');
+                            if (supDate >= sunday && supDate <= saturday) {
+                                const montant = parseFloat(sup.montant) || 0;
+                                totalSupplies += montant;
+
+                                matchedSupplies.push({
+                                    prestataire: report.prestataire || 'Inconnu',
+                                    projet: report.projet || 'Projet sans nom',
+                                    date: sup.date,
+                                    description: sup.description,
+                                    montant: montant
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Affichage des totaux
+            document.getElementById('weeklyWorkDisplay').textContent = totalWork.toFixed(2) + ' h';
+            document.getElementById('weeklyTransportDisplay').textContent = totalTransport.toFixed(2) + ' h';
+            document.getElementById('weeklyTotalDisplay').textContent = (totalWork + totalTransport).toFixed(2) + ' h';
+            document.getElementById('weeklySuppliesDisplay').textContent = totalSupplies.toFixed(2) + ' $';
+
+            // Rendu du détail des activités
+            const container = document.getElementById('weeklyDetailsContainer');
+            container.innerHTML = '';
+
+            if (matchedEntries.length === 0) {
+                container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité enregistrée pour cette sélection.</p>';
+            } else {
+                matchedEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+                matchedEntries.forEach(entry => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4';
+                    card.innerHTML = `
+                        <div>
+                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">👤 ${entry.prestataire} • Projet : ${entry.projet} • Date : ${entry.date}</span>
+                            <h4 class="font-serif text-sm font-bold text-beigeSoft">${entry.description}</h4>
+                            <p class="text-xs text-beigeMuted mt-1">Horaire : ${entry.horaire}</p>
+                        </div>
+                        <div class="flex items-center space-x-4 text-xs">
+                            <span class="px-3 py-1.5 rounded-xl bg-gold/10 border gold-border text-gold font-bold">Travail : ${entry.travail.toFixed(2)}h</span>
+                            <span class="px-3 py-1.5 rounded-xl bg-luxuryCard border gold-border text-beigeSoft">Transport : ${entry.transport.toFixed(2)}h</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            // Rendu du détail des achats de fournitures
+            const suppliesContainer = document.getElementById('weeklySuppliesContainer');
+            suppliesContainer.innerHTML = '';
+
+            if (matchedSupplies.length === 0) {
+                suppliesContainer.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture enregistré pour cette sélection.</p>';
+            } else {
+                matchedSupplies.sort((a, b) => new Date(a.date) - new Date(b.date));
+                matchedSupplies.forEach(sup => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4';
+                    card.innerHTML = `
+                        <div>
+                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">👤 ${sup.prestataire} • Projet : ${sup.projet} • Date : ${sup.date}</span>
+                            <h4 class="font-serif text-sm font-bold text-beigeSoft">${sup.description}</h4>
+                        </div>
+                        <div class="flex items-center space-x-4 text-xs">
+                            <span class="px-3 py-1.5 rounded-xl bg-gold/10 border gold-border text-goldLight font-bold">Montant : ${sup.montant.toFixed(2)} $</span>
+                        </div>
+                    `;
+                    suppliesContainer.appendChild(card);
+                });
+            }
+        };
+
+        loadAllReports();
+    </script>
+</body>
+</html>
