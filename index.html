@@ -212,71 +212,87 @@
                 <p class="text-beigeMuted font-light">Espace dédié aux équipes commerciales, techniques et administratives pour établir et simuler les projets clients.</p>
             </div>
 
-            <!-- Grille d'outils à 3 éléments (Estimation, Projet/Tâches, Documentation) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            <!-- Grille d'outils (Estimation, Projet/Tâches, Déclaration Temps, Documentation) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
                 <!-- Outil 1 : Estimation -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         </div>
-                        <h3 class="font-serif text-2xl font-bold mb-3 text-gold-light">Outil d'Estimation Interne</h3>
-                        <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Utilisez le simulateur de devis et d'estimation pour préparer rapidement les propositions budgétaires lors de vos rendez-vous clients.
+                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Outil d'Estimation</h3>
+                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
+                            Simulateur de devis et d'estimation pour préparer rapidement les propositions budgétaires.
                         </p>
                     </div>
                     <div>
-                        <a href="estimation_CAMS.html" class="inline-flex items-center justify-center w-full px-6 py-4 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
-                            <span>Lancer l'outil d'estimation</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        <a href="estimation_CAMS.html" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
+                            <span>Lancer l'estimation</span>
                         </a>
                     </div>
                 </div>
 
-                <!-- Outil 2 : Projet / Tâches (AJOUTÉ) -->
+                <!-- Outil 2 : Projet / Tâches -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2m-6 9l2 2 4-4"></path></svg>
                         </div>
-                        <h3 class="font-serif text-2xl font-bold mb-3 text-gold-light">Gestion de Projet & Tâches</h3>
-                        <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Gérez les chantiers pièce par pièce, évaluez les temps d'intervention, suivez les corps de métiers et synchronisez vos données en temps réel.
+                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Gestion de Projet</h3>
+                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
+                            Gérez les chantiers pièce par pièce, suivez les corps de métiers en temps réel.
                         </p>
                     </div>
                     <div>
-                        <a href="taches.html" class="inline-flex items-center justify-center w-full px-6 py-4 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
+                        <a href="taches.html" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
                             <span>Ouvrir Projet</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </a>
                     </div>
                 </div>
 
-                <!-- Outil 3 : Documentation & Procédures -->
+                <!-- Outil 3 : Déclarer le temps passé (NOUVEAU BOUTON AJOUTÉ) -->
+                <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
+                    <div>
+                        <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Déclarer son Temps</h3>
+                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
+                            Renseignez vos activités, horaires, achats de fournitures et pièces justificatives avec sauvegarde en base.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="rapport_activites.html" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
+                            <span>Déclarer le temps</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Outil 4 : Documentation & Procédures -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         </div>
-                        <h3 class="font-serif text-2xl font-bold mb-3 text-gold-light">Documentation & Procédures</h3>
-                        <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Accédez aux grilles tarifaires internes, aux chartes de qualité et aux rapports d'activités standardisés par la direction.
+                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Documentation</h3>
+                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
+                            Accédez aux grilles tarifaires et aux rapports d'activités standardisés.
                         </p>
                     </div>
                     <div class="relative">
                         <div class="relative inline-block w-full">
-                            <button id="consultDocsBtn" onclick="toggleDocMenu(event)" class="w-full px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-between">
-                                <span>Consulter les documents</span>
+                            <button id="consultDocsBtn" onclick="toggleDocMenu(event)" class="w-full px-4 py-3 rounded-xl border gold-border text-gold font-bold text-[10px] tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-between">
+                                <span>Documents</span>
                                 <svg class="w-4 h-4 transition-transform duration-200" id="chevronIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
 
                             <div id="docMenu" class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2 space-y-1">
-                                <a href="inspection.html" class="flex items-center px-5 py-3 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-3"></span>
-                                    <span>Inspection avant/après appartement</span>
+                                <a href="inspection.html" class="flex items-center px-4 py-2 text-[11px] tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
+                                    <span>Inspection appartement</span>
                                 </a>
-                                <a href="rapport_activites.html" class="flex items-center px-5 py-3 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-3"></span>
+                                <a href="rapport_activites.html" class="flex items-center px-4 py-2 text-[11px] tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
                                     <span>Déclarations heures</span>
                                 </a>
                             </div>
