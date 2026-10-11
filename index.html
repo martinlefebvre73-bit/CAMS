@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C.A.M.S. — Portail Interne & Prestige</title>
+    
+    <!-- Lien essentiel pour la PWA / Installation sur cellulaire -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#39383f">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts for Serif & Sans-serif elegance -->
@@ -64,7 +69,7 @@
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="#" class="flex items-center space-x-3 group">
                 <div class="h-12 w-auto overflow-hidden rounded-lg border gold-border flex items-center bg-luxuryCard p-1">
-                    <img src="logo cams.jpg" alt="Gestion C.A.M.S. Logo" class="h-full w-auto object-contain">
+                    <img src="logo cams.png" alt="Gestion C.A.M.S. Logo" class="h-full w-auto object-contain">
                 </div>
                 <div class="flex flex-col">
                     <span class="font-serif text-xl font-bold tracking-widest text-gold">C.A.M.S.</span>
@@ -95,7 +100,7 @@
                 <a href="#contact" class="text-beigeSoft hover:text-gold transition-colors">Contact RH / Admin</a>
             </nav>
 
-            <!-- Bouton Administration visible UNIQUEMENT sur Mobile (Petits écrans) -->
+            <!-- Bouton Administration visible UNIQUEMENT sur Mobile -->
             <div class="flex md:hidden items-center">
                 <div class="relative inline-block">
                     <button onclick="toggleMobileAdminMenu(event)" class="px-3 py-1.5 rounded-lg border gold-border bg-gold/10 text-gold text-xs uppercase tracking-wider font-semibold flex items-center space-x-1 focus:outline-none">
@@ -122,7 +127,6 @@
 
     <!-- Hero Section -->
     <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        <!-- Background radial ambient light -->
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 pointer-events-none"></div>
         
         <div class="max-w-5xl mx-auto px-6 text-center relative z-10 py-20">
@@ -196,7 +200,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <!-- Card 1: Rénovation Intérieure & Immeubles Locatifs -->
                 <div class="bg-luxuryCard rounded-2xl p-8 border gold-border hover:border-gold transition-all group flex flex-col justify-between">
                     <div>
                         <div class="w-14 h-14 rounded-xl bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6 group-hover:bg-gold group-hover:text-luxuryBlack transition-all">
@@ -214,7 +217,6 @@
                     </ul>
                 </div>
 
-                <!-- Card 2: Réaménagement de Locaux Commerciaux -->
                 <div class="bg-luxuryCard rounded-2xl p-8 border gold-border hover:border-gold transition-all group flex flex-col justify-between">
                     <div>
                         <div class="w-14 h-14 rounded-xl bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6 group-hover:bg-gold group-hover:text-luxuryBlack transition-all">
@@ -241,12 +243,10 @@
             <div class="text-center max-w-3xl mx-auto mb-16">
                 <span class="text-gold text-xs tracking-[0.3em] uppercase font-semibold">Workspace Collaborateur</span>
                 <h2 class="font-serif text-3xl sm:text-4xl font-bold mt-3 mb-4">Outils Internes & Chiffrage</h2>
-                <p class="text-beigeMuted font-light">Espace dédié aux équipes commerciales, techniques et administratives pour établir et simuler les projets clients.</p>
+                <p class="text-beigeMuted font-light">Espace dédié aux équipes commerciales, teknik et administratives pour établir et simuler les projets clients.</p>
             </div>
 
-            <!-- Grille d'outils -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
-                <!-- Outil 1 : Estimation -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -264,7 +264,6 @@
                     </div>
                 </div>
 
-                <!-- Outil 2 : Projet / Tâches -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -282,7 +281,6 @@
                     </div>
                 </div>
 
-                <!-- Outil 3 : Déclarer le temps passé -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -300,7 +298,6 @@
                     </div>
                 </div>
 
-                <!-- Outil 4 : Documentation & Procédures -->
                 <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
                     <div>
                         <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
@@ -374,8 +371,17 @@
         </div>
     </footer>
 
-    <!-- Scripts pour la gestion des menus déroulants et calcul automatique dynamique des années d'expérience -->
+    <!-- Scripts généraux + Enregistrement du Service Worker pour installation mobile -->
     <script>
+        // Enregistrement du Service Worker pour permettre l'installation PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => { console.log('Service Worker enregistré avec succès:', reg.scope); })
+                    .catch((err) => { console.log('Échec de l\'enregistrement du Service Worker:', err); });
+            });
+        }
+
         function toggleAdminMenu(event) {
             event.stopPropagation();
             const menu = document.getElementById('adminDropdown');
@@ -438,18 +444,14 @@
             }
         });
 
-        // Script dynamique pour les années d'expérience (base 3 ans, +1 chaque mois d'avril)
+        // Script dynamique pour les années d'expérience
         function updateExperience() {
             const baseYears = 3;
-            const baseDate = new Date(2026, 3, 1); // Avril 2026 comme point de départ initial (mois 3 = avril en JS)
             const now = new Date();
-            
-            // Calculer le nombre d'années écoulées depuis avril 2026 (ou mois d'avril atteints)
             let additionalYears = 0;
-            let currentCheck = new Date(2026, 3, 1); // 1er avril 2026
+            let currentCheck = new Date(2026, 3, 1);
             
             while (now >= currentCheck) {
-                // Avancer d'un an
                 currentCheck.setFullYear(currentCheck.getFullYear() + 1);
                 if (now >= currentCheck) {
                     additionalYears++;
@@ -457,8 +459,6 @@
             }
 
             const totalYears = baseYears + additionalYears;
-            
-            // Mettre à jour l'affichage dans la page
             const yearsTextEl = document.getElementById('yearsText');
             const yearsBadgeEl = document.getElementById('yearsBadge');
             const footerYearEl = document.getElementById('footerYear');
