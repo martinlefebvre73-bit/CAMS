@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C.A.M.S. — Portail Interne & Prestige</title>
+    <title>C.A.M.S. — Compte Rendu des Activités</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF CDN pour la génération de PDF professionnelle -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Google Fonts for Serif & Sans-serif elegance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,381 +35,793 @@
         }
     </script>
     <style>
-        /* Custom scrollbar and subtle glowing effects */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #050505;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #d4af37;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
         .gold-gradient-text {
             background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 50%, #aa8c2c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .gold-border {
-            border-color: rgba(212, 175, 55, 0.3);
-        }
-        .gold-border:hover {
-            border-color: rgba(212, 175, 55, 0.8);
-        }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
+        .gold-border:hover { border-color: rgba(212, 175, 55, 0.8); }
     </style>
 </head>
 <body class="bg-luxuryBlack text-beigeSoft font-sans antialiased selection:bg-gold selection:text-luxuryBlack">
 
-    <!-- Header / Navigation avec Logo -->
+    <!-- Header / Navigation -->
     <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="#" class="flex items-center space-x-3 group">
-                <div class="h-12 w-auto overflow-hidden rounded-lg border gold-border flex items-center bg-luxuryCard p-1">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <div class="h-10 w-auto overflow-hidden rounded-lg border gold-border flex items-center bg-luxuryCard p-1">
                     <img src="logo cams.jpg" alt="Gestion C.A.M.S. Logo" class="h-full w-auto object-contain">
                 </div>
                 <div class="flex flex-col">
                     <span class="font-serif text-xl font-bold tracking-widest text-gold">C.A.M.S.</span>
-                    <span class="text-[9px] tracking-[0.2em] text-beigeMuted uppercase">Portail Collaborateurs</span>
+                    <span class="text-[9px] tracking-[0.2em] text-beigeMuted uppercase">Rapport d'Activités</span>
                 </div>
             </a>
-            
-            <nav class="hidden md:flex items-center space-x-8 text-sm uppercase tracking-widest">
-                <a href="#about" class="text-beigeSoft hover:text-gold transition-colors">À Propos</a>
-                <a href="#expertise" class="text-beigeSoft hover:text-gold transition-colors">Expertises</a>
-                <a href="#internal-tools" class="text-gold font-semibold hover:text-goldLight transition-colors">Espace Outils</a>
-                
-                <!-- Menu Déroulant Administration -->
-                <div class="relative inline-block">
-                    <button id="adminMenuBtn" onclick="toggleAdminMenu(event)" class="text-beigeSoft hover:text-gold transition-colors flex items-center space-x-1 uppercase focus:outline-none">
-                        <span>Administration</span>
-                        <svg class="w-3.5 h-3.5 transition-transform duration-200" id="adminChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div id="adminDropdown" class="hidden absolute left-0 mt-3 w-48 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2 space-y-1">
-                        <a href="samineTotal.html" class="flex items-center px-4 py-2 text-xs tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
-                            <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
-                            <span>Total Semaine</span>
-                        </a>
-                    </div>
-                </div>
-
-                <a href="#contact" class="text-beigeSoft hover:text-gold transition-colors">Contact RH / Admin</a>
-            </nav>
-
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gold/10 border gold-border text-xs text-gold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Session Interne Active</span>
-                </div>
+            <div class="flex items-center space-x-3">
+                <button type="button" onclick="openRecoveryModal()" class="px-4 py-2 rounded-full bg-gold/10 border gold-border text-xs text-gold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Récupération</span>
+                </button>
+                <a href="index.html" class="px-4 py-2 rounded-full border gold-border text-xs text-gold uppercase tracking-widest hover:bg-gold/10 transition-colors">
+                    Accueil
+                </a>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        <!-- Background radial ambient light -->
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 pointer-events-none"></div>
-        
-        <div class="max-w-5xl mx-auto px-6 text-center relative z-10 py-20">
-            <span class="inline-block py-1.5 px-4 rounded-full border gold-border bg-gold/5 text-gold text-xs tracking-[0.3em] uppercase mb-6">
-                Espace Interne Réservé au Personnel • C.A.M.S.[cite: 5]
+    <!-- Modal de Récupération -->
+    <div id="recoveryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center px-4">
+        <div class="bg-luxuryCard border gold-border rounded-3xl max-w-3xl w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-6 border-b gold-border flex items-center justify-between bg-luxuryBlack">
+                <h3 class="font-serif text-xl font-bold text-gold-light">Récupération des Rapports Enregistrés</h3>
+                <button onclick="closeRecoveryModal()" class="text-beigeMuted hover:text-gold transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4" id="reportsListContainer">
+                <p class="text-beigeMuted text-xs text-center py-8">Chargement des rapports depuis Firestore...</p>
+            </div>
+            <div class="p-4 border-t gold-border bg-luxuryBlack flex items-center justify-between">
+                <button type="button" onclick="resetFormForNewReport()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">Nouveau Rapport</button>
+                <button onclick="closeRecoveryModal()" class="px-6 py-2 rounded-xl border gold-border text-gold text-xs uppercase tracking-widest hover:bg-gold/10 transition-colors">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <main class="pt-32 pb-24 px-6 max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+            <span class="inline-block py-1.5 px-4 rounded-full border gold-border bg-gold/5 text-gold text-xs tracking-[0.3em] uppercase mb-4">
+                Déclaration de Temps, Achats & Pièces Justificatives
             </span>
-            <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
-                L'excellence opérationnelle de <span class="gold-gradient-text">nos équipes</span>[cite: 5]
+            <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight mb-4">
+                Compte Rendu des <span class="gold-gradient-text">Activités</span>
             </h1>
-            <p class="max-w-2xl mx-auto text-beigeMuted text-base sm:text-lg font-light leading-relaxed mb-10">
-                Bienvenue sur le portail collaborateur de C.A.M.S. Retrouvez ici les directives de l'entreprise, nos standards de qualité et l'accès direct aux outils internes de chiffrage et de gestion de chantier[cite: 5].
+            <p class="text-beigeMuted text-sm sm:text-base font-light max-w-2xl mx-auto">
+                Renseignez vos horaires (ex: 08h-16h30), les heures travaillées se calculent automatiquement.
             </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="#internal-tools" class="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-semibold text-sm tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-105 transition-transform text-center">
-                    Accéder aux Outils Internes[cite: 5]
-                </a>
-                <a href="#about" class="w-full sm:w-auto px-8 py-4 rounded-full border gold-border text-gold font-semibold text-sm tracking-widest uppercase hover:bg-gold/10 transition-colors text-center">
-                    Consulter les Directives[cite: 5]
-                </a>
-            </div>
         </div>
-    </section>
 
-    <!-- About / History Section -->
-    <section id="about" class="py-24 bg-luxuryCard border-t border-b gold-border relative">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <span class="text-gold text-xs tracking-[0.3em] uppercase font-semibold">Culture & Vision d'Entreprise[cite: 5]</span>
-                    <h2 class="font-serif text-3xl sm:text-4xl font-bold mt-3 mb-6 text-beigeSoft">
-                        Maintenir le prestige et la rigueur C.A.M.S.[cite: 5]
-                    </h2>
-                    <p class="text-beigeMuted leading-relaxed font-light mb-6">
-                        En tant que membre du personnel de C.A.M.S., vous incarnez nos valeurs d'intégrité, de précision technique et d'exigence haut de gamme auprès de notre clientèle prestigieuse[cite: 5].
-                    </p>
-                    <p class="text-beigeMuted leading-relaxed font-light mb-8">
-                        Chaque intervention sur le terrain ou dans le cadre de nos prestations de services reflète notre savoir-faire accumulé depuis 5 ans. Le respect des protocoles de sécurité et de qualité est notre marque de fabrique[cite: 5].
-                    </p>
-                    <div class="grid grid-cols-2 gap-6 pt-4 border-t gold-border">
+        <!-- Form Container -->
+        <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-10 shadow-2xl relative">
+            <form id="activityForm" onsubmit="handleSubmit(event)">
+                
+                <!-- Metadata Header Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 pb-8 border-b gold-border">
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Nom du Prestataire</label>
+                        <input type="text" id="prestataire" value="Martin" readonly class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none cursor-not-allowed opacity-90">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Nom du Projet</label>
+                        <input type="text" id="nomProjet" placeholder="Ex: Rénovation Appartement 73" required class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Date de Remise du Rapport</label>
+                        <input type="date" id="dateRemise" required class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                    </div>
+                </div>
+
+                <!-- Section 1 : Lignes d'Activités -->
+                <div class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-serif text-xl font-bold text-gold-light">1. Lignes d'Activités & Temps</h3>
+                        <button type="button" onclick="addRow()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Ajouter une ligne</span>
+                        </button>
+                    </div>
+                    <div id="rowsContainer" class="space-y-4"></div>
+                </div>
+
+                <!-- Section 2 : Achats de Fournitures -->
+                <div class="mb-10 pb-8 border-b gold-border">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-serif text-xl font-bold text-gold-light">2. Achats de Fournitures</h3>
+                        <button type="button" onclick="addSupplyRow()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Ajouter un achat</span>
+                        </button>
+                    </div>
+                    <div id="supplyContainer" class="space-y-4"></div>
+                </div>
+
+                <!-- Section 3 : Pièces Justificatives -->
+                <div class="mb-10 pb-8 border-b gold-border">
+                    <h3 class="font-serif text-xl font-bold text-gold-light mb-2">3. Pièces Justificatives (Photos & Factures compressées)</h3>
+                    <p class="text-[11px] text-beigeMuted mb-4">Astuce : Double-cliquez sur une pièce jointe pour l'ouvrir dans un nouvel onglet.</p>
+                    <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 relative">
+                        <input type="file" id="attachments" multiple accept="image/*" onchange="handleFiles(this)" class="w-full text-xs text-beigeMuted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:gold-border file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-gold/10 file:text-gold hover:file:bg-gold hover:file:text-luxuryBlack file:transition-all cursor-pointer">
+                        <div id="fileListDisplay" class="mt-4 space-y-2 text-xs text-beigeSoft"></div>
+                    </div>
+                </div>
+
+                <!-- Totals Section -->
+                <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="flex items-center justify-between md:justify-start md:space-x-4">
+                        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Total Travaillé :</span>
+                        <span id="totalTravailleDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 h</span>
+                    </div>
+                    <div class="flex items-center justify-between md:justify-start md:space-x-4">
                         <div>
-                            <span class="font-serif text-3xl text-gold font-bold">5</span>
-                            <p class="text-xs uppercase tracking-wider text-beigeMuted mt-1">Années d'excellence[cite: 5]</p>
+                            <span class="text-xs uppercase tracking-widest text-gold font-semibold">Total Transport :</span>
+                            <span class="block text-[9px] text-beigeMuted">(à votre discrétion)</span>
                         </div>
-                        <div>
-                            <span class="font-serif text-3xl text-gold font-bold">100%</span>
-                            <p class="text-xs uppercase tracking-wider text-beigeMuted mt-1">Engagement qualitatif[cite: 5]</p>
-                        </div>
+                        <span id="totalTransportDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 h</span>
+                    </div>
+                    <div class="flex items-center justify-between md:justify-start md:space-x-4">
+                        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Total Achats :</span>
+                        <span id="totalAchatsDisplay" class="font-serif text-xl font-bold text-goldLight">0.00 $</span>
                     </div>
                 </div>
-                <div class="relative">
-                    <div class="aspect-[4/3] rounded-2xl overflow-hidden border gold-border relative shadow-2xl">
-                        <img src="https://images.unsplash.com/photo-1541888946425-d0fbb18f86f6?auto=format&fit=crop&q=80&w=1000" alt="Chantier et architecture C.A.M.S." class="w-full h-full object-cover filter grayscale contrast-125 opacity-80 hover:scale-105 transition-transform duration-700" onerror="this.src='https://placehold.co/800x600/0a0a0a/d4af37?text=C.A.M.S.+Personnel'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-luxuryBlack via-transparent to-transparent opacity-80"></div>
-                        <div class="absolute bottom-6 left-6 right-6">
-                            <span class="text-xs tracking-widest text-gold uppercase">Standards Collaborateurs[cite: 5]</span>
-                            <h3 class="font-serif text-xl font-bold text-beigeSoft mt-1">Rigueur et Sécurité sur Chantier[cite: 5]</h3>
-                        </div>
-                    </div>
+
+                <!-- Action Submit Buttons -->
+                <div class="flex flex-col lg:flex-row items-center justify-end gap-4">
+                    <button type="button" onclick="exportWordBilling()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
+                        <span>Export pour Facturation (Word)</span>
+                    </button>
+                    <button type="button" onclick="generatePDF()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gold/10 border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold hover:text-luxuryBlack transition-all flex items-center justify-center space-x-2">
+                        <span>Générer le PDF</span>
+                    </button>
+                    <button type="button" onclick="saveAndSendEmail()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
+                        <span>Enregistrer & Courriel</span>
+                    </button>
+                    <button type="button" onclick="saveAndSendSMS()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all flex items-center justify-center space-x-2">
+                        <span>Enregistrer & SMS</span>
+                    </button>
                 </div>
-            </div>
+
+            </form>
         </div>
-    </section>
-
-    <!-- Expertise Section -->
-    <section id="expertise" class="py-24 relative">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <span class="text-gold text-xs tracking-[0.3em] uppercase font-semibold">Périmètre d'activité[cite: 5]</span>
-                <h2 class="font-serif text-3xl sm:text-5xl font-bold mt-3 mb-4">Nos Domaines d'Expertise[cite: 5]</h2>
-                <p class="text-beigeMuted font-light">Les piliers opérationnels dédiés à la valorisation et à l'aménagement de vos espaces intérieurs et commerciaux[cite: 5].</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <!-- Card 1: Rénovation Intérieure & Immeubles Locatifs -->
-                <div class="bg-luxuryCard rounded-2xl p-8 border gold-border hover:border-gold transition-all group flex flex-col justify-between">
-                    <div>
-                        <div class="w-14 h-14 rounded-xl bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6 group-hover:bg-gold group-hover:text-luxuryBlack transition-all">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                        </div>
-                        <h3 class="font-serif text-2xl font-bold mb-4 text-gold-light">Rénovation Intérieure & Immeubles Locatifs[cite: 5]</h3>
-                        <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Conserver et rehausser la valeur des immeubles locatifs grâce à une rénovation intérieure soignée, adaptée aux exigences du marché et au confort des occupants[cite: 5].
-                        </p>
-                    </div>
-                    <ul class="space-y-2 text-xs text-beigeMuted border-t gold-border pt-4">
-                        <li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span>Rénovation d'appartements et espaces de vie[cite: 5]</span></li>
-                        <li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span>Valorisation d'immeubles locatifs[cite: 5]</span></li>
-                        <li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span>Finitions haut de gamme & mise aux normes[cite: 5]</span></li>
-                    </ul>
-                </div>
-
-                <!-- Card 2: Réaménagement de Locaux Commerciaux -->
-                <div class="bg-luxuryCard rounded-2xl p-8 border gold-border hover:border-gold transition-all group flex flex-col justify-between">
-                    <div>
-                        <div class="w-14 h-14 rounded-xl bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6 group-hover:bg-gold group-hover:text-luxuryBlack transition-all">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                        </div>
-                        <h3 class="font-serif text-2xl font-bold mb-4 text-gold-light">Réaménagement de Locaux Commerciaux[cite: 5]</h3>
-                        <p class="text-beigeMuted text-sm font-light leading-relaxed mb-6">
-                            Optimisation et réaménagement des locaux commerciaux pour dynamiser l'expérience client, maximiser l'espace de vente et valoriser votre image de marque[cite: 5].
-                        </p>
-                    </div>
-                    <ul class="space-y-2 text-xs text-beigeMuted border-t gold-border pt-4">
-                        <li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span>Réaménagement stratégique de surfaces commerciales[cite: 5]</span></li>
-                        <li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span>Agencement sur-mesure pour professionnels[cite: 5]</span></li>
-                        <li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span>Esthétique et ergonomie des espaces de travail[cite: 5]</span></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Internal Tools Section -->
-    <section id="internal-tools" class="py-24 bg-luxuryCard border-t border-b gold-border relative">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <span class="text-gold text-xs tracking-[0.3em] uppercase font-semibold">Workspace Collaborateur[cite: 5]</span>
-                <h2 class="font-serif text-3xl sm:text-4xl font-bold mt-3 mb-4">Outils Internes & Chiffrage[cite: 5]</h2>
-                <p class="text-beigeMuted font-light">Espace dédié aux équipes commerciales, techniques et administratives pour établir et simuler les projets clients[cite: 5].</p>
-            </div>
-
-            <!-- Grille d'outils -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
-                <!-- Outil 1 : Estimation -->
-                <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
-                    <div>
-                        <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Outil d'Estimation[cite: 5]</h3>
-                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
-                            Simulateur de devis et d'estimation pour préparer rapidement les propositions budgétaires[cite: 5].
-                        </p>
-                    </div>
-                    <div>
-                        <a href="estimation_CAMS.html" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
-                            <span>Lancer l'estimation[cite: 5]</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Outil 2 : Projet / Tâches -->
-                <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
-                    <div>
-                        <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2m-6 9l2 2 4-4"></path></svg>
-                        </div>
-                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Gestion de Projet[cite: 5]</h3>
-                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
-                            Gérez les chantiers pièce par pièce, suivez les corps de métiers en temps réel[cite: 5].
-                        </p>
-                    </div>
-                    <div>
-                        <a href="taches.html" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
-                            <span>Ouvrir Projet[cite: 5]</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Outil 3 : Déclarer le temps passé -->
-                <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
-                    <div>
-                        <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Déclarer son Temps[cite: 5]</h3>
-                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
-                            Renseignez vos activités, horaires, achats de fournitures et pièces justificatives avec sauvegarde en base[cite: 5].
-                        </p>
-                    </div>
-                    <div>
-                        <a href="temps.html" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all space-x-2">
-                            <span>Déclarer le temps[cite: 5]</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Outil 4 : Documentation & Procédures -->
-                <div class="p-8 rounded-2xl bg-luxuryBlack border gold-border flex flex-col justify-between h-full">
-                    <div>
-                        <div class="w-12 h-12 rounded-lg bg-gold/10 border gold-border flex items-center justify-center text-gold mb-6">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        </div>
-                        <h3 class="font-serif text-xl font-bold mb-3 text-gold-light">Documentation[cite: 5]</h3>
-                        <p class="text-beigeMuted text-xs font-light leading-relaxed mb-6">
-                            Accédez aux grilles tarifaires et aux rapports d'activités standardisés[cite: 5].
-                        </p>
-                    </div>
-                    <div class="relative">
-                        <div class="relative inline-block w-full">
-                            <button id="consultDocsBtn" onclick="toggleDocMenu(event)" class="w-full px-4 py-3 rounded-xl border gold-border text-gold font-bold text-[10px] tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-between">
-                                <span>Documents[cite: 5]</span>
-                                <svg class="w-4 h-4 transition-transform duration-200" id="chevronIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-
-                            <div id="docMenu" class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-luxuryCard border gold-border shadow-2xl overflow-hidden z-20 py-2 space-y-1">
-                                <a href="inspection.html" class="flex items-center px-4 py-2 text-[11px] tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
-                                    <span>Inspection appartement[cite: 5]</span>
-                                </a>
-                                <a href="rapport_activites.html" class="flex items-center px-4 py-2 text-[11px] tracking-wider text-beigeSoft hover:bg-gold/10 hover:text-gold transition-colors">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gold mr-2"></span>
-                                    <span>Déclarations heures[cite: 5]</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact & Admin Section -->
-    <section id="contact" class="py-28 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-t from-gold/10 via-transparent to-transparent pointer-events-none"></div>
-        <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
-            <span class="text-gold text-xs tracking-[0.3em] uppercase font-semibold">Support Interne & RH[cite: 5]</span>
-            <h2 class="font-serif text-3xl sm:text-5xl font-bold mt-3 mb-6">Besoin d'assistance administrative ?[cite: 5]</h2>
-            <p class="max-w-2xl mx-auto text-beigeMuted text-base font-light mb-10">
-                Pour toute question relative aux plannings, aux notes de frais ou aux procédures techniques, contactez directement le support interne de C.A.M.S[cite: 5].
-            </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <a href="mailto:entreprise.cams@gmail.com" class="px-10 py-5 rounded-full bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-sm tracking-widest uppercase shadow-xl shadow-gold/20 hover:scale-105 transition-all">
-                    Contacter les RH / Admin[cite: 5]
-                </a>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 pt-16 border-t gold-border text-left">
-                <div>
-                    <h4 class="font-serif text-gold font-bold mb-2 uppercase text-sm tracking-wider">Siège & Bureau Régional[cite: 5]</h4>
-                    <p class="text-beigeMuted text-xs leading-relaxed">St-Jean-sur-Richelieu<br>Québec, Canada[cite: 5]</p>
-                </div>
-                <div>
-                    <h4 class="font-serif text-gold font-bold mb-2 uppercase text-sm tracking-wider">Ligne Interne Support[cite: 5]</h4>
-                    <p class="text-beigeMuted text-xs leading-relaxed">Téléphone : À déterminer<br>Email : entreprise.cams@gmail.com[cite: 5]</p>
-                </div>
-                <div>
-                    <h4 class="font-serif text-gold font-bold mb-2 uppercase text-sm tracking-wider">Disponibilité[cite: 5]</h4>
-                    <p class="text-beigeMuted text-xs leading-relaxed">Lundi – Vendredi : 08h00 - 19h00<br>Portail sécurisé collaborateurs[cite: 5]</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    </main>
 
     <!-- Footer -->
     <footer class="bg-luxuryBlack py-8 border-t gold-border text-center text-xs text-beigeMuted">
         <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>&copy; 2026 C.A.M.S. Espace Interne Réservé au Personnel[cite: 5].</p>
-            <div class="flex space-x-6 text-xs uppercase tracking-widest">
-                <a href="#" class="hover:text-gold transition-colors">Sécurité & Confidentialité[cite: 5]</a>
-                <a href="#" class="hover:text-gold transition-colors">Mentions Légales Internes[cite: 5]</a>
-            </div>
+            <p>&copy; 2026 C.A.M.S. Espace Interne Réservé au Personnel.</p>
         </div>
     </footer>
 
-    <!-- Scripts pour la gestion des menus déroulants -->
+    <!-- Firebase SDKs & Logique -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+            authDomain: "cams-cf723.firebaseapp.com",
+            projectId: "cams-cf723",
+            storageBucket: "cams-cf723.firebasestorage.app",
+            messagingSenderId: "1037636451682",
+            appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+            measurementId: "G-8Q2V3660XZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        window.currentReportId = null;
+
+        window.saveReportToFirebase = async function() {
+            const nomProjet = document.getElementById('nomProjet').value;
+            if (!nomProjet) {
+                alert("Veuillez indiquer le nom du projet.");
+                document.getElementById('nomProjet').focus();
+                return false;
+            }
+
+            const activites = [];
+            let totalTravail = 0;
+            let totalTransport = 0;
+            document.querySelectorAll('.activity-row').forEach(row => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value || '';
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+
+                totalTravail += travail;
+                totalTransport += transport;
+                activites.push({ date, description: desc, horaire, travail, transport });
+            });
+
+            const achats = [];
+            let totalAchats = 0;
+            document.querySelectorAll('.supply-row').forEach(row => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+
+                totalAchats += montant;
+                achats.push({ date, description: desc, montant });
+            });
+
+            const rapportData = {
+                prestataire: document.getElementById('prestataire').value,
+                projet: nomProjet,
+                dateRemise: document.getElementById('dateRemise').value,
+                activites: activites,
+                achats: achats,
+                piecesJointes: window.compressedFiles || [],
+                totaux: { totalTravail, totalTransport, totalAchats },
+                updatedAt: serverTimestamp()
+            };
+
+            try {
+                if (window.currentReportId) {
+                    const docRef = doc(db, "temps", window.currentReportId);
+                    await updateDoc(docRef, rapportData);
+                } else {
+                    rapportData.createdAt = serverTimestamp();
+                    const docRef = await addDoc(collection(db, "temps"), rapportData);
+                    window.currentReportId = docRef.id;
+                }
+                return true;
+            } catch (error) {
+                console.error("Erreur Firestore : ", error);
+                alert("Erreur lors de l'enregistrement : " + error.message);
+                return false;
+            }
+        };
+
+        window.openRecoveryModal = async function() {
+            const modal = document.getElementById('recoveryModal');
+            const container = document.getElementById('reportsListContainer');
+            modal.classList.remove('hidden');
+            container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-8">Chargement des rapports...</p>';
+
+            try {
+                const q = query(collection(db, "temps"), orderBy("dateRemise", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                container.innerHTML = '';
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-8">Aucun rapport enregistré.</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const docId = docSnap.id;
+                    const card = document.createElement('div');
+                    card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-gold transition-all';
+                    
+                    card.innerHTML = `
+                        <div>
+                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">Projet : ${data.projet || 'Sans nom'}</span>
+                            <h4 class="font-serif text-base font-bold text-beigeSoft">${data.projet} — Remise le ${data.dateRemise}</h4>
+                            <p class="text-xs text-beigeMuted mt-1">Pièces jointes : ${data.piecesJointes ? data.piecesJointes.length : 0}</p>
+                        </div>
+                        <button type="button" onclick='loadReportData("${docId}", ${JSON.stringify(data)})' class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">
+                            Modifier / Charger
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.innerHTML = '<p class="text-red-400 text-xs text-center py-8">Erreur de chargement.</p>';
+            }
+        };
+
+        window.closeRecoveryModal = function() {
+            document.getElementById('recoveryModal').classList.add('hidden');
+        };
+
+        window.resetFormForNewReport = function() {
+            window.currentReportId = null;
+            document.getElementById('nomProjet').value = '';
+            document.getElementById('dateRemise').valueAsDate = new Date();
+            document.getElementById('rowsContainer').innerHTML = '';
+            document.getElementById('supplyContainer').innerHTML = '';
+            window.compressedFiles = [];
+            renderFilesDisplay();
+            addRow();
+            addSupplyRow();
+            closeRecoveryModal();
+            alert("Formulaire réinitialisé pour un nouveau rapport.");
+        };
+
+        window.loadReportData = function(docId, data) {
+            window.currentReportId = docId;
+            document.getElementById('nomProjet').value = data.projet || '';
+            document.getElementById('dateRemise').value = data.dateRemise || new Date().toISOString().split('T')[0];
+
+            document.getElementById('rowsContainer').innerHTML = '';
+            if (data.activites && data.activites.length > 0) {
+                data.activites.forEach(act => addRow({ date: act.date, desc: act.description, horaire: act.horaire, travail: act.travail, transport: act.transport }));
+            } else { addRow(); }
+
+            document.getElementById('supplyContainer').innerHTML = '';
+            if (data.achats && data.achats.length > 0) {
+                data.achats.forEach(sup => addSupplyRow({ date: sup.date, desc: sup.description, montant: sup.montant }));
+            } else { addSupplyRow(); }
+
+            window.compressedFiles = data.piecesJointes || [];
+            renderFilesDisplay();
+
+            calculateTotals();
+            closeRecoveryModal();
+            alert("Rapport chargé avec succès ! Les modifications mettront à jour ce même rapport.");
+        };
+    </script>
+
+    <!-- Logique d'interface & Fonctions Export Word -->
     <script>
-        function toggleAdminMenu(event) {
-            event.stopPropagation();
-            const menu = document.getElementById('adminDropdown');
-            const chevron = document.getElementById('adminChevron');
-            const docMenu = document.getElementById('docMenu');
-            
-            if (docMenu && !docMenu.classList.contains('hidden')) {
-                docMenu.classList.add('hidden');
-                document.getElementById('chevronIcon').classList.remove('rotate-180');
-            }
+        document.getElementById('dateRemise').valueAsDate = new Date();
+        window.compressedFiles = [];
 
-            menu.classList.toggle('hidden');
-            chevron.classList.toggle('rotate-180');
+        function parseHours(timeStr) {
+            if (!timeStr) return null;
+            let cleaned = timeStr.toLowerCase().replace(/h/g, ':').replace(/\s+/g, '');
+            if (!cleaned.includes(':')) {
+                cleaned += ':00';
+            }
+            const parts = cleaned.split(':');
+            let hours = parseInt(parts[0], 10);
+            let minutes = parseInt(parts[1], 10) || 0;
+            if (isNaN(hours)) return null;
+            return hours + (minutes / 60);
         }
 
-        function toggleDocMenu(event) {
-            event.stopPropagation();
-            const menu = document.getElementById('docMenu');
-            const chevron = document.getElementById('chevronIcon');
-            const adminMenu = document.getElementById('adminDropdown');
-            
-            if (adminMenu && !adminMenu.classList.contains('hidden')) {
-                adminMenu.classList.add('hidden');
-                document.getElementById('adminChevron').classList.remove('rotate-180');
+        function calculateHoursFromSchedule(inputElement) {
+            const row = inputElement.closest('.activity-row');
+            const horaireVal = inputElement.value.trim();
+            const travailInput = row.querySelector('.row-travail');
+
+            const regex = /(\d{1,2}[h:]?\d{0,2})\s*(?:à|-)\s*(\d{1,2}[h:]?\d{0,2})/gi;
+            let match;
+            let totalHours = 0;
+            let found = false;
+
+            while ((match = regex.exec(horaireVal)) !== null) {
+                const start = parseHours(match[1]);
+                const end = parseHours(match[2]);
+                if (start !== null && end !== null) {
+                    let diff = end - start;
+                    if (diff < 0) diff += 24;
+                    totalHours += diff;
+                    found = true;
+                }
             }
 
-            menu.classList.toggle('hidden');
-            chevron.classList.toggle('rotate-180');
+            if (found && totalHours > 0) {
+                travailInput.value = totalHours.toFixed(2);
+                calculateTotals();
+            }
         }
 
-        window.addEventListener('click', function() {
-            const adminMenu = document.getElementById('adminDropdown');
-            const adminChevron = document.getElementById('adminChevron');
-            if (adminMenu && !adminMenu.classList.contains('hidden')) {
-                adminMenu.classList.add('hidden');
-                adminChevron.classList.remove('rotate-180');
+        function addRow(data = {}) {
+            const container = document.getElementById('rowsContainer');
+            const rowId = 'row_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'activity-row bg-luxuryBlack border gold-border rounded-2xl p-4 sm:p-6 relative grid grid-cols-1 sm:grid-cols-12 gap-4 items-end';
+            rowDiv.id = rowId;
+
+            rowDiv.innerHTML = `
+                <div class="sm:col-span-2"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Date</label><input type="date" class="row-date w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.date || new Date().toISOString().split('T')[0]}" required></div>
+                <div class="sm:col-span-4"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Description</label><input type="text" placeholder="Description des travaux" class="row-desc w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.desc || ''}" required></div>
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Horaire</label>
+                    <input type="text" placeholder="Ex: 08h-16h30" class="row-horaire w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.horaire || ''}" onblur="calculateHoursFromSchedule(this)">
+                </div>
+                <div class="sm:col-span-2"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Travail (h)</label><input type="number" step="0.25" min="0" placeholder="0.0" class="row-travail w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.travail || ''}" oninput="calculateTotals()" required></div>
+                <div class="sm:col-span-1"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Trans. (h)</label><input type="number" step="0.25" min="0" placeholder="0.0" class="row-transport w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.transport || ''}" oninput="calculateTotals()"></div>
+                <div class="sm:col-span-1 flex items-center justify-center"><button type="button" onclick="removeRow('${rowId}')" class="w-full h-9 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">✕</button></div>
+            `;
+            container.appendChild(rowDiv);
+            calculateTotals();
+        }
+
+        function removeRow(rowId) { document.getElementById(rowId)?.remove(); calculateTotals(); }
+
+        function addSupplyRow(data = {}) {
+            const container = document.getElementById('supplyContainer');
+            const supplyId = 'supply_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const supplyDiv = document.createElement('div');
+            supplyDiv.className = 'supply-row bg-luxuryBlack border gold-border rounded-2xl p-4 sm:p-6 relative grid grid-cols-1 sm:grid-cols-12 gap-4 items-end';
+            supplyDiv.id = supplyId;
+
+            supplyDiv.innerHTML = `
+                <div class="sm:col-span-3"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Date d'achat</label><input type="date" class="supply-date w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.date || new Date().toISOString().split('T')[0]}" required></div>
+                <div class="sm:col-span-6"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Description</label><input type="text" placeholder="Matériel, peinture..." class="supply-desc w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.desc || ''}" required></div>
+                <div class="sm:col-span-2"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Montant ($)</label><input type="number" step="0.01" min="0" placeholder="0.00" class="supply-montant w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.montant || ''}" oninput="calculateTotals()" required></div>
+                <div class="sm:col-span-1 flex items-center justify-center"><button type="button" onclick="removeSupplyRow('${supplyId}')" class="w-full h-9 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">✕</button></div>
+            `;
+            container.appendChild(supplyDiv);
+            calculateTotals();
+        }
+
+        function removeSupplyRow(supplyId) { document.getElementById(supplyId)?.remove(); calculateTotals(); }
+
+        function handleFiles(input) {
+            if (!input.files || input.files.length === 0) return;
+
+            let processedCount = 0;
+            const files = input.files;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        window.compressedFiles.push({ name: file.name, data: dataUrl });
+
+                        processedCount++;
+                        if (processedCount === files.length) {
+                            renderFilesDisplay();
+                            input.value = '';
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderFilesDisplay() {
+            const display = document.getElementById('fileListDisplay');
+            display.innerHTML = '';
+
+            if (!window.compressedFiles || window.compressedFiles.length === 0) {
+                display.innerHTML = '<p class="text-beigeMuted text-xs">Aucune pièce jointe.</p>';
+                return;
             }
 
-            const docMenu = document.getElementById('docMenu');
-            const chevron = document.getElementById('chevronIcon');
-            if (docMenu && !docMenu.classList.contains('hidden')) {
-                docMenu.classList.add('hidden');
-                chevron.classList.remove('rotate-180');
+            window.compressedFiles.forEach((file, index) => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center justify-between bg-gold/10 border gold-border px-3 py-2 rounded-xl text-gold group hover:bg-gold/20 transition-all';
+                badge.title = "Double-cliquez pour ouvrir l'image";
+                
+                badge.innerHTML = `
+                    <span class="cursor-pointer truncate flex-1" ondblclick="openAttachment('${file.data}')">📎 ${file.name} <span class="text-[10px] opacity-75">(Double-clic pour ouvrir)</span></span>
+                    <button type="button" onclick="removeAttachment(${index})" class="ml-2 w-6 h-6 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors">✕</button>
+                `;
+                display.appendChild(badge);
+            });
+        }
+
+        window.openAttachment = function(dataUrl) {
+            const win = window.open();
+            win.document.write('<iframe src="' + dataUrl + '" frameborder="0" style="border:0; top:0; left:0; bottom:0; right:0; width:100%; height:100%;" autofit></iframe>');
+        }
+
+        window.removeAttachment = function(index) {
+            window.compressedFiles.splice(index, 1);
+            renderFilesDisplay();
+        }
+
+        function calculateTotals() {
+            let totalTravail = 0, totalTransport = 0, totalAchats = 0;
+            document.querySelectorAll('.activity-row').forEach(row => {
+                totalTravail += parseFloat(row.querySelector('.row-travail').value) || 0;
+                totalTransport += parseFloat(row.querySelector('.row-transport').value) || 0;
+            });
+            document.querySelectorAll('.supply-row').forEach(row => {
+                totalAchats += parseFloat(row.querySelector('.supply-montant').value) || 0;
+            });
+            document.getElementById('totalTravailleDisplay').textContent = totalTravail.toFixed(2) + ' h';
+            document.getElementById('totalTransportDisplay').textContent = totalTransport.toFixed(2) + ' h';
+            document.getElementById('totalAchatsDisplay').textContent = totalAchats.toFixed(2) + ' $';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { addRow(); addSupplyRow(); renderFilesDisplay(); });
+
+        window.exportWordBilling = function() {
+            const nomProjet = document.getElementById('nomProjet').value;
+            if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
+
+            const prestataire = document.getElementById('prestataire').value;
+            const dateRemise = document.getElementById('dateRemise').value;
+
+            let totalTravail = 0;
+            let totalTransport = 0;
+            let totalAchats = 0;
+
+            let activitiesHtml = '';
+            document.querySelectorAll('.activity-row').forEach(row => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                totalTravail += travail;
+                totalTransport += transport;
+
+                activitiesHtml += `<tr>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${date}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${desc}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt; text-align: right;">${travail.toFixed(2)} h</td>
+                </tr>`;
+            });
+
+            let suppliesHtml = '';
+            document.querySelectorAll('.supply-row').forEach(row => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+                totalAchats += montant;
+
+                suppliesHtml += `<tr>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${date}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${desc}</td>
+                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt; text-align: right;">${montant.toFixed(2)} $</td>
+                </tr>`;
+            });
+
+            const htmlContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <title>Export Facturation - C.A.M.S.</title>
+                    <style>
+                        body { font-family: 'Calibri', Arial, sans-serif; color: #050505; line-height: 1.6; }
+                        h1 { color: #aa8c2c; font-size: 20pt; text-transform: uppercase; border-bottom: 2px solid #d4af37; padding-bottom: 5px; }
+                        h2 { color: #aa8c2c; font-size: 14pt; margin-top: 20px; }
+                        p { font-size: 11pt; margin: 4px 0; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+                        th { background-color: #0f0f0f; color: #d4af37; border: 1px solid #d4af37; padding: 10px; font-size: 11pt; text-align: left; }
+                        .totals { background-color: #f5f5dc; border: 1px solid #d4af37; padding: 15px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>C.A.M.S. — Résumé pour Facturation</h1>
+                    <p><b>Projet :</b> ${nomProjet}</p>
+                    <p><b>Prestataire :</b> ${prestataire}</p>
+                    <p><b>Date d'export :</b> ${dateRemise}</p>
+
+                    <h2>1. Détails des Tâches & Réalisations</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description des Tâches / Réalisations</th>
+                                <th style="text-align: right;">Temps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${activitiesHtml}
+                        </tbody>
+                    </table>
+
+                    <h2>2. Achats de Fournitures</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description de l'Achat</th>
+                                <th style="text-align: right;">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${suppliesHtml || '<tr><td colspan="3" style="border: 1px solid #d4af37; padding: 8px; text-align: center;">Aucun achat enregistré.</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <div class="totals">
+                        <h2 style="margin-top: 0; color: #aa8c2c;">Récapitulatif Global</h2>
+                        <p><b>Total Heures Travaillées :</b> ${totalTravail.toFixed(2)} h</p>
+                        <p><b>Total Heures Transport :</b> ${totalTransport.toFixed(2)} h</p>
+                        <p><b>Total Achats de Fournitures :</b> ${totalAchats.toFixed(2)} $</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Facturation_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generatePDF() {
+            const nomProjet = document.getElementById('nomProjet').value;
+            if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const prestataire = document.getElementById('prestataire').value;
+            const dateRemise = document.getElementById('dateRemise').value;
+
+            doc.setFillColor(5, 5, 5);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            doc.setFillColor(15, 15, 15);
+            doc.rect(15, 15, 180, 25, 'F');
+            doc.setDrawColor(212, 175, 55);
+            doc.setLineWidth(0.5);
+            doc.rect(15, 15, 180, 25, 'S');
+
+            doc.setTextColor(212, 175, 55); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("C.A.M.S.", 22, 28);
+            doc.setFontSize(9); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 22, 35);
+
+            doc.setTextColor(245, 245, 220); doc.setFontSize(10); doc.setFont("Helvetica", "normal");
+            doc.text(`Projet : ${nomProjet}`, 20, 52);
+            doc.text(`Prestataire : ${prestataire}`, 20, 60);
+            doc.text(`Date de remise : ${dateRemise}`, 20, 68);
+
+            let y = 80;
+
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("1. Activités & Temps", 20, y); y += 6;
+            
+            doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
+            doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
+            doc.text("Date", 23, y + 5.5); doc.text("Description", 55, y + 5.5); doc.text("Horaire", 125, y + 5.5); doc.text("Travail", 150, y + 5.5); doc.text("Transp.", 172, y + 5.5);
+
+            y += 10; doc.setFont("Helvetica", "normal"); doc.setTextColor(245, 245, 220);
+            let totalTravail = 0, totalTransport = 0;
+            document.querySelectorAll('.activity-row').forEach((row) => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value || '-';
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                totalTravail += travail; totalTransport += transport;
+
+                if (y > 260) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+                doc.text(date, 23, y); doc.text(desc.substring(0, 35), 55, y); doc.text(horaire, 125, y); doc.text(travail.toFixed(2) + "h", 150, y); doc.text(transport.toFixed(2) + "h", 172, y);
+                y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
+            });
+
+            y += 8; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("2. Achats de Fournitures", 20, y); y += 6;
+            
+            doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
+            doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
+            doc.text("Date", 23, y + 5.5); doc.text("Description de la fourniture", 55, y + 5.5); doc.text("Montant ($)", 155, y + 5.5);
+
+            y += 10; doc.setFont("Helvetica", "normal"); doc.setTextColor(245, 245, 220);
+            let totalAchats = 0;
+            document.querySelectorAll('.supply-row').forEach((row) => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+                totalAchats += montant;
+
+                if (y > 260) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+                doc.text(date, 23, y); doc.text(desc.substring(0, 50), 55, y); doc.text(montant.toFixed(2) + " $", 155, y);
+                y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
+            });
+
+            if (window.compressedFiles && window.compressedFiles.length > 0) {
+                y += 8; if (y > 240) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+                doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(212, 175, 55);
+                doc.text("Pièces justificatives jointes :", 20, y); y += 6;
+                doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(245, 245, 220);
+                window.compressedFiles.forEach(file => { doc.text(`• ${file.name} (Compressé)`, 25, y); y += 6; });
             }
-        });
+
+            y += 10; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
+            doc.setFillColor(15, 15, 15); doc.roundedRect(20, y, 170, 24, 2, 2, 'F');
+            doc.setDrawColor(212, 175, 55); doc.roundedRect(20, y, 170, 24, 2, 2, 'S');
+            
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(243, 229, 171);
+            doc.text(`Total Heures Travaillées : ${totalTravail.toFixed(2)} h`, 25, y + 7);
+            doc.text(`Total Heures Transport (à votre discrétion) : ${totalTransport.toFixed(2)} h`, 25, y + 14);
+            doc.text(`Total Achats de Fournitures : ${totalAchats.toFixed(2)} $`, 25, y + 21);
+
+            doc.save(`Rapport_Activites_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.pdf`);
+        }
+
+        function generateReportText() {
+            const prestataire = document.getElementById('prestataire').value;
+            const nomProjet = document.getElementById('nomProjet').value || 'Non spécifié';
+            const dateRemise = document.getElementById('dateRemise').value;
+            const recoveryUrl = window.location.href.split('?')[0];
+            
+            let report = `COMPTE RENDU DES ACTIVITÉS — C.A.M.S.\n`;
+            report += `════════════════════════════════════\n`;
+            report += `👤 Prestataire : ${prestataire}\n`;
+            report += `🏗️ Projet : ${nomProjet}\n`;
+            report += `📅 Date de remise : ${dateRemise}\n`;
+            report += `════════════════════════════════════\n\n`;
+
+            report += `📋 1. ACTIVITÉS & TEMPS\n`;
+            let totalTravail = 0, totalTransport = 0;
+            document.querySelectorAll('.activity-row').forEach((row) => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value || 'N/A';
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                totalTravail += travail; totalTransport += transport;
+                report += `• [${date}] ${desc} (${horaire}) | Travaillé : ${travail}h | Transport : ${transport}h\n`;
+            });
+
+            report += `\n🛒 2. ACHATS DE FOURNITURES\n`;
+            let totalAchats = 0;
+            document.querySelectorAll('.supply-row').forEach((row) => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+                totalAchats += montant;
+                report += `• [${date}] ${desc} : ${montant.toFixed(2)}$\n`;
+            });
+
+            if (window.compressedFiles && window.compressedFiles.length > 0) {
+                const fileNames = window.compressedFiles.map(f => f.name).join(', ');
+                report += `\n📎 PIÈCES JOINTES : ${fileNames}\n`;
+            }
+
+            report += `\n════════════════════════════════════\n`;
+            report += `📊 TOTAUX GÉNÉRAUX\n`;
+            report += `⏱️ Total Travaillé : ${totalTravail.toFixed(2)}h\n`;
+            report += `🚗 Total Transport (à votre discrétion) : ${totalTransport.toFixed(2)}h\n`;
+            report += `💰 Total Achats : ${totalAchats.toFixed(2)}$\n`;
+            report += `════════════════════════════════════\n\n`;
+            report += `🔗 Récupérer ou modifier ce rapport :\n${recoveryUrl}`;
+
+            return report;
+        }
+
+        window.saveAndSendEmail = async function() {
+            const success = await window.saveReportToFirebase();
+            if (!success) return;
+
+            const nomProjet = document.getElementById('nomProjet').value;
+            const subject = encodeURIComponent(`Compte Rendu d'Activités & Achats - ${nomProjet} - Martin`);
+            const body = encodeURIComponent(generateReportText());
+            window.location.href = `mailto:gestion_cams@hotmail.com?subject=${subject}&body=${body}`;
+        }
+
+        window.saveAndSendSMS = async function() {
+            const success = await window.saveReportToFirebase();
+            if (!success) return;
+
+            const text = encodeURIComponent(generateReportText());
+            window.location.href = `sms:5149124573?body=${text}`;
+        }
+
+        function handleSubmit(event) { event.preventDefault(); }
     </script>
 </body>
 </html>
