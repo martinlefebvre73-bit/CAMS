@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C.A.M.S. — Compte Rendu des Activités</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF CDN pour la génération de PDF professionnelle -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google Fonts for Serif & Sans-serif elegance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind configuration for custom luxury colors and fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        luxuryBlack: '#050505',
+                        luxuryCard: '#0f0f0f',
+                        gold: '#d4af37',
+                        goldLight: '#f3e5ab',
+                        goldDark: '#aa8c2c',
+                        beigeSoft: '#f5f5dc',
+                        beigeMuted: '#d1d1b8',
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 50%, #aa8c2c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
+        .gold-border:hover { border-color: rgba(212, 175, 55, 0.8); }
+    </style>
+</head>
+<body class="bg-luxuryBlack text-beigeSoft font-sans antialiased selection:bg-gold selection:text-luxuryBlack">
+
+    <!-- Header / Navigation -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
+                    <span class="font-serif text-gold font-bold text-lg">C</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-serif text-2xl font-bold tracking-widest text-gold">C.A.M.S.</span>
+                    <span class="text-[10px] tracking-[0.25em] text-beigeMuted uppercase">Rapport d'Activités</span>
+                </div>
+            </a>
+            <div class="flex items-center space-x-3">
+                <button type="button" onclick="openRecoveryModal()" class="px-4 py-2 rounded-full bg-gold/10 border gold-border text-xs text-gold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Récupération</span>
+                </button>
+                <a href="index.html" class="px-4 py-2 rounded-full border gold-border text-xs text-gold uppercase tracking-widest hover:bg-gold/10 transition-colors">
+                    Accueil
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Modal de Récupération -->
+    <div id="recoveryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center px-4">
+        <div class="bg-luxuryCard border gold-border rounded-3xl max-w-3xl w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-6 border-b gold-border flex items-center justify-between bg-luxuryBlack">
+                <h3 class="font-serif text-xl font-bold text-gold-light">Récupération des Rapports Enregistrés</h3>
+                <button onclick="closeRecoveryModal()" class="text-beigeMuted hover:text-gold transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4" id="reportsListContainer">
+                <p class="text-beigeMuted text-xs text-center py-8">Chargement des rapports depuis Firestore...</p>
+            </div>
+            <div class="p-4 border-t gold-border bg-luxuryBlack text-right">
+                <button onclick="closeRecoveryModal()" class="px-6 py-2 rounded-xl border gold-border text-gold text-xs uppercase tracking-widest hover:bg-gold/10 transition-colors">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <main class="pt-32 pb-24 px-6 max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+            <span class="inline-block py-1.5 px-4 rounded-full border gold-border bg-gold/5 text-gold text-xs tracking-[0.3em] uppercase mb-4">
+                Déclaration de Temps, Achats & Pièces Justificatives
+            </span>
+            <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight mb-4">
+                Compte Rendu des <span class="gold-gradient-text">Activités</span>
+            </h1>
+            <p class="text-beigeMuted text-sm sm:text-base font-light max-w-2xl mx-auto">
+                Renseignez vos horaires (ex: 08h-16h30), les heures travaillées se calculent automatiquement.
+            </p>
+        </div>
+
+        <!-- Form Container -->
+        <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-10 shadow-2xl relative">
+            <form id="activityForm" onsubmit="handleSubmit(event)">
+                
+                <!-- Metadata Header Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 pb-8 border-b gold-border">
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Nom du Prestataire</label>
+                        <input type="text" id="prestataire" value="Martin" readonly class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none cursor-not-allowed opacity-90">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Nom du Projet</label>
+                        <input type="text" id="nomProjet" placeholder="Ex: Rénovation Appartement 73" required class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Date de Remise du Rapport</label>
+                        <input type="date" id="dateRemise" required class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                    </div>
+                </div>
+
+                <!-- Section 1 : Lignes d'Activités -->
+                <div class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-serif text-xl font-bold text-gold-light">1. Lignes d'Activités & Temps</h3>
+                        <button type="button" onclick="addRow()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Ajouter une ligne</span>
+                        </button>
+                    </div>
+                    <div id="rowsContainer" class="space-y-4"></div>
+                </div>
+
+                <!-- Section 2 : Achats de Fournitures -->
+                <div class="mb-10 pb-8 border-b gold-border">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-serif text-xl font-bold text-gold-light">2. Achats de Fournitures</h3>
+                        <button type="button" onclick="addSupplyRow()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Ajouter un achat</span>
+                        </button>
+                    </div>
+                    <div id="supplyContainer" class="space-y-4"></div>
+                </div>
+
+                <!-- Section 3 : Pièces Justificatives -->
+                <div class="mb-10 pb-8 border-b gold-border">
+                    <h3 class="font-serif text-xl font-bold text-gold-light mb-2">3. Pièces Justificatives (Photos & Factures compressées)</h3>
+                    <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 relative">
+                        <input type="file" id="attachments" multiple accept="image/*" onchange="handleFiles(this)" class="w-full text-xs text-beigeMuted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:gold-border file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-gold/10 file:text-gold hover:file:bg-gold hover:file:text-luxuryBlack file:transition-all cursor-pointer">
+                        <div id="fileListDisplay" class="mt-4 space-y-2 text-xs text-beigeSoft"></div>
+                    </div>
+                </div>
+
+                <!-- Totals Section -->
+                <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="flex items-center justify-between md:justify-start md:space-x-4">
+                        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Total Travaillé :</span>
+                        <span id="totalTravailleDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 h</span>
+                    </div>
+                    <div class="flex items-center justify-between md:justify-start md:space-x-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-widest text-gold font-semibold">Total Transport :</span>
+                            <span class="block text-[9px] text-beigeMuted">(à votre discrétion)</span>
+                        </div>
+                        <span id="totalTransportDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 h</span>
+                    </div>
+                    <div class="flex items-center justify-between md:justify-start md:space-x-4">
+                        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Total Achats :</span>
+                        <span id="totalAchatsDisplay" class="font-serif text-xl font-bold text-goldLight">0.00 $</span>
+                    </div>
+                </div>
+
+                <!-- Action Submit Buttons -->
+                <div class="flex flex-col lg:flex-row items-center justify-end gap-4">
+                    <button type="button" onclick="generatePDF()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gold/10 border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold hover:text-luxuryBlack transition-all flex items-center justify-center space-x-2">
+                        <span>Générer le PDF</span>
+                    </button>
+                    <button type="button" onclick="saveAndSendEmail()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
+                        <span>Enregistrer & Courriel</span>
+                    </button>
+                    <button type="button" onclick="saveAndSendSMS()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gradient-to-r from-goldLight via-gold to-goldDark text-luxuryBlack font-bold text-xs tracking-widest uppercase shadow-lg shadow-gold/20 hover:scale-[1.02] transition-all flex items-center justify-center space-x-2">
+                        <span>Enregistrer & SMS</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-luxuryBlack py-8 border-t gold-border text-center text-xs text-beigeMuted">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 C.A.M.S. Espace Interne Réservé au Personnel.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDKs & Logique -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+            authDomain: "cams-cf723.firebaseapp.com",
+            projectId: "cams-cf723",
+            storageBucket: "cams-cf723.firebasestorage.app",
+            messagingSenderId: "1037636451682",
+            appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+            measurementId: "G-8Q2V3660XZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        window.saveReportToFirebase = async function() {
+            const nomProjet = document.getElementById('nomProjet').value;
+            if (!nomProjet) {
+                alert("Veuillez indiquer le nom du projet.");
+                document.getElementById('nomProjet').focus();
+                return false;
+            }
+
+            const activites = [];
+            let totalTravail = 0;
+            let totalTransport = 0;
+            document.querySelectorAll('.activity-row').forEach(row => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value || '';
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+
+                totalTravail += travail;
+                totalTransport += transport;
+                activites.push({ date, description: desc, horaire, travail, transport });
+            });
+
+            const achats = [];
+            let totalAchats = 0;
+            document.querySelectorAll('.supply-row').forEach(row => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+
+                totalAchats += montant;
+                achats.push({ date, description: desc, montant });
+            });
+
+            const rapportData = {
+                prestataire: document.getElementById('prestataire').value,
+                projet: nomProjet,
+                dateRemise: document.getElementById('dateRemise').value,
+                activites: activites,
+                achats: achats,
+                piecesJointes: window.compressedFiles || [],
+                totaux: { totalTravail, totalTransport, totalAchats },
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, "temps"), rapportData);
+                return true;
+            } catch (error) {
+                console.error("Erreur Firestore : ", error);
+                alert("Erreur lors de l'enregistrement : " + error.message);
+                return false;
+            }
+        };
+
+        window.openRecoveryModal = async function() {
+            const modal = document.getElementById('recoveryModal');
+            const container = document.getElementById('reportsListContainer');
+            modal.classList.remove('hidden');
+            container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-8">Chargement des rapports...</p>';
+
+            try {
+                const q = query(collection(db, "temps"), orderBy("dateRemise", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                container.innerHTML = '';
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-8">Aucun rapport enregistré.</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-gold transition-all';
+                    
+                    card.innerHTML = `
+                        <div>
+                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">Projet : ${data.projet || 'Sans nom'}</span>
+                            <h4 class="font-serif text-base font-bold text-beigeSoft">${data.projet} — Remise le ${data.dateRemise}</h4>
+                            <p class="text-xs text-beigeMuted mt-1">Pièces jointes : ${data.piecesJointes ? data.piecesJointes.length : 0}</p>
+                        </div>
+                        <button type="button" onclick='loadReportData(${JSON.stringify(data)})' class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">
+                            Modifier / Charger
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.innerHTML = '<p class="text-red-400 text-xs text-center py-8">Erreur de chargement.</p>';
+            }
+        };
+
+        window.closeRecoveryModal = function() {
+            document.getElementById('recoveryModal').classList.add('hidden');
+        };
+
+        window.loadReportData = function(data) {
+            document.getElementById('nomProjet').value = data.projet || '';
+            document.getElementById('dateRemise').value = data.dateRemise || new Date().toISOString().split('T')[0];
+
+            document.getElementById('rowsContainer').innerHTML = '';
+            if (data.activites && data.activites.length > 0) {
+                data.activites.forEach(act => addRow({ date: act.date, desc: act.description, horaire: act.horaire, travail: act.travail, transport: act.transport }));
+            } else { addRow(); }
+
+            document.getElementById('supplyContainer').innerHTML = '';
+            if (data.achats && data.achats.length > 0) {
+                data.achats.forEach(sup => addSupplyRow({ date: sup.date, desc: sup.description, montant: sup.montant }));
+            } else { addSupplyRow(); }
+
+            window.compressedFiles = data.piecesJointes || [];
+            const display = document.getElementById('fileListDisplay');
+            display.innerHTML = '';
+            window.compressedFiles.forEach(file => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center space-x-2 bg-gold/10 border gold-border px-3 py-1.5 rounded-lg text-gold';
+                badge.innerHTML = `<span>📎 ${file.name} (Compressé)</span>`;
+                display.appendChild(badge);
+            });
+
+            calculateTotals();
+            closeRecoveryModal();
+            alert("Rapport chargé avec succès !");
+        };
+    </script>
+
+    <!-- Logique d'interface & Calcul automatique d'heures -->
+    <script>
+        document.getElementById('dateRemise').valueAsDate = new Date();
+        window.compressedFiles = [];
+
+        function parseHours(timeStr) {
+            if (!timeStr) return null;
+            // Nettoyer la chaîne (ex: "08h30" -> "08:30", "8h" -> "08:00")
+            let cleaned = timeStr.toLowerCase().replace(/h/g, ':').replace(/\s+/g, '');
+            if (!cleaned.includes(':')) {
+                cleaned += ':00';
+            }
+            const parts = cleaned.split(':');
+            let hours = parseInt(parts[0], 10);
+            let minutes = parseInt(parts[1], 10) || 0;
+            if (isNaN(hours)) return null;
+            return hours + (minutes / 60);
+        }
+
+        function calculateHoursFromSchedule(inputElement) {
+            const row = inputElement.closest('.activity-row');
+            const horaireVal = inputElement.value.trim();
+            const travailInput = row.querySelector('.row-travail');
+
+            // Recherche de plages horaires (ex: 08h-16h30 ou 8:00 à 16:30)
+            // Gère aussi plusieurs plages séparées par "et" ou "+"
+            const regex = /(\d{1,2}[h:]?\d{0,2})\s*(?:à|-)\s*(\d{1,2}[h:]?\d{0,2})/gi;
+            let match;
+            let totalHours = 0;
+            let found = false;
+
+            while ((match = regex.exec(horaireVal)) !== null) {
+                const start = parseHours(match[1]);
+                const end = parseHours(match[2]);
+                if (start !== null && end !== null) {
+                    let diff = end - start;
+                    if (diff < 0) diff += 24; // Gérer le dépassement de minuit si besoin
+                    totalHours += diff;
+                    found = true;
+                }
+            }
+
+            if (found && totalHours > 0) {
+                travailInput.value = totalHours.toFixed(2);
+                calculateTotals();
+            }
+        }
+
+        function addRow(data = {}) {
+            const container = document.getElementById('rowsContainer');
+            const rowId = 'row_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'activity-row bg-luxuryBlack border gold-border rounded-2xl p-4 sm:p-6 relative grid grid-cols-1 sm:grid-cols-12 gap-4 items-end';
+            rowDiv.id = rowId;
+
+            rowDiv.innerHTML = `
+                <div class="sm:col-span-2"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Date</label><input type="date" class="row-date w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.date || new Date().toISOString().split('T')[0]}" required></div>
+                <div class="sm:col-span-4"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Description</label><input type="text" placeholder="Description des travaux" class="row-desc w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.desc || ''}" required></div>
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Horaire</label>
+                    <input type="text" placeholder="Ex: 08h-16h30" class="row-horaire w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.horaire || ''}" onblur="calculateHoursFromSchedule(this)">
+                </div>
+                <div class="sm:col-span-2"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Travail (h)</label><input type="number" step="0.25" min="0" placeholder="0.0" class="row-travail w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.travail || ''}" oninput="calculateTotals()" required></div>
+                <div class="sm:col-span-1"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Trans. (h)</label><input type="number" step="0.25" min="0" placeholder="0.0" class="row-transport w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.transport || ''}" oninput="calculateTotals()"></div>
+                <div class="sm:col-span-1 flex items-center justify-center"><button type="button" onclick="removeRow('${rowId}')" class="w-full h-9 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">✕</button></div>
+            `;
+            container.appendChild(rowDiv);
+            calculateTotals();
+        }
+
+        function removeRow(rowId) { document.getElementById(rowId)?.remove(); calculateTotals(); }
+
+        function addSupplyRow(data = {}) {
+            const container = document.getElementById('supplyContainer');
+            const supplyId = 'supply_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const supplyDiv = document.createElement('div');
+            supplyDiv.className = 'supply-row bg-luxuryBlack border gold-border rounded-2xl p-4 sm:p-6 relative grid grid-cols-1 sm:grid-cols-12 gap-4 items-end';
+            supplyDiv.id = supplyId;
+
+            supplyDiv.innerHTML = `
+                <div class="sm:col-span-3"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Date d'achat</label><input type="date" class="supply-date w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.date || new Date().toISOString().split('T')[0]}" required></div>
+                <div class="sm:col-span-6"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Description</label><input type="text" placeholder="Matériel, peinture..." class="supply-desc w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.desc || ''}" required></div>
+                <div class="sm:col-span-2"><label class="block text-[10px] uppercase tracking-widest text-gold mb-1">Montant ($)</label><input type="number" step="0.01" min="0" placeholder="0.00" class="supply-montant w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold" value="${data.montant || ''}" oninput="calculateTotals()" required></div>
+                <div class="sm:col-span-1 flex items-center justify-center"><button type="button" onclick="removeSupplyRow('${supplyId}')" class="w-full h-9 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">✕</button></div>
+            `;
+            container.appendChild(supplyDiv);
+            calculateTotals();
+        }
+
+        function removeSupplyRow(supplyId) { document.getElementById(supplyId)?.remove(); calculateTotals(); }
+
+        function handleFiles(input) {
+            window.compressedFiles = [];
+            const display = document.getElementById('fileListDisplay');
+            display.innerHTML = '<p class="text-gold text-xs">Compression des images en cours...</p>';
+
+            if (!input.files || input.files.length === 0) { display.innerHTML = ''; return; }
+
+            let processedCount = 0;
+            const files = input.files;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        window.compressedFiles.push({ name: file.name, data: dataUrl });
+
+                        processedCount++;
+                        if (processedCount === files.length) {
+                            display.innerHTML = '';
+                            window.compressedFiles.forEach(cf => {
+                                const badge = document.createElement('div');
+                                badge.className = 'flex items-center space-x-2 bg-gold/10 border gold-border px-3 py-1.5 rounded-lg text-gold';
+                                badge.innerHTML = `<span>📎 ${cf.name} (Compressé)</span>`;
+                                display.appendChild(badge);
+                            });
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function calculateTotals() {
+            let totalTravail = 0, totalTransport = 0, totalAchats = 0;
+            document.querySelectorAll('.activity-row').forEach(row => {
+                totalTravail += parseFloat(row.querySelector('.row-travail').value) || 0;
+                totalTransport += parseFloat(row.querySelector('.row-transport').value) || 0;
+            });
+            document.querySelectorAll('.supply-row').forEach(row => {
+                totalAchats += parseFloat(row.querySelector('.supply-montant').value) || 0;
+            });
+            document.getElementById('totalTravailleDisplay').textContent = totalTravail.toFixed(2) + ' h';
+            document.getElementById('totalTransportDisplay').textContent = totalTransport.toFixed(2) + ' h';
+            document.getElementById('totalAchatsDisplay').textContent = totalAchats.toFixed(2) + ' $';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { addRow(); addSupplyRow(); });
+
+        function generatePDF() {
+            const nomProjet = document.getElementById('nomProjet').value;
+            if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const prestataire = document.getElementById('prestataire').value;
+            const dateRemise = document.getElementById('dateRemise').value;
+
+            doc.setFillColor(15, 15, 15); doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(212, 175, 55); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("C.A.M.S.", 20, 22);
+            doc.setFontSize(10); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 20, 30);
+
+            doc.setTextColor(40, 40, 40); doc.setFontSize(11);
+            doc.text(`Projet : ${nomProjet}`, 20, 55);
+            doc.text(`Prestataire : ${prestataire}`, 20, 63);
+            doc.text(`Date de remise : ${dateRemise}`, 20, 71);
+
+            let y = 85;
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(170, 140, 44); doc.text("1. Activités & Temps", 20, y); y += 6;
+            doc.setFillColor(240, 240, 240); doc.rect(20, y, 170, 8, 'F');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(40, 40, 40);
+            doc.text("Date", 23, y + 6); doc.text("Description", 55, y + 6); doc.text("Horaire", 125, y + 6); doc.text("Travail", 150, y + 6); doc.text("Transp.", 175, y + 6);
+
+            y += 12; doc.setFont("Helvetica", "normal");
+            let totalTravail = 0, totalTransport = 0;
+            document.querySelectorAll('.activity-row').forEach((row) => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value || '-';
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                totalTravail += travail; totalTransport += transport;
+
+                if (y > 260) { doc.addPage(); y = 20; }
+                doc.text(date, 23, y); doc.text(desc.substring(0, 35), 55, y); doc.text(horaire, 125, y); doc.text(travail.toFixed(2) + "h", 150, y); doc.text(transport.toFixed(2) + "h", 175, y);
+                y += 8; doc.setDrawColor(220, 220, 220); doc.line(20, y - 2, 190, y - 2); y += 4;
+            });
+
+            y += 10; if (y > 230) { doc.addPage(); y = 20; }
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(170, 140, 44); doc.text("2. Achats de Fournitures", 20, y); y += 6;
+            doc.setFillColor(240, 240, 240); doc.rect(20, y, 170, 8, 'F');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(40, 40, 40);
+            doc.text("Date", 23, y + 6); doc.text("Description de la fourniture", 55, y + 6); doc.text("Montant ($)", 155, y + 6);
+
+            y += 12; doc.setFont("Helvetica", "normal");
+            let totalAchats = 0;
+            document.querySelectorAll('.supply-row').forEach((row) => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+                totalAchats += montant;
+
+                if (y > 260) { doc.addPage(); y = 20; }
+                doc.text(date, 23, y); doc.text(desc.substring(0, 50), 55, y); doc.text(montant.toFixed(2) + " $", 155, y);
+                y += 8; doc.setDrawColor(220, 220, 220); doc.line(20, y - 2, 190, y - 2); y += 4;
+            });
+
+            if (window.compressedFiles && window.compressedFiles.length > 0) {
+                y += 10; if (y > 240) { doc.addPage(); y = 20; }
+                doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+                doc.text("Pièces justificatives jointes :", 20, y); y += 6;
+                doc.setFont("Helvetica", "normal"); doc.setFontSize(9);
+                window.compressedFiles.forEach(file => { doc.text(`• ${file.name} (Compressé)`, 25, y); y += 6; });
+            }
+
+            y += 10; if (y > 240) { doc.addPage(); y = 20; }
+            doc.setFillColor(245, 243, 230); doc.roundedRect(20, y, 170, 25, 2, 2, 'F');
+            doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+            doc.text(`Total Heures Travaillées : ${totalTravail.toFixed(2)} h`, 25, y + 7);
+            doc.text(`Total Heures Transport (à votre discrétion) : ${totalTransport.toFixed(2)} h`, 25, y + 14);
+            doc.text(`Total Achats de Fournitures : ${totalAchats.toFixed(2)} $`, 25, y + 21);
+
+            doc.save(`Rapport_Activites_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.pdf`);
+        }
+
+        function generateReportText() {
+            const prestataire = document.getElementById('prestataire').value;
+            const nomProjet = document.getElementById('nomProjet').value || 'Non spécifié';
+            const dateRemise = document.getElementById('dateRemise').value;
+            
+            let report = `COMPTE RENDU DES ACTIVITÉS — C.A.M.S.\n`;
+            report += `════════════════════════════════════\n`;
+            report += `👤 Prestataire : ${prestataire}\n`;
+            report += `🏗️ Projet : ${nomProjet}\n`;
+            report += `📅 Date de remise : ${dateRemise}\n`;
+            report += `════════════════════════════════════\n\n`;
+
+            report += `📋 1. ACTIVITÉS & TEMPS\n`;
+            let totalTravail = 0, totalTransport = 0;
+            document.querySelectorAll('.activity-row').forEach((row) => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value || 'N/A';
+                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                totalTravail += travail; totalTransport += transport;
+                report += `• [${date}] ${desc} (${horaire}) | Travaillé : ${travail}h | Transport : ${transport}h\n`;
+            });
+
+            report += `\n🛒 2. ACHATS DE FOURNITURES\n`;
+            let totalAchats = 0;
+            document.querySelectorAll('.supply-row').forEach((row) => {
+                const date = row.querySelector('.supply-date').value;
+                const desc = row.querySelector('.supply-desc').value;
+                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
+                totalAchats += montant;
+                report += `• [${date}] ${desc} : ${montant.toFixed(2)}$\n`;
+            });
+
+            if (window.compressedFiles && window.compressedFiles.length > 0) {
+                const fileNames = window.compressedFiles.map(f => f.name).join(', ');
+                report += `\n📎 PIÈCES JOINTES : ${fileNames}\n`;
+            }
+
+            report += `\n════════════════════════════════════\n`;
+            report += `📊 TOTAUX GÉNÉRAUX\n`;
+            report += `⏱️ Total Travaillé : ${totalTravail.toFixed(2)}h\n`;
+            report += `🚗 Total Transport (à votre discrétion) : ${totalTransport.toFixed(2)}h\n`;
+            report += `💰 Total Achats : ${totalAchats.toFixed(2)}$\n`;
+            report += `════════════════════════════════════`;
+
+            return report;
+        }
+
+        window.saveAndSendEmail = async function() {
+            const success = await window.saveReportToFirebase();
+            if (!success) return;
+
+            const nomProjet = document.getElementById('nomProjet').value;
+            const subject = encodeURIComponent(`Compte Rendu d'Activités & Achats - ${nomProjet} - Martin`);
+            const body = encodeURIComponent(generateReportText());
+            window.location.href = `mailto:gestion_cams@hotmail.com?subject=${subject}&body=${body}`;
+        }
+
+        window.saveAndSendSMS = async function() {
+            const success = await window.saveReportToFirebase();
+            if (!success) return;
+
+            const text = encodeURIComponent(generateReportText());
+            window.location.href = `sms:5149124573?body=${text}`;
+        }
+
+        function handleSubmit(event) { event.preventDefault(); }
+    </script>
+</body>
+</html>
