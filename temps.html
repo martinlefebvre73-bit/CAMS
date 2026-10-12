@@ -251,7 +251,13 @@
 
                 totalTravail += travail;
                 totalTransport += transport;
-                activites.push({ date, description: desc, horaire, travail, transport });
+                activites.push({
+                    date: String(date),
+                    description: String(desc),
+                    horaire: String(horaire),
+                    travail: Number(travail),
+                    transport: Number(transport)
+                });
             });
 
             const achats = [];
@@ -262,14 +268,25 @@
                 const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
 
                 totalAchats += montant;
-                achats.push({ date, description: desc, montant });
+                achats.push({
+                    date: String(date),
+                    description: String(desc),
+                    montant: Number(montant)
+                });
             });
 
-            // Nettoyage et sécurisation rigoureuse des pièces jointes pour Firestore
-            const piecesJointes = (window.compressedFiles || []).map(f => ({
-                name: String(f.name || 'Fichier sans nom'),
-                data: String(f.data || '')
-            })).filter(f => f.data !== '');
+            // Nettoyage strict et conversion en objets primitifs purs pour Firestore
+            const piecesJointes = [];
+            if (Array.isArray(window.compressedFiles)) {
+                window.compressedFiles.forEach(f => {
+                    if (f && typeof f === 'object') {
+                        piecesJointes.push({
+                            name: String(f.name || 'Fichier sans nom'),
+                            data: String(f.data || '')
+                        });
+                    }
+                });
+            }
 
             const rapportData = {
                 prestataire: String(document.getElementById('prestataire').value || 'Martin'),
@@ -278,7 +295,11 @@
                 activites: activites,
                 achats: achats,
                 piecesJointes: piecesJointes,
-                totaux: { totalTravail, totalTransport, totalAchats },
+                totaux: {
+                    totalTravail: Number(totalTravail),
+                    totalTransport: Number(totalTransport),
+                    totalAchats: Number(totalAchats)
+                },
                 updatedAt: serverTimestamp()
             };
 
@@ -378,7 +399,18 @@
                 data.achats.forEach(sup => addSupplyRow({ date: sup.date, desc: sup.description, montant: sup.montant }));
             } else { addSupplyRow(); }
 
-            window.compressedFiles = data.piecesJointes || [];
+            // Sécurisation stricte lors du chargement des pièces jointes existantes
+            window.compressedFiles = [];
+            if (Array.isArray(data.piecesJointes)) {
+                data.piecesJointes.forEach(f => {
+                    if (f && typeof f === 'object') {
+                        window.compressedFiles.push({
+                            name: String(f.name || 'Fichier'),
+                            data: String(f.data || '')
+                        });
+                    }
+                });
+            }
             renderFilesDisplay();
 
             calculateTotals();
@@ -508,7 +540,7 @@
 
                             const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                             if (!window.compressedFiles) window.compressedFiles = [];
-                            window.compressedFiles.push({ name: file.name, data: dataUrl });
+                            window.compressedFiles.push({ name: String(file.name), data: String(dataUrl) });
 
                             processedCount++;
                             if (processedCount === files.length) {
@@ -519,7 +551,7 @@
                         img.src = e.target.result;
                     } else {
                         if (!window.compressedFiles) window.compressedFiles = [];
-                        window.compressedFiles.push({ name: file.name, data: e.target.result });
+                        window.compressedFiles.push({ name: String(file.name), data: String(e.target.result) });
 
                         processedCount++;
                         if (processedCount === files.length) {
