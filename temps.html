@@ -243,8 +243,8 @@
             let totalTravail = 0;
             let totalTransport = 0;
             document.querySelectorAll('.activity-row').forEach(row => {
-                const date = row.querySelector('.row-date').value;
-                const desc = row.querySelector('.row-desc').value;
+                const date = row.querySelector('.row-date').value || '';
+                const desc = row.querySelector('.row-desc').value || '';
                 const horaire = row.querySelector('.row-horaire').value || '';
                 const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
                 const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
@@ -257,21 +257,27 @@
             const achats = [];
             let totalAchats = 0;
             document.querySelectorAll('.supply-row').forEach(row => {
-                const date = row.querySelector('.supply-date').value;
-                const desc = row.querySelector('.supply-desc').value;
+                const date = row.querySelector('.supply-date').value || '';
+                const desc = row.querySelector('.supply-desc').value || '';
                 const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
 
                 totalAchats += montant;
                 achats.push({ date, description: desc, montant });
             });
 
+            // Nettoyage et sécurisation rigoureuse des pièces jointes pour Firestore
+            const piecesJointes = (window.compressedFiles || []).map(f => ({
+                name: String(f.name || 'Fichier sans nom'),
+                data: String(f.data || '')
+            })).filter(f => f.data !== '');
+
             const rapportData = {
-                prestataire: document.getElementById('prestataire').value,
-                projet: nomProjet,
-                dateRemise: document.getElementById('dateRemise').value,
+                prestataire: String(document.getElementById('prestataire').value || 'Martin'),
+                projet: String(nomProjet),
+                dateRemise: String(document.getElementById('dateRemise').value || ''),
                 activites: activites,
                 achats: achats,
-                piecesJointes: window.compressedFiles || [],
+                piecesJointes: piecesJointes,
                 totaux: { totalTravail, totalTransport, totalAchats },
                 updatedAt: serverTimestamp()
             };
@@ -480,7 +486,6 @@
                 const reader = new FileReader();
 
                 reader.onload = function(e) {
-                    // Si c'est une image, on applique la compression
                     if (file.type.startsWith('image/')) {
                         const img = new Image();
                         img.onload = function() {
@@ -513,7 +518,6 @@
                         };
                         img.src = e.target.result;
                     } else {
-                        // Pour les autres formats (PDF, Word, etc.), on les intègre directement
                         if (!window.compressedFiles) window.compressedFiles = [];
                         window.compressedFiles.push({ name: file.name, data: e.target.result });
 
