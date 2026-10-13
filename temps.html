@@ -131,6 +131,18 @@
                     </div>
                 </div>
 
+                <!-- Contrôle de Paiement -->
+                <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center space-x-4">
+                        <input type="checkbox" id="estPaye" onchange="togglePaiementDate()" class="w-5 h-5 accent-gold cursor-pointer">
+                        <label for="estPaye" class="text-xs uppercase tracking-widest text-gold font-semibold cursor-pointer">Rapport réglé / payé</label>
+                    </div>
+                    <div class="w-full sm:w-auto flex items-center space-x-3">
+                        <label class="text-xs uppercase tracking-widest text-beigeMuted">Date de paiement :</label>
+                        <input type="date" id="datePaiement" disabled class="bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold opacity-50 cursor-not-allowed">
+                    </div>
+                </div>
+
                 <!-- Section 1 : Lignes d'Activités -->
                 <div class="mb-10">
                     <div class="flex items-center justify-between mb-4">
@@ -280,7 +292,6 @@
                 });
             });
 
-            // Nettoyage strict et conversion en objets primitifs purs pour Firestore
             const piecesJointes = [];
             if (Array.isArray(window.compressedFiles)) {
                 window.compressedFiles.forEach(f => {
@@ -293,10 +304,15 @@
                 });
             }
 
+            const estPaye = document.getElementById('estPaye').checked;
+            const datePaiement = document.getElementById('datePaiement').value || '';
+
             const rapportData = {
                 prestataire: String(document.getElementById('prestataire').value || 'Martin'),
                 projet: String(nomProjet),
                 dateRemise: String(document.getElementById('dateRemise').value || ''),
+                estPaye: Boolean(estPaye),
+                datePaiement: String(datePaiement),
                 activites: activites,
                 achats: achats,
                 piecesJointes: piecesJointes,
@@ -354,9 +370,16 @@
                     const card = document.createElement('div');
                     card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-gold transition-all';
                     
+                    const statusBadge = data.estPaye 
+                        ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] uppercase font-bold tracking-widest">Payé le ${data.datePaiement || 'N/A'}</span>`
+                        : `<span class="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] uppercase font-bold tracking-widest">En attente de paiement</span>`;
+
                     card.innerHTML = `
                         <div>
-                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">Projet : ${data.projet || 'Sans nom'}</span>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="text-[10px] text-gold uppercase tracking-widest">Projet : ${data.projet || 'Sans nom'}</span>
+                                ${statusBadge}
+                            </div>
                             <h4 class="font-serif text-base font-bold text-beigeSoft">${data.projet} — Remise le ${data.dateRemise}</h4>
                             <p class="text-xs text-beigeMuted mt-1">Pièces jointes : ${data.piecesJointes ? data.piecesJointes.length : 0}</p>
                         </div>
@@ -379,6 +402,9 @@
             window.currentReportId = null;
             document.getElementById('nomProjet').value = '';
             document.getElementById('dateRemise').valueAsDate = new Date();
+            document.getElementById('estPaye').checked = false;
+            document.getElementById('datePaiement').value = '';
+            togglePaiementDate();
             document.getElementById('rowsContainer').innerHTML = '';
             document.getElementById('supplyContainer').innerHTML = '';
             window.compressedFiles = [];
@@ -393,6 +419,10 @@
             window.currentReportId = docId;
             document.getElementById('nomProjet').value = data.projet || '';
             document.getElementById('dateRemise').value = data.dateRemise || new Date().toISOString().split('T')[0];
+            
+            document.getElementById('estPaye').checked = !!data.estPaye;
+            document.getElementById('datePaiement').value = data.datePaiement || '';
+            togglePaiementDate();
 
             document.getElementById('rowsContainer').innerHTML = '';
             if (data.activites && data.activites.length > 0) {
@@ -427,6 +457,22 @@
     <script>
         document.getElementById('dateRemise').valueAsDate = new Date();
         window.compressedFiles = [];
+
+        function togglePaiementDate() {
+            const estPaye = document.getElementById('estPaye').checked;
+            const datePaiementInput = document.getElementById('datePaiement');
+            if (estPaye) {
+                datePaiementInput.disabled = false;
+                datePaiementInput.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (!datePaiementInput.value) {
+                    datePaiementInput.valueAsDate = new Date();
+                }
+            } else {
+                datePaiementInput.disabled = true;
+                datePaiementInput.classList.add('opacity-50', 'cursor-not-allowed');
+                datePaiementInput.value = '';
+            }
+        }
 
         function parseHours(timeStr) {
             if (!timeStr) return null;
@@ -511,7 +557,6 @@
 
         function removeSupplyRow(supplyId) { document.getElementById(supplyId)?.remove(); calculateTotals(); }
 
-        // Gestion de tous les formats avec compression automatique (PDF convertis en image & Images redimensionnées)
         async function handleFiles(input) {
             if (!input.files || input.files.length === 0) return;
 
@@ -651,6 +696,8 @@
 
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
+            const estPaye = document.getElementById('estPaye').checked;
+            const datePaiement = document.getElementById('datePaiement').value;
 
             let totalTravail = 0;
             let totalTransport = 0;
@@ -686,6 +733,10 @@
                 </tr>`;
             });
 
+            const statutPaiementHtml = estPaye 
+                ? `<p style="color: #2e7d32; font-weight: bold;">STATUT : PAYÉ (Date de règlement : ${datePaiement || 'N/A'})</p>` 
+                : `<p style="color: #c62828; font-weight: bold;">STATUT : EN ATTENTE DE PAIEMENT</p>`;
+
             const htmlContent = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
@@ -706,6 +757,7 @@
                     <p><b>Projet :</b> ${nomProjet}</p>
                     <p><b>Prestataire :</b> ${prestataire}</p>
                     <p><b>Date d'export :</b> ${dateRemise}</p>
+                    ${statutPaiementHtml}
 
                     <h2>1. Détails des Tâches & Réalisations</h2>
                     <table>
@@ -765,6 +817,8 @@
             const doc = new jsPDF();
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
+            const estPaye = document.getElementById('estPaye').checked;
+            const datePaiement = document.getElementById('datePaiement').value;
 
             doc.setFillColor(5, 5, 5);
             doc.rect(0, 0, 210, 297, 'F');
@@ -779,11 +833,19 @@
             doc.setFontSize(9); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 22, 35);
 
             doc.setTextColor(245, 245, 220); doc.setFontSize(10); doc.setFont("Helvetica", "normal");
-            doc.text(`Projet : ${nomProjet}`, 20, 52);
-            doc.text(`Prestataire : ${prestataire}`, 20, 60);
-            doc.text(`Date de remise : ${dateRemise}`, 20, 68);
+            doc.text(`Projet : ${nomProjet}`, 20, 48);
+            doc.text(`Prestataire : ${prestataire}`, 20, 55);
+            doc.text(`Date de remise : ${dateRemise}`, 20, 62);
+            
+            if (estPaye) {
+                doc.setTextColor(100, 220, 100);
+                doc.text(`STATUT : PAYÉ (Le ${datePaiement || 'N/A'})`, 20, 69);
+            } else {
+                doc.setTextColor(240, 160, 80);
+                doc.text(`STATUT : EN ATTENTE DE PAIEMENT`, 20, 69);
+            }
 
-            let y = 80;
+            let y = 78;
 
             doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("1. Activités & Temps", 20, y); y += 6;
             
@@ -852,13 +914,18 @@
             const prestataire = document.getElementById('prestataire').value;
             const nomProjet = document.getElementById('nomProjet').value || 'Non spécifié';
             const dateRemise = document.getElementById('dateRemise').value;
+            const estPaye = document.getElementById('estPaye').checked;
+            const datePaiement = document.getElementById('datePaiement').value;
             const recoveryUrl = window.location.href.split('?')[0];
             
+            let statutTexte = estPaye ? `✅ STATUT : PAYÉ (Le ${datePaiement || 'N/A'})` : `⏳ STATUT : EN ATTENTE DE PAIEMENT`;
+
             let report = `COMPTE RENDU DES ACTIVITÉS — C.A.M.S.\n`;
             report += `════════════════════════════════════\n`;
             report += `👤 Prestataire : ${prestataire}\n`;
             report += `🏗️ Projet : ${nomProjet}\n`;
             report += `📅 Date de remise : ${dateRemise}\n`;
+            report += `💳 ${statutTexte}\n`;
             report += `════════════════════════════════════\n\n`;
 
             report += `📋 1. ACTIVITÉS & TEMPS\n`;
