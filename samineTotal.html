@@ -74,22 +74,29 @@
     <main class="pt-32 pb-24 px-6 max-w-5xl mx-auto">
         <div class="text-center mb-12">
             <span class="inline-block py-1.5 px-4 rounded-full border gold-border bg-gold/5 text-gold text-xs tracking-[0.3em] uppercase mb-4">
-                Suivi des Heures & Dépenses • Semaine (Dimanche au Samedi)
+                Suivi des Heures & Dépenses • Semaine & Date Précise
             </span>
             <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight mb-4">
-                Total du Temps & Achats par <span class="gold-gradient-text">Semaine</span>
+                Total du Temps & Achats par <span class="gold-gradient-text">Semaine ou Date</span>
             </h1>
             <p class="text-beigeMuted text-sm sm:text-base font-light max-w-2xl mx-auto">
-                Sélectionnez une semaine et filtrez par prestataire pour consulter le cumul des heures et des dépenses de fournitures.
+                Sélectionnez une semaine, filtrez par date spécifique ou par prestataire pour consulter le cumul et le détail des heures par projet.
             </p>
         </div>
 
         <!-- Selector Card -->
         <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <div>
                     <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Choisir une semaine (Dimanche)</label>
-                    <input type="week" id="weekSelector" onchange="calculateWeeklyTotals()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                    <input type="week" id="weekSelector" onchange="onWeekChange()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Ou cibler une date exacte</label>
+                    <div class="flex space-x-2">
+                        <input type="date" id="dateSelector" onchange="onDateChange()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                        <button onclick="clearDateFilter()" title="Réinitialiser la date" class="px-3 py-3 rounded-xl bg-gold/10 border gold-border text-gold text-xs hover:bg-gold hover:text-luxuryBlack transition-all">✕</button>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Filtrer par Prestataire</label>
@@ -100,7 +107,7 @@
             </div>
             <div class="mt-6 pt-4 border-t gold-border">
                 <div id="weekRangeDisplay" class="text-xs text-beigeMuted uppercase tracking-wider bg-luxuryBlack border gold-border px-4 py-3 rounded-xl w-full text-center">
-                    Sélectionnez une semaine
+                    Sélectionnez une période ou une date
                 </div>
             </div>
         </div>
@@ -125,11 +132,11 @@
             </div>
         </div>
 
-        <!-- Detailed Breakdown Container (Activités) -->
+        <!-- Detailed Breakdown Container (Activités groupées par Projet) -->
         <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
-            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des activités pour cette sélection</h3>
-            <div id="weeklyDetailsContainer" class="space-y-4">
-                <p class="text-beigeMuted text-xs text-center py-6">Veuillez sélectionner une semaine pour afficher le détail.</p>
+            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des activités par projet</h3>
+            <div id="weeklyDetailsContainer" class="space-y-6">
+                <p class="text-beigeMuted text-xs text-center py-6">Veuillez sélectionner une période pour afficher le détail.</p>
             </div>
         </div>
 
@@ -212,34 +219,63 @@
             calculateWeeklyTotals();
         }
 
+        window.onWeekChange = function() {
+            // Si on change de semaine, on efface le filtre de date exacte pour éviter la confusion
+            document.getElementById('dateSelector').value = '';
+            calculateWeeklyTotals();
+        };
+
+        window.onDateChange = function() {
+            // Si on sélectionne une date exacte, on efface la sélection de semaine
+            document.getElementById('weekSelector').value = '';
+            calculateWeeklyTotals();
+        };
+
+        window.clearDateFilter = function() {
+            document.getElementById('dateSelector').value = '';
+            setDefaultWeek();
+        };
+
         window.calculateWeeklyTotals = function() {
             const weekVal = document.getElementById('weekSelector').value;
+            const dateVal = document.getElementById('dateSelector').value;
             const selectedPrestataire = document.getElementById('prestataireSelector').value;
-            if (!weekVal) return;
 
-            const [yearStr, weekStr] = weekVal.split('-W');
-            const year = parseInt(yearStr, 10);
-            const week = parseInt(weekStr, 10);
+            let sunday = null;
+            let saturday = null;
+            let exactDate = dateVal ? new Date(dateVal + 'T00:00:00') : null;
 
-            const simple = new Date(year, 0, 1 + (week - 1) * 7);
-            const dow = simple.getDay();
-            const ISOweekStart = new Date(simple);
-            if (dow <= 4) {
-                ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            if (exactDate) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                document.getElementById('weekRangeDisplay').textContent = `Recherche pour la journée du : ${exactDate.toLocaleDateString('fr-CA', options)}`;
+            } else if (weekVal) {
+                const [yearStr, weekStr] = weekVal.split('-W');
+                const year = parseInt(yearStr, 10);
+                const week = parseInt(weekStr, 10);
+
+                const simple = new Date(year, 0, 1 + (week - 1) * 7);
+                const dow = simple.getDay();
+                const ISOweekStart = new Date(simple);
+                if (dow <= 4) {
+                    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+                } else {
+                    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                }
+
+                // Semaine du DIMANCHE au SAMEDI
+                sunday = new Date(ISOweekStart);
+                sunday.setDate(ISOweekStart.getDate() - 1);
+
+                saturday = new Date(sunday);
+                saturday.setDate(saturday.getDate() + 6);
+
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                const rangeStr = `Du ${sunday.toLocaleDateString('fr-CA', options)} au ${saturday.toLocaleDateString('fr-CA', options)}`;
+                document.getElementById('weekRangeDisplay').textContent = rangeStr;
             } else {
-                ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                document.getElementById('weekRangeDisplay').textContent = 'Veuillez sélectionner une semaine ou une date';
+                return;
             }
-
-            // Semaine du DIMANCHE au SAMEDI
-            const sunday = new Date(ISOweekStart);
-            sunday.setDate(ISOweekStart.getDate() - 1);
-
-            const saturday = new Date(sunday);
-            saturday.setDate(saturday.getDate() + 6);
-
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            const rangeStr = `Du ${sunday.toLocaleDateString('fr-CA', options)} au ${saturday.toLocaleDateString('fr-CA', options)}`;
-            document.getElementById('weekRangeDisplay').textContent = rangeStr;
 
             let totalWork = 0;
             let totalTransport = 0;
@@ -257,7 +293,14 @@
                     report.activites.forEach(act => {
                         if (act.date) {
                             const actDate = new Date(act.date + 'T00:00:00');
-                            if (actDate >= sunday && actDate <= saturday) {
+                            let matchCondition = false;
+                            if (exactDate) {
+                                matchCondition = (actDate.getTime() === exactDate.getTime());
+                            } else if (sunday && saturday) {
+                                matchCondition = (actDate >= sunday && actDate <= saturday);
+                            }
+
+                            if (matchCondition) {
                                 const travail = parseFloat(act.travail) || 0;
                                 const transport = parseFloat(act.transport) || 0;
                                 totalWork += travail;
@@ -282,7 +325,14 @@
                     report.achats.forEach(sup => {
                         if (sup.date) {
                             const supDate = new Date(sup.date + 'T00:00:00');
-                            if (supDate >= sunday && supDate <= saturday) {
+                            let matchCondition = false;
+                            if (exactDate) {
+                                matchCondition = (supDate.getTime() === exactDate.getTime());
+                            } else if (sunday && saturday) {
+                                matchCondition = (supDate >= sunday && supDate <= saturday);
+                            }
+
+                            if (matchCondition) {
                                 const montant = parseFloat(sup.montant) || 0;
                                 totalSupplies += montant;
 
@@ -305,29 +355,65 @@
             document.getElementById('weeklyTotalDisplay').textContent = (totalWork + totalTransport).toFixed(2) + ' h';
             document.getElementById('weeklySuppliesDisplay').textContent = totalSupplies.toFixed(2) + ' $';
 
-            // Rendu du détail des activités
+            // Rendu du détail des activités regroupées par Projet
             const container = document.getElementById('weeklyDetailsContainer');
             container.innerHTML = '';
 
             if (matchedEntries.length === 0) {
                 container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité enregistrée pour cette sélection.</p>';
             } else {
-                matchedEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+                // Grouper par projet
+                const projectsMap = {};
                 matchedEntries.forEach(entry => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4';
-                    card.innerHTML = `
-                        <div>
-                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">👤 ${entry.prestataire} • Projet : ${entry.projet} • Date : ${entry.date}</span>
-                            <h4 class="font-serif text-sm font-bold text-beigeSoft">${entry.description}</h4>
-                            <p class="text-xs text-beigeMuted mt-1">Horaire : ${entry.horaire}</p>
+                    if (!projectsMap[entry.projet]) {
+                        projectsMap[entry.projet] = {
+                            totalTravail: 0,
+                            totalTransport: 0,
+                            entries: []
+                        };
+                    }
+                    projectsMap[entry.projet].totalTravail += entry.travail;
+                    projectsMap[entry.projet].totalTransport += entry.transport;
+                    projectsMap[entry.projet].entries.push(entry);
+                });
+
+                // Générer les blocs par projet avec affichage clair des heures cumulées
+                Object.keys(projectsMap).forEach(projectName => {
+                    const projData = projectsMap[projectName];
+                    const projectCard = document.createElement('div');
+                    projectCard.className = 'bg-luxuryBlack border gold-border rounded-2xl p-5 mb-4';
+
+                    let entriesHtml = '';
+                    projData.entries.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(entry => {
+                        entriesHtml += `
+                            <div class="py-3 border-b gold-border last:border-b-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                                <div>
+                                    <span class="text-[10px] text-gold uppercase tracking-widest block">👤 ${entry.prestataire} • Date : ${entry.date}</span>
+                                    <span class="font-serif font-bold text-beigeSoft">${entry.description}</span>
+                                    <span class="text-beigeMuted block mt-0.5">Horaire : ${entry.horaire}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 shrink-0">
+                                    <span class="px-2.5 py-1 rounded-lg bg-gold/10 border gold-border text-gold font-bold">Travail : ${entry.travail.toFixed(2)}h</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-luxuryCard border gold-border text-beigeSoft">Transport : ${entry.transport.toFixed(2)}h</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    projectCard.innerHTML = `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b gold-border pb-3 mb-2 gap-2">
+                            <h4 class="font-serif text-base font-bold text-gold uppercase tracking-wider">📁 Projet : ${projectName}</h4>
+                            <div class="flex items-center space-x-3 text-xs bg-luxuryCard px-3 py-1.5 rounded-xl border gold-border">
+                                <span class="text-beigeSoft">Total Projet — Travail: <strong class="text-gold">${projData.totalTravail.toFixed(2)}h</strong></span>
+                                <span class="text-beigeMuted">|</span>
+                                <span class="text-beigeSoft">Transport: <strong class="text-gold">${projData.totalTransport.toFixed(2)}h</strong></span>
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-4 text-xs">
-                            <span class="px-3 py-1.5 rounded-xl bg-gold/10 border gold-border text-gold font-bold">Travail : ${entry.travail.toFixed(2)}h</span>
-                            <span class="px-3 py-1.5 rounded-xl bg-luxuryCard border gold-border text-beigeSoft">Transport : ${entry.transport.toFixed(2)}h</span>
+                        <div class="divide-y divide-gold/10">
+                            ${entriesHtml}
                         </div>
                     `;
-                    container.appendChild(card);
+                    container.appendChild(projectCard);
                 });
             }
 
