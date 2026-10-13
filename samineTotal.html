@@ -51,7 +51,9 @@
     <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="index.html" class="flex items-center space-x-3 group">
-                <img src="logo cams.jpg" alt="Logo C.A.M.S." class="w-10 h-10 rounded-full border border-gold object-cover group-hover:scale-105 transition-transform">
+                <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
+                    <span class="font-serif text-gold font-bold text-lg">C</span>
+                </div>
                 <div class="flex flex-col">
                     <span class="font-serif text-2xl font-bold tracking-widest text-gold">C.A.M.S.</span>
                     <span class="text-[10px] tracking-[0.25em] text-beigeMuted uppercase">Bilan Hebdomadaire</span>
@@ -89,7 +91,6 @@
                     <span class="text-xs uppercase tracking-widest text-gold font-bold block">Filtres de recherche</span>
                     <span class="text-[10px] text-beigeMuted">Période, date et prestataire</span>
                 </div>
-                <!-- Bouton Filtre / Config Tarifs dans l'en-tête du formulaire -->
                 <button onclick="toggleTarifPanel()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-xs text-gold uppercase tracking-wider hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
                     <span>⚙️ Config. Tarifs</span>
                 </button>
@@ -163,6 +164,13 @@
         <!-- SECTION PAIEMENTS & SYNTHÈSE -->
         <div class="bg-gradient-to-r from-luxuryCard via-[#14120a] to-luxuryCard border-2 border-gold rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
             <h3 class="font-serif text-xl font-bold text-gold mb-6 text-center tracking-wider uppercase">💰 Synthèse des montants à régler</h3>
+            
+            <!-- Alerte Arriérés / Souffrance Précédente (Affichage en rouge séparé) -->
+            <div id="arrearsBanner" class="hidden mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/40 text-center">
+                <span class="text-xs uppercase tracking-widest text-red-400 font-bold block mb-1">⚠️ Montants en souffrance des semaines antérieures (Non inclus dans le solde de la semaine)</span>
+                <span id="arrearsAmountDisplay" class="font-serif text-xl font-bold text-red-400">0.00 $</span>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
                 <!-- Montant Travail -->
                 <div class="p-4 rounded-2xl bg-luxuryBlack border gold-border">
@@ -182,11 +190,11 @@
                     <span class="text-[10px] text-beigeMuted block my-2">Total fournitures</span>
                     <span id="merchandisePaymentDisplay" class="font-serif text-xl font-bold text-goldLight block">0.00 $</span>
                 </div>
-                <!-- Total Général -->
+                <!-- Total Général (Semaine en cours uniquement) -->
                 <div class="p-4 rounded-2xl bg-gold/10 border-2 border-gold shadow-lg flex flex-col justify-between">
                     <div>
                         <span class="block text-xs uppercase tracking-widest text-gold font-bold mb-1">TOTAL À PAYER</span>
-                        <span class="text-[10px] text-beigeMuted block">(Travail + Transport + Achats)</span>
+                        <span class="text-[10px] text-beigeMuted block">(Semaine en cours)</span>
                     </div>
                     <span id="grandTotalPaymentDisplay" class="font-serif text-2xl font-bold gold-gradient-text block my-2">0.00 $</span>
                 </div>
@@ -236,15 +244,13 @@
         const db = getFirestore(app);
 
         let allReports = [];
-        let ratesCache = {}; // Cache local des tarifs récupérés depuis Firebase
+        let ratesCache = {};
 
-        // Gestion de l'affichage du panneau des tarifs
         window.toggleTarifPanel = function() {
             const panel = document.getElementById('tarifPanel');
             panel.classList.toggle('hidden');
         };
 
-        // Charger les tarifs depuis Firebase pour un prestataire donné
         async function loadRatesForPrestataire(prestataire) {
             const safePrest = prestataire || 'ALL';
             document.getElementById('currentPrestataireLabel').textContent = `Prestataire : ${safePrest === 'ALL' ? 'Tous' : safePrest}`;
@@ -270,7 +276,7 @@
                     ratesCache[safePrest] = { work: 0, transport: 0 };
                 }
             } catch (error) {
-                console.error("Erreur lors du chargement des tarifs depuis Firebase :", error);
+                console.error("Erreur chargement tarifs :", error);
                 ratesCache[safePrest] = { work: 0, transport: 0 };
             }
 
@@ -279,7 +285,6 @@
             calculateWeeklyTotals();
         }
 
-        // Sauvegarder les tarifs dans Firebase
         window.saveRatesToFirebase = async function() {
             const prestataire = document.getElementById('prestataireSelector').value || 'ALL';
             const workRate = parseFloat(document.getElementById('workRateInput').value) || 0;
@@ -293,9 +298,8 @@
                     transport: transportRate,
                     updatedAt: new Date().toISOString()
                 });
-                console.log(`Tarifs sauvegardés dans Firebase pour : ${prestataire}`);
             } catch (error) {
-                console.error("Erreur lors de la sauvegarde des tarifs dans Firebase :", error);
+                console.error("Erreur sauvegarde tarifs :", error);
             }
 
             calculateWeeklyTotals();
@@ -331,8 +335,7 @@
                 await loadRatesForPrestataire('ALL');
                 setDefaultWeek();
             } catch (error) {
-                console.error("Erreur de chargement Firestore :", error);
-                document.getElementById('weeklyDetailsContainer').innerHTML = '<p class="text-red-400 text-xs text-center py-6">Erreur de connexion à la base de données.</p>';
+                console.error("Erreur chargement Firestore :", error);
             }
         }
 
@@ -394,7 +397,6 @@
                     ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
                 }
 
-                // Semaine du DIMANCHE au SAMEDI
                 sunday = new Date(ISOweekStart);
                 sunday.setDate(ISOweekStart.getDate() - 1);
 
@@ -412,6 +414,10 @@
             let totalWork = 0;
             let totalTransport = 0;
             let totalSupplies = 0;
+            let arrearsWork = 0;
+            let arrearsTransport = 0;
+            let arrearsSupplies = 0;
+
             let matchedEntries = [];
             let matchedSupplies = [];
 
@@ -420,21 +426,33 @@
                     return;
                 }
 
-                // Traiter les activités (heures)
+                // 1. Analyse des activités (heures)
                 if (report.activites && Array.isArray(report.activites)) {
                     report.activites.forEach(act => {
                         if (act.date) {
                             const actDate = new Date(act.date + 'T00:00:00');
                             let matchCondition = false;
+                            let isPrevious = false;
+
                             if (exactDate) {
                                 matchCondition = (actDate.getTime() === exactDate.getTime());
+                                isPrevious = (actDate < exactDate && !report.estPayeHeures && act.paye !== true);
                             } else if (sunday && saturday) {
                                 matchCondition = (actDate >= sunday && actDate <= saturday);
+                                isPrevious = (actDate < sunday && !report.estPayeHeures && act.paye !== true);
                             }
 
-                            if (matchCondition) {
-                                const travail = parseFloat(act.travail) || 0;
-                                const transport = parseFloat(act.transport) || 0;
+                            const travail = parseFloat(act.travail) || 0;
+                            const transport = parseFloat(act.transport) || 0;
+
+                            // Comptabilisation des arriérés (antérieurs à la période)
+                            if (isPrevious) {
+                                arrearsWork += travail;
+                                arrearsTransport += transport;
+                            }
+
+                            // Comptabilisation de la période sélectionnée
+                            if (matchCondition && !report.estPayeHeures && act.paye !== true) {
                                 totalWork += travail;
                                 totalTransport += transport;
 
@@ -452,20 +470,31 @@
                     });
                 }
 
-                // Traiter les achats de fournitures
+                // 2. Analyse des achats de fournitures
                 if (report.achats && Array.isArray(report.achats)) {
                     report.achats.forEach(sup => {
                         if (sup.date) {
                             const supDate = new Date(sup.date + 'T00:00:00');
                             let matchCondition = false;
+                            let isPrevious = false;
+
                             if (exactDate) {
                                 matchCondition = (supDate.getTime() === exactDate.getTime());
+                                isPrevious = (supDate < exactDate && !report.estPayeAchats && sup.paye !== true);
                             } else if (sunday && saturday) {
                                 matchCondition = (supDate >= sunday && supDate <= saturday);
+                                isPrevious = (supDate < sunday && !report.estPayeAchats && sup.paye !== true);
                             }
 
-                            if (matchCondition) {
-                                const montant = parseFloat(sup.montant) || 0;
+                            const montant = parseFloat(sup.montant) || 0;
+
+                            // Comptabilisation des arriérés d'achats
+                            if (isPrevious) {
+                                arrearsSupplies += montant;
+                            }
+
+                            // Comptabilisation de la période sélectionnée
+                            if (matchCondition && !report.estPayeAchats && sup.paye !== true) {
                                 totalSupplies += montant;
 
                                 matchedSupplies.push({
@@ -481,13 +510,25 @@
                 }
             });
 
-            // Affichage des totaux en heures et en dollars
+            // Calcul financier des arriérés (affiché en rouge, SANS l'ajouter au grand total de la semaine)
+            const arrearsPayment = (arrearsWork * workRate) + (arrearsTransport * transportRate) + arrearsSupplies;
+            
+            const arrearsBanner = document.getElementById('arrearsBanner');
+            const arrearsAmountDisplay = document.getElementById('arrearsAmountDisplay');
+            if (arrearsPayment > 0) {
+                arrearsBanner.classList.remove('hidden');
+                arrearsAmountDisplay.textContent = arrearsPayment.toFixed(2) + ' $';
+            } else {
+                arrearsBanner.classList.add('hidden');
+            }
+
+            // Affichage des totaux de la période
             document.getElementById('weeklyWorkDisplay').textContent = totalWork.toFixed(2) + ' h';
             document.getElementById('weeklyTransportDisplay').textContent = totalTransport.toFixed(2) + ' h';
             document.getElementById('weeklyTotalDisplay').textContent = (totalWork + totalTransport).toFixed(2) + ' h';
             document.getElementById('weeklySuppliesDisplay').textContent = totalSupplies.toFixed(2) + ' $';
 
-            // Calculs financiers
+            // Calculs financiers de la période (Exclut strictement les arriérés)
             const workPayment = totalWork * workRate;
             const transportPayment = totalTransport * transportRate;
             const grandTotal = workPayment + transportPayment + totalSupplies;
@@ -497,21 +538,17 @@
             document.getElementById('merchandisePaymentDisplay').textContent = totalSupplies.toFixed(2) + ' $';
             document.getElementById('grandTotalPaymentDisplay').textContent = grandTotal.toFixed(2) + ' $';
 
-            // Rendu du détail des activités regroupées par Projet
+            // Rendu des tableaux de détails
             const container = document.getElementById('weeklyDetailsContainer');
             container.innerHTML = '';
 
             if (matchedEntries.length === 0) {
-                container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité enregistrée pour cette sélection.</p>';
+                container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité non payée enregistrée pour cette sélection.</p>';
             } else {
                 const projectsMap = {};
                 matchedEntries.forEach(entry => {
                     if (!projectsMap[entry.projet]) {
-                        projectsMap[entry.projet] = {
-                            totalTravail: 0,
-                            totalTransport: 0,
-                            entries: []
-                        };
+                        projectsMap[entry.projet] = { totalTravail: 0, totalTransport: 0, entries: [] };
                     }
                     projectsMap[entry.projet].totalTravail += entry.travail;
                     projectsMap[entry.projet].totalTransport += entry.transport;
@@ -549,20 +586,17 @@
                                 <span class="text-beigeSoft">Transport: <strong class="text-gold">${projData.totalTransport.toFixed(2)}h</strong></span>
                             </div>
                         </div>
-                        <div class="divide-y divide-gold/10">
-                            ${entriesHtml}
-                        </div>
+                        <div class="divide-y divide-gold/10">${entriesHtml}</div>
                     `;
                     container.appendChild(projectCard);
                 });
             }
 
-            // Rendu du détail des achats de fournitures
             const suppliesContainer = document.getElementById('weeklySuppliesContainer');
             suppliesContainer.innerHTML = '';
 
             if (matchedSupplies.length === 0) {
-                suppliesContainer.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture enregistré pour cette sélection.</p>';
+                suppliesContainer.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture non payé enregistré pour cette sélection.</p>';
             } else {
                 matchedSupplies.sort((a, b) => new Date(a.date) - new Date(b.date));
                 matchedSupplies.forEach(sup => {
