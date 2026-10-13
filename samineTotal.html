@@ -193,14 +193,31 @@
             </div>
         </div>
 
-        <!-- 3. TROISIÈME ENCART : Montants en retard / en souffrance (Semaines précédentes) -->
+        <!-- 3. TROISIÈME ENCART : Montants en retard / en souffrance (Semaines précédentes ventilés par catégorie) -->
         <div id="arrearsBanner" class="hidden bg-luxuryCard border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
-            <div class="text-center">
+            <div class="text-center mb-6">
                 <span class="inline-block py-1.5 px-4 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 text-xs tracking-[0.3em] uppercase mb-3 font-bold">
                     ⚠️ 3. Alerte financière • Arriérés & Retards
                 </span>
                 <h3 class="font-serif text-lg font-bold text-red-400 mb-2">Montants en souffrance des semaines antérieures</h3>
-                <p class="text-beigeMuted text-xs mb-4">Ces montants proviennent de semaines passées et n'entrent pas dans le solde de la semaine sélectionnée ci-dessus.</p>
+                <p class="text-beigeMuted text-xs">Ces montants proviennent de semaines passées et n'entrent pas dans le solde de la semaine sélectionnée ci-dessus.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-6">
+                <div class="p-4 rounded-2xl bg-luxuryBlack border border-red-500/30">
+                    <span class="block text-xs uppercase tracking-widest text-red-400 font-semibold mb-1">Heures Travaillées</span>
+                    <span id="arrearsWorkDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 $</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-luxuryBlack border border-red-500/30">
+                    <span class="block text-xs uppercase tracking-widest text-red-400 font-semibold mb-1">Heures Transport</span>
+                    <span id="arrearsTransportDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 $</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-luxuryBlack border border-red-500/30">
+                    <span class="block text-xs uppercase tracking-widest text-red-400 font-semibold mb-1">Marchandise</span>
+                    <span id="arrearsMerchandiseDisplay" class="font-serif text-xl font-bold text-beigeSoft">0.00 $</span>
+                </div>
+            </div>
+            <div class="text-center pt-4 border-t border-red-500/30">
+                <span class="text-xs uppercase tracking-widest text-red-400 font-bold block mb-1">Total Général en Souffrance</span>
                 <span id="arrearsAmountDisplay" class="font-serif text-3xl font-bold text-red-400 block">0.00 $</span>
             </div>
         </div>
@@ -551,13 +568,19 @@
             document.getElementById('merchandisePaymentDisplay').textContent = netSupplies.toFixed(2) + ' $';
             document.getElementById('grandTotalPaymentDisplay').textContent = grandTotal.toFixed(2) + ' $';
 
-            // Calculs Encart 3 : Arriérés en retard (en rouge)
-            const arrearsPayment = (arrearsWork * workRate) + (arrearsTransport * transportRate) + arrearsSupplies;
+            // Calculs Encart 3 : Arriérés en retard ventilés et total général
+            const arrearsWorkTotal = arrearsWork * workRate;
+            const arrearsTransportTotal = arrearsTransport * transportRate;
+            const arrearsMerchandiseTotal = arrearsSupplies;
+            const arrearsPayment = arrearsWorkTotal + arrearsTransportTotal + arrearsMerchandiseTotal;
+
             const arrearsBanner = document.getElementById('arrearsBanner');
-            const arrearsAmountDisplay = document.getElementById('arrearsAmountDisplay');
             if (arrearsPayment > 0) {
                 arrearsBanner.classList.remove('hidden');
-                arrearsAmountDisplay.textContent = arrearsPayment.toFixed(2) + ' $';
+                document.getElementById('arrearsWorkDisplay').textContent = arrearsWorkTotal.toFixed(2) + ' $';
+                document.getElementById('arrearsTransportDisplay').textContent = arrearsTransportTotal.toFixed(2) + ' $';
+                document.getElementById('arrearsMerchandiseDisplay').textContent = arrearsMerchandiseTotal.toFixed(2) + ' $';
+                document.getElementById('arrearsAmountDisplay').textContent = arrearsPayment.toFixed(2) + ' $';
             } else {
                 arrearsBanner.classList.add('hidden');
             }
@@ -603,7 +626,7 @@
 
                     projectCard.innerHTML = `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b gold-border pb-3 mb-2 gap-2">
-                            <h4 class="font-serif text-base font-bold text-gold uppercase tracking-wider">📁 Projet : ${projectName}</h4>
+                            <h4 class="font-serif text-base font-bold text-gold uppercase tracking-wider">📁 Projet : **${projectName}**</h4>
                             <div class="flex items-center space-x-3 text-xs bg-luxuryCard px-3 py-1.5 rounded-xl border gold-border">
                                 <span class="text-beigeSoft">Total Projet — Travail: <strong class="text-gold">${projData.totalTravail.toFixed(2)}h</strong></span>
                                 <span class="text-beigeMuted">|</span>
@@ -625,7 +648,7 @@
                 matchedSupplies.sort((a, b) => new Date(a.date) - new Date(b.date));
                 matchedSupplies.forEach(sup => {
                     const card = document.createElement('div');
-                    card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4';
+                    card.className = 'bg-luxuryCard border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4';
                     card.innerHTML = `
                         <div>
                             <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">👤 ${sup.prestataire} • Projet : ${sup.projet} • Date : ${sup.date}</span>
