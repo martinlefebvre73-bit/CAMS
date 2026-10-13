@@ -51,8 +51,8 @@
     <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="index.html" class="flex items-center space-x-3 group">
-                <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
-                    <span class="font-serif text-gold font-bold text-lg">C</span>
+                <div class="w-11 h-11 rounded-full border border-gold overflow-hidden flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors shrink-0">
+                    <img src="logo cams.jpg" alt="Logo C.A.M.S." class="w-full h-full object-cover">
                 </div>
                 <div class="flex flex-col">
                     <span class="font-serif text-2xl font-bold tracking-widest text-gold">C.A.M.S.</span>
@@ -626,7 +626,7 @@
 
                     projectCard.innerHTML = `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b gold-border pb-3 mb-2 gap-2">
-                            <h4 class="font-serif text-base font-bold text-gold uppercase tracking-wider">📁 Projet : **${projectName}**</h4>
+                            <h4 class="font-serif text-base font-bold text-gold uppercase tracking-wider">📁 Projet : ${projectName}</h4>
                             <div class="flex items-center space-x-3 text-xs bg-luxuryCard px-3 py-1.5 rounded-xl border gold-border">
                                 <span class="text-beigeSoft">Total Projet — Travail: <strong class="text-gold">${projData.totalTravail.toFixed(2)}h</strong></span>
                                 <span class="text-beigeMuted">|</span>
