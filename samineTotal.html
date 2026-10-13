@@ -141,7 +141,7 @@
             </div>
         </div>
 
-        <!-- 1. PREMIER ENCART : Total des coûts et heures pour la semaine (Sans regard au paiement) -->
+        <!-- 1. PREMIER ENCART : Total des coûts et heures pour la semaine -->
         <div class="bg-luxuryBlack border gold-border rounded-3xl p-8 mb-8">
             <h3 class="font-serif text-sm font-bold text-gold uppercase tracking-wider mb-4 text-center">1. Total brut de la semaine (Indépendant des paiements)</h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center text-center">
@@ -193,7 +193,7 @@
             </div>
         </div>
 
-        <!-- 3. TROISIÈME ENCART : Montants en retard / en souffrance (Semaines précédentes ventilés par catégorie) -->
+        <!-- 3. TROISIÈME ENCART : Montants en retard / en souffrance -->
         <div id="arrearsBanner" class="hidden bg-luxuryCard border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
             <div class="text-center mb-6">
                 <span class="inline-block py-1.5 px-4 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 text-xs tracking-[0.3em] uppercase mb-3 font-bold">
@@ -224,16 +224,16 @@
 
         <!-- Detailed Breakdown Container (Activités groupées par Projet) -->
         <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
-            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des activités par projet</h3>
+            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des activités par projet (avec statut)</h3>
             <div id="weeklyDetailsContainer" class="space-y-6">
                 <p class="text-beigeMuted text-xs text-center py-6">Veuillez sélectionner une période pour afficher le détail.</p>
             </div>
         </div>
 
-        <!-- Detailed Supplies Container (Achats) -->
+        <!-- Detailed Supplies Container (Achats / Marchandise groupés par Projet) -->
         <div class="bg-luxuryCard border gold-border rounded-3xl p-6 sm:p-8 shadow-2xl">
-            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des achats de fournitures</h3>
-            <div id="weeklySuppliesContainer" class="space-y-4">
+            <h3 class="font-serif text-xl font-bold text-gold-light mb-6">Détail des achats / marchandise par projet (avec statut)</h3>
+            <div id="weeklySuppliesContainer" class="space-y-6">
                 <p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture pour cette sélection.</p>
             </div>
         </div>
@@ -419,7 +419,7 @@
                 }
 
                 sunday = new Date(ISOweekStart);
-                sunday.setDate(ISOweekStart.getDate() - 1);
+                sunday.setDate(sunday.getDate() - 1);
 
                 saturday = new Date(sunday);
                 saturday.setDate(saturday.getDate() + 6);
@@ -432,17 +432,14 @@
                 return;
             }
 
-            // Encart 1 : Total brut (sans regard au paiement)
             let grossWork = 0;
             let grossTransport = 0;
             let grossSupplies = 0;
 
-            // Encart 2 : Paiements de la semaine en cours (filtre payé / non payé)
             let netWork = 0;
             let netTransport = 0;
             let netSupplies = 0;
 
-            // Encart 3 : Arriérés (semaines précédentes non payées)
             let arrearsWork = 0;
             let arrearsTransport = 0;
             let arrearsSupplies = 0;
@@ -474,30 +471,31 @@
                             const travail = parseFloat(act.travail) || 0;
                             const transport = parseFloat(act.transport) || 0;
 
-                            // Si c'est dans la période sélectionnée
                             if (matchCondition) {
-                                // Encart 1 : Brut sans regard au paiement
                                 grossWork += travail;
                                 grossTransport += transport;
 
-                                // Encart 2 : Paiement (uniquement si non payé)
+                                const isPaidActivity = report.estPayeHeures || act.paye === true;
+                                const statutMention = isPaidActivity ? "(payé)" : "(en souffrance)";
+
                                 if (!report.estPayeHeures && act.paye !== true) {
                                     netWork += travail;
                                     netTransport += transport;
-
-                                    matchedEntries.push({
-                                        prestataire: report.prestataire || 'Inconnu',
-                                        projet: report.projet || 'Projet sans nom',
-                                        date: act.date,
-                                        description: act.description,
-                                        horaire: act.horaire || '-',
-                                        travail: travail,
-                                        transport: transport
-                                    });
                                 }
+
+                                matchedEntries.push({
+                                    prestataire: report.prestataire || 'Inconnu',
+                                    projet: report.projet || 'Projet sans nom',
+                                    date: act.date,
+                                    description: act.description,
+                                    horaire: act.horaire || '-',
+                                    travail: travail,
+                                    transport: transport,
+                                    statut: statutMention,
+                                    isPaid: isPaidActivity
+                                });
                             }
 
-                            // Si c'est une semaine précédente et non payée -> Arriéré (Encart 3)
                             if (isPrevious && (!report.estPayeHeures && act.paye !== true)) {
                                 arrearsWork += travail;
                                 arrearsTransport += transport;
@@ -524,26 +522,27 @@
 
                             const montant = parseFloat(sup.montant) || 0;
 
-                            // Si c'est dans la période sélectionnée
                             if (matchCondition) {
-                                // Encart 1 : Brut sans regard au paiement
                                 grossSupplies += montant;
 
-                                // Encart 2 : Paiement (uniquement si non payé)
+                                const isPaidSupply = report.estPayeAchats || sup.paye === true;
+                                const statutSupplyMention = isPaidSupply ? "(payé)" : "(en souffrance)";
+
                                 if (!report.estPayeAchats && sup.paye !== true) {
                                     netSupplies += montant;
-
-                                    matchedSupplies.push({
-                                        prestataire: report.prestataire || 'Inconnu',
-                                        projet: report.projet || 'Projet sans nom',
-                                        date: sup.date,
-                                        description: sup.description,
-                                        montant: montant
-                                    });
                                 }
+
+                                matchedSupplies.push({
+                                    prestataire: report.prestataire || 'Inconnu',
+                                    projet: report.projet || 'Projet sans nom',
+                                    date: sup.date,
+                                    description: sup.description,
+                                    montant: montant,
+                                    statut: statutSupplyMention,
+                                    isPaid: isPaidSupply
+                                });
                             }
 
-                            // Si c'est un achat antérieur non payé -> Arriéré (Encart 3)
                             if (isPrevious && (!report.estPayeAchats && sup.paye !== true)) {
                                 arrearsSupplies += montant;
                             }
@@ -552,13 +551,13 @@
                 }
             });
 
-            // Affichage Encart 1 : Totaux bruts de la semaine
+            // Affichage Encart 1
             document.getElementById('weeklyWorkDisplay').textContent = grossWork.toFixed(2) + ' h';
             document.getElementById('weeklyTransportDisplay').textContent = grossTransport.toFixed(2) + ' h';
             document.getElementById('weeklyTotalDisplay').textContent = (grossWork + grossTransport).toFixed(2) + ' h';
             document.getElementById('weeklySuppliesDisplay').textContent = grossSupplies.toFixed(2) + ' $';
 
-            // Calculs Encart 2 : Paiements de la semaine
+            // Calculs Encart 2
             const workPayment = netWork * workRate;
             const transportPayment = netTransport * transportRate;
             const grandTotal = workPayment + transportPayment + netSupplies;
@@ -568,7 +567,7 @@
             document.getElementById('merchandisePaymentDisplay').textContent = netSupplies.toFixed(2) + ' $';
             document.getElementById('grandTotalPaymentDisplay').textContent = grandTotal.toFixed(2) + ' $';
 
-            // Calculs Encart 3 : Arriérés en retard ventilés et total général
+            // Calculs Encart 3
             const arrearsWorkTotal = arrearsWork * workRate;
             const arrearsTransportTotal = arrearsTransport * transportRate;
             const arrearsMerchandiseTotal = arrearsSupplies;
@@ -585,12 +584,12 @@
                 arrearsBanner.classList.add('hidden');
             }
 
-            // Rendu des tableaux de détails
+            // Rendu des tableaux de détails Activités (par projet)
             const container = document.getElementById('weeklyDetailsContainer');
             container.innerHTML = '';
 
             if (matchedEntries.length === 0) {
-                container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité non payée enregistrée pour cette sélection.</p>';
+                container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité enregistrée pour cette sélection.</p>';
             } else {
                 const projectsMap = {};
                 matchedEntries.forEach(entry => {
@@ -609,10 +608,17 @@
 
                     let entriesHtml = '';
                     projData.entries.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(entry => {
+                        const badgeClass = entry.isPaid 
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                            : 'bg-red-500/10 border-red-500/30 text-red-400';
+
                         entriesHtml += `
                             <div class="py-3 border-b gold-border last:border-b-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                                 <div>
-                                    <span class="text-[10px] text-gold uppercase tracking-widest block">👤 ${entry.prestataire} • Date : ${entry.date}</span>
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-[10px] text-gold uppercase tracking-widest">👤 ${entry.prestataire} • Date : ${entry.date}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] border ${badgeClass} font-bold">${entry.statut}</span>
+                                    </div>
                                     <span class="font-serif font-bold text-beigeSoft">${entry.description}</span>
                                     <span class="text-beigeMuted block mt-0.5">Horaire : ${entry.horaire}</span>
                                 </div>
@@ -639,26 +645,59 @@
                 });
             }
 
+            // Rendu des tableaux de détails Marchandise / Achats (groupés par projet)
             const suppliesContainer = document.getElementById('weeklySuppliesContainer');
             suppliesContainer.innerHTML = '';
 
             if (matchedSupplies.length === 0) {
-                suppliesContainer.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture non payé enregistré pour cette sélection.</p>';
+                suppliesContainer.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucun achat de fourniture enregistré pour cette sélection.</p>';
             } else {
-                matchedSupplies.sort((a, b) => new Date(a.date) - new Date(b.date));
+                const suppliesProjectsMap = {};
                 matchedSupplies.forEach(sup => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-luxuryCard border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4';
-                    card.innerHTML = `
-                        <div>
-                            <span class="text-[10px] text-gold uppercase tracking-widest block mb-1">👤 ${sup.prestataire} • Projet : ${sup.projet} • Date : ${sup.date}</span>
-                            <h4 class="font-serif text-sm font-bold text-beigeSoft">${sup.description}</h4>
+                    if (!suppliesProjectsMap[sup.projet]) {
+                        suppliesProjectsMap[sup.projet] = { totalMontant: 0, items: [] };
+                    }
+                    suppliesProjectsMap[sup.projet].totalMontant += sup.montant;
+                    suppliesProjectsMap[sup.projet].items.push(sup);
+                });
+
+                Object.keys(suppliesProjectsMap).forEach(projectName => {
+                    const supProjData = suppliesProjectsMap[projectName];
+                    const supplyCard = document.createElement('div');
+                    supplyCard.className = 'bg-luxuryBlack border gold-border rounded-2xl p-5 mb-4';
+
+                    let suppliesHtml = '';
+                    supProjData.items.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(sup => {
+                        const badgeClass = sup.isPaid 
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                            : 'bg-red-500/10 border-red-500/30 text-red-400';
+
+                        suppliesHtml += `
+                            <div class="py-3 border-b gold-border last:border-b-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                                <div>
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-[10px] text-gold uppercase tracking-widest">👤 ${sup.prestataire} • Date : ${sup.date}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] border ${badgeClass} font-bold">${sup.statut}</span>
+                                    </div>
+                                    <span class="font-serif font-bold text-beigeSoft">${sup.description}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 shrink-0">
+                                    <span class="px-3 py-1.5 rounded-xl bg-gold/10 border gold-border text-goldLight font-bold">Montant : ${sup.montant.toFixed(2)} $</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    supplyCard.innerHTML = `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b gold-border pb-3 mb-2 gap-2">
+                            <h4 class="font-serif text-base font-bold text-gold uppercase tracking-wider">📁 Projet : ${projectName}</h4>
+                            <div class="flex items-center space-x-3 text-xs bg-luxuryCard px-3 py-1.5 rounded-xl border gold-border">
+                                <span class="text-beigeSoft">Total Marchandise Projet : <strong class="text-gold">${supProjData.totalMontant.toFixed(2)} $</strong></span>
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-4 text-xs">
-                            <span class="px-3 py-1.5 rounded-xl bg-gold/10 border gold-border text-goldLight font-bold">Montant : ${sup.montant.toFixed(2)} $</span>
-                        </div>
+                        <div class="divide-y divide-gold/10">${suppliesHtml}</div>
                     `;
-                    suppliesContainer.appendChild(card);
+                    suppliesContainer.appendChild(supplyCard);
                 });
             }
         };
