@@ -131,15 +131,30 @@
                     </div>
                 </div>
 
-                <!-- Contrôle de Paiement -->
-                <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div class="flex items-center space-x-4">
-                        <input type="checkbox" id="estPaye" onchange="togglePaiementDate()" class="w-5 h-5 accent-gold cursor-pointer">
-                        <label for="estPaye" class="text-xs uppercase tracking-widest text-gold font-semibold cursor-pointer">Rapport réglé / payé</label>
+                <!-- Contrôles de Paiement Séparés (Heures vs Marchandises) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Contrôle Paiement Heures -->
+                    <div class="bg-luxuryBlack border gold-border rounded-2xl p-5 flex flex-col justify-between gap-4">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" id="estPayeHeures" onchange="togglePaiementHeuresDate()" class="w-5 h-5 accent-gold cursor-pointer">
+                            <label for="estPayeHeures" class="text-xs uppercase tracking-widest text-gold font-semibold cursor-pointer">Heures & Transport réglés</label>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-beigeMuted mb-1">Date de paiement des heures :</label>
+                            <input type="date" id="datePaiementHeures" disabled class="w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold opacity-50 cursor-not-allowed">
+                        </div>
                     </div>
-                    <div class="w-full sm:w-auto flex items-center space-x-3">
-                        <label class="text-xs uppercase tracking-widest text-beigeMuted">Date de paiement :</label>
-                        <input type="date" id="datePaiement" disabled class="bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold opacity-50 cursor-not-allowed">
+
+                    <!-- Contrôle Paiement Marchandises -->
+                    <div class="bg-luxuryBlack border gold-border rounded-2xl p-5 flex flex-col justify-between gap-4">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" id="estPayeAchats" onchange="togglePaiementAchatsDate()" class="w-5 h-5 accent-gold cursor-pointer">
+                            <label for="estPayeAchats" class="text-xs uppercase tracking-widest text-gold font-semibold cursor-pointer">Marchandises / Achats réglés</label>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-beigeMuted mb-1">Date de paiement des marchandises :</label>
+                            <input type="date" id="datePaiementAchats" disabled class="w-full bg-luxuryCard border gold-border rounded-xl px-3 py-2 text-beigeSoft text-xs focus:outline-none focus:border-gold opacity-50 cursor-not-allowed">
+                        </div>
                     </div>
                 </div>
 
@@ -158,7 +173,7 @@
                 <!-- Section 2 : Achats de Fournitures -->
                 <div class="mb-10 pb-8 border-b gold-border">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-serif text-xl font-bold text-gold-light">2. Achats de Fournitures</h3>
+                        <h3 class="font-serif text-xl font-bold text-gold-light">2. Achats de Fournitures / Marchandises</h3>
                         <button type="button" onclick="addSupplyRow()" class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all flex items-center space-x-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             <span>Ajouter un achat</span>
@@ -304,15 +319,19 @@
                 });
             }
 
-            const estPaye = document.getElementById('estPaye').checked;
-            const datePaiement = document.getElementById('datePaiement').value || '';
+            const estPayeHeures = document.getElementById('estPayeHeures').checked;
+            const datePaiementHeures = document.getElementById('datePaiementHeures').value || '';
+            const estPayeAchats = document.getElementById('estPayeAchats').checked;
+            const datePaiementAchats = document.getElementById('datePaiementAchats').value || '';
 
             const rapportData = {
                 prestataire: String(document.getElementById('prestataire').value || 'Martin'),
                 projet: String(nomProjet),
                 dateRemise: String(document.getElementById('dateRemise').value || ''),
-                estPaye: Boolean(estPaye),
-                datePaiement: String(datePaiement),
+                estPayeHeures: Boolean(estPayeHeures),
+                datePaiementHeures: String(datePaiementHeures),
+                estPayeAchats: Boolean(estPayeAchats),
+                datePaiementAchats: String(datePaiementAchats),
                 activites: activites,
                 achats: achats,
                 piecesJointes: piecesJointes,
@@ -370,18 +389,24 @@
                     const card = document.createElement('div');
                     card.className = 'bg-luxuryBlack border gold-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-gold transition-all';
                     
-                    const statusBadge = data.estPaye 
-                        ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] uppercase font-bold tracking-widest">Payé le ${data.datePaiement || 'N/A'}</span>`
-                        : `<span class="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] uppercase font-bold tracking-widest">En attente de paiement</span>`;
+                    const badgeHeures = data.estPayeHeures 
+                        ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] uppercase font-bold tracking-widest">Heures payées</span>`
+                        : `<span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] uppercase font-bold tracking-widest">Heures en attente</span>`;
+
+                    const badgeAchats = data.estPayeAchats 
+                        ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] uppercase font-bold tracking-widest">Achats payés</span>`
+                        : `<span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] uppercase font-bold tracking-widest">Achats en attente</span>`;
 
                     card.innerHTML = `
                         <div>
                             <div class="flex items-center space-x-2 mb-1">
                                 <span class="text-[10px] text-gold uppercase tracking-widest">Projet : ${data.projet || 'Sans nom'}</span>
-                                ${statusBadge}
                             </div>
                             <h4 class="font-serif text-base font-bold text-beigeSoft">${data.projet} — Remise le ${data.dateRemise}</h4>
-                            <p class="text-xs text-beigeMuted mt-1">Pièces jointes : ${data.piecesJointes ? data.piecesJointes.length : 0}</p>
+                            <div class="flex items-center space-x-2 mt-2">
+                                ${badgeHeures}
+                                ${badgeAchats}
+                            </div>
                         </div>
                         <button type="button" onclick='loadReportData("${docId}", ${JSON.stringify(data)})' class="px-4 py-2 rounded-xl bg-gold/10 border gold-border text-gold text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-luxuryBlack transition-all">
                             Modifier / Charger
@@ -402,9 +427,12 @@
             window.currentReportId = null;
             document.getElementById('nomProjet').value = '';
             document.getElementById('dateRemise').valueAsDate = new Date();
-            document.getElementById('estPaye').checked = false;
-            document.getElementById('datePaiement').value = '';
-            togglePaiementDate();
+            document.getElementById('estPayeHeures').checked = false;
+            document.getElementById('datePaiementHeures').value = '';
+            document.getElementById('estPayeAchats').checked = false;
+            document.getElementById('datePaiementAchats').value = '';
+            togglePaiementHeuresDate();
+            togglePaiementAchatsDate();
             document.getElementById('rowsContainer').innerHTML = '';
             document.getElementById('supplyContainer').innerHTML = '';
             window.compressedFiles = [];
@@ -420,9 +448,13 @@
             document.getElementById('nomProjet').value = data.projet || '';
             document.getElementById('dateRemise').value = data.dateRemise || new Date().toISOString().split('T')[0];
             
-            document.getElementById('estPaye').checked = !!data.estPaye;
-            document.getElementById('datePaiement').value = data.datePaiement || '';
-            togglePaiementDate();
+            document.getElementById('estPayeHeures').checked = !!data.estPayeHeures;
+            document.getElementById('datePaiementHeures').value = data.datePaiementHeures || '';
+            togglePaiementHeuresDate();
+
+            document.getElementById('estPayeAchats').checked = !!data.estPayeAchats;
+            document.getElementById('datePaiementAchats').value = data.datePaiementAchats || '';
+            togglePaiementAchatsDate();
 
             document.getElementById('rowsContainer').innerHTML = '';
             if (data.activites && data.activites.length > 0) {
@@ -458,19 +490,31 @@
         document.getElementById('dateRemise').valueAsDate = new Date();
         window.compressedFiles = [];
 
-        function togglePaiementDate() {
-            const estPaye = document.getElementById('estPaye').checked;
-            const datePaiementInput = document.getElementById('datePaiement');
+        function togglePaiementHeuresDate() {
+            const estPaye = document.getElementById('estPayeHeures').checked;
+            const input = document.getElementById('datePaiementHeures');
             if (estPaye) {
-                datePaiementInput.disabled = false;
-                datePaiementInput.classList.remove('opacity-50', 'cursor-not-allowed');
-                if (!datePaiementInput.value) {
-                    datePaiementInput.valueAsDate = new Date();
-                }
+                input.disabled = false;
+                input.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (!input.value) input.valueAsDate = new Date();
             } else {
-                datePaiementInput.disabled = true;
-                datePaiementInput.classList.add('opacity-50', 'cursor-not-allowed');
-                datePaiementInput.value = '';
+                input.disabled = true;
+                input.classList.add('opacity-50', 'cursor-not-allowed');
+                input.value = '';
+            }
+        }
+
+        function togglePaiementAchatsDate() {
+            const estPaye = document.getElementById('estPayeAchats').checked;
+            const input = document.getElementById('datePaiementAchats');
+            if (estPaye) {
+                input.disabled = false;
+                input.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (!input.value) input.valueAsDate = new Date();
+            } else {
+                input.disabled = true;
+                input.classList.add('opacity-50', 'cursor-not-allowed');
+                input.value = '';
             }
         }
 
@@ -696,8 +740,10 @@
 
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
-            const estPaye = document.getElementById('estPaye').checked;
-            const datePaiement = document.getElementById('datePaiement').value;
+            const estPayeHeures = document.getElementById('estPayeHeures').checked;
+            const datePaiementHeures = document.getElementById('datePaiementHeures').value;
+            const estPayeAchats = document.getElementById('estPayeAchats').checked;
+            const datePaiementAchats = document.getElementById('datePaiementAchats').value;
 
             let totalTravail = 0;
             let totalTransport = 0;
@@ -733,9 +779,13 @@
                 </tr>`;
             });
 
-            const statutPaiementHtml = estPaye 
-                ? `<p style="color: #2e7d32; font-weight: bold;">STATUT : PAYÉ (Date de règlement : ${datePaiement || 'N/A'})</p>` 
-                : `<p style="color: #c62828; font-weight: bold;">STATUT : EN ATTENTE DE PAIEMENT</p>`;
+            const statutHeuresHtml = estPayeHeures 
+                ? `<p style="color: #2e7d32; font-weight: bold;">STATUT HEURES : PAYÉ (Réglé le ${datePaiementHeures || 'N/A'})</p>` 
+                : `<p style="color: #c62828; font-weight: bold;">STATUT HEURES : EN ATTENTE DE PAIEMENT</p>`;
+
+            const statutAchatsHtml = estPayeAchats 
+                ? `<p style="color: #2e7d32; font-weight: bold;">STATUT MARCHANDISES : PAYÉ (Réglé le ${datePaiementAchats || 'N/A'})</p>` 
+                : `<p style="color: #c62828; font-weight: bold;">STATUT MARCHANDISES : EN ATTENTE DE PAIEMENT</p>`;
 
             const htmlContent = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -757,7 +807,8 @@
                     <p><b>Projet :</b> ${nomProjet}</p>
                     <p><b>Prestataire :</b> ${prestataire}</p>
                     <p><b>Date d'export :</b> ${dateRemise}</p>
-                    ${statutPaiementHtml}
+                    ${statutHeuresHtml}
+                    ${statutAchatsHtml}
 
                     <h2>1. Détails des Tâches & Réalisations</h2>
                     <table>
@@ -773,7 +824,7 @@
                         </tbody>
                     </table>
 
-                    <h2>2. Achats de Fournitures</h2>
+                    <h2>2. Achats de Fournitures & Marchandises</h2>
                     <table>
                         <thead>
                             <tr>
@@ -817,8 +868,10 @@
             const doc = new jsPDF();
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
-            const estPaye = document.getElementById('estPaye').checked;
-            const datePaiement = document.getElementById('datePaiement').value;
+            const estPayeHeures = document.getElementById('estPayeHeures').checked;
+            const datePaiementHeures = document.getElementById('datePaiementHeures').value;
+            const estPayeAchats = document.getElementById('estPayeAchats').checked;
+            const datePaiementAchats = document.getElementById('datePaiementAchats').value;
 
             doc.setFillColor(5, 5, 5);
             doc.rect(0, 0, 210, 297, 'F');
@@ -833,16 +886,24 @@
             doc.setFontSize(9); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 22, 35);
 
             doc.setTextColor(245, 245, 220); doc.setFontSize(10); doc.setFont("Helvetica", "normal");
-            doc.text(`Projet : ${nomProjet}`, 20, 48);
-            doc.text(`Prestataire : ${prestataire}`, 20, 55);
-            doc.text(`Date de remise : ${dateRemise}`, 20, 62);
+            doc.text(`Projet : ${nomProjet}`, 20, 47);
+            doc.text(`Prestataire : ${prestataire}`, 20, 54);
+            doc.text(`Date de remise : ${dateRemise}`, 20, 61);
             
-            if (estPaye) {
+            if (estPayeHeures) {
                 doc.setTextColor(100, 220, 100);
-                doc.text(`STATUT : PAYÉ (Le ${datePaiement || 'N/A'})`, 20, 69);
+                doc.text(`HEURES : PAYÉ (Le ${datePaiementHeures || 'N/A'})`, 20, 68);
             } else {
                 doc.setTextColor(240, 160, 80);
-                doc.text(`STATUT : EN ATTENTE DE PAIEMENT`, 20, 69);
+                doc.text(`HEURES : EN ATTENTE`, 20, 68);
+            }
+
+            if (estPayeAchats) {
+                doc.setTextColor(100, 220, 100);
+                doc.text(`MARCHANDISES : PAYÉ (Le ${datePaiementAchats || 'N/A'})`, 110, 68);
+            } else {
+                doc.setTextColor(240, 160, 80);
+                doc.text(`MARCHANDISES : EN ATTENTE`, 110, 68);
             }
 
             let y = 78;
@@ -870,7 +931,7 @@
             });
 
             y += 8; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
-            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("2. Achats de Fournitures", 20, y); y += 6;
+            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("2. Achats de Fournitures / Marchandises", 20, y); y += 6;
             
             doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
             doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
@@ -914,18 +975,22 @@
             const prestataire = document.getElementById('prestataire').value;
             const nomProjet = document.getElementById('nomProjet').value || 'Non spécifié';
             const dateRemise = document.getElementById('dateRemise').value;
-            const estPaye = document.getElementById('estPaye').checked;
-            const datePaiement = document.getElementById('datePaiement').value;
+            const estPayeHeures = document.getElementById('estPayeHeures').checked;
+            const datePaiementHeures = document.getElementById('datePaiementHeures').value;
+            const estPayeAchats = document.getElementById('estPayeAchats').checked;
+            const datePaiementAchats = document.getElementById('datePaiementAchats').value;
             const recoveryUrl = window.location.href.split('?')[0];
             
-            let statutTexte = estPaye ? `✅ STATUT : PAYÉ (Le ${datePaiement || 'N/A'})` : `⏳ STATUT : EN ATTENTE DE PAIEMENT`;
+            let statutHeuresTxt = estPayeHeures ? `✅ HEURES : PAYÉ (Le ${datePaiementHeures || 'N/A'})` : `⏳ HEURES : EN ATTENTE`;
+            let statutAchatsTxt = estPayeAchats ? `✅ MARCHANDISES : PAYÉ (Le ${datePaiementAchats || 'N/A'})` : `⏳ MARCHANDISES : EN ATTENTE`;
 
             let report = `COMPTE RENDU DES ACTIVITÉS — C.A.M.S.\n`;
             report += `════════════════════════════════════\n`;
             report += `👤 Prestataire : ${prestataire}\n`;
             report += `🏗️ Projet : ${nomProjet}\n`;
             report += `📅 Date de remise : ${dateRemise}\n`;
-            report += `💳 ${statutTexte}\n`;
+            report += `💳 ${statutHeuresTxt}\n`;
+            report += `🛒 ${statutAchatsTxt}\n`;
             report += `════════════════════════════════════\n\n`;
 
             report += `📋 1. ACTIVITÉS & TEMPS\n`;
