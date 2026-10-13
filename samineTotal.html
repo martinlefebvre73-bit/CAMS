@@ -51,9 +51,7 @@
     <header class="fixed top-0 left-0 w-full z-50 bg-luxuryBlack/90 backdrop-blur-md border-b gold-border transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="index.html" class="flex items-center space-x-3 group">
-                <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center bg-gold/10 group-hover:bg-gold/20 transition-colors">
-                    <span class="font-serif text-gold font-bold text-lg">C</span>
-                </div>
+                <img src="logo cams.jpg" alt="Logo C.A.M.S." class="w-10 h-10 rounded-full border border-gold object-cover group-hover:scale-105 transition-transform">
                 <div class="flex flex-col">
                     <span class="font-serif text-2xl font-bold tracking-widest text-gold">C.A.M.S.</span>
                     <span class="text-[10px] tracking-[0.25em] text-beigeMuted uppercase">Bilan Hebdomadaire</span>
@@ -220,13 +218,11 @@
         }
 
         window.onWeekChange = function() {
-            // Si on change de semaine, on efface le filtre de date exacte pour éviter la confusion
             document.getElementById('dateSelector').value = '';
             calculateWeeklyTotals();
         };
 
         window.onDateChange = function() {
-            // Si on sélectionne une date exacte, on efface la sélection de semaine
             document.getElementById('weekSelector').value = '';
             calculateWeeklyTotals();
         };
@@ -362,7 +358,6 @@
             if (matchedEntries.length === 0) {
                 container.innerHTML = '<p class="text-beigeMuted text-xs text-center py-6">Aucune activité enregistrée pour cette sélection.</p>';
             } else {
-                // Grouper par projet
                 const projectsMap = {};
                 matchedEntries.forEach(entry => {
                     if (!projectsMap[entry.projet]) {
@@ -377,7 +372,6 @@
                     projectsMap[entry.projet].entries.push(entry);
                 });
 
-                // Générer les blocs par projet avec affichage clair des heures cumulées
                 Object.keys(projectsMap).forEach(projectName => {
                     const projData = projectsMap[projectName];
                     const projectCard = document.createElement('div');
