@@ -80,7 +80,7 @@
                 Total du Temps & Achats par <span class="gold-gradient-text">Semaine ou Date</span>
             </h1>
             <p class="text-beigeMuted text-sm sm:text-base font-light max-w-2xl mx-auto">
-                Sélectionnez une semaine, filtrez par date spécifique, configurez vos tarifs synchronisés et consultez le détail des montants à régler.
+                Sélectionnez une semaine, filtrez par date spécifique, configurez vos tarifs synchronisés et consultez le détail des montants.
             </p>
         </div>
 
@@ -141,63 +141,67 @@
             </div>
         </div>
 
-        <!-- Totals & Summary Cards -->
-        <div class="bg-luxuryBlack border gold-border rounded-3xl p-8 mb-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-center text-center">
-            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
-                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Travaillé</span>
-                <span id="weeklyWorkDisplay" class="font-serif text-2xl font-bold text-beigeSoft">0.00 h</span>
-            </div>
-            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
-                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Transport</span>
-                <span id="weeklyTransportDisplay" class="font-serif text-2xl font-bold text-beigeSoft">0.00 h</span>
-            </div>
-            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
-                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Global (Heures)</span>
-                <span id="weeklyTotalDisplay" class="font-serif text-2xl font-bold text-goldLight">0.00 h</span>
-            </div>
-            <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
-                <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Fournitures</span>
-                <span id="weeklySuppliesDisplay" class="font-serif text-2xl font-bold text-goldLight">0.00 $</span>
+        <!-- 1. PREMIER ENCART : Total des coûts et heures pour la semaine (Sans regard au paiement) -->
+        <div class="bg-luxuryBlack border gold-border rounded-3xl p-8 mb-8">
+            <h3 class="font-serif text-sm font-bold text-gold uppercase tracking-wider mb-4 text-center">1. Total brut de la semaine (Indépendant des paiements)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center text-center">
+                <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                    <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Travaillé</span>
+                    <span id="weeklyWorkDisplay" class="font-serif text-2xl font-bold text-beigeSoft">0.00 h</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                    <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Transport</span>
+                    <span id="weeklyTransportDisplay" class="font-serif text-2xl font-bold text-beigeSoft">0.00 h</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                    <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Global (Heures)</span>
+                    <span id="weeklyTotalDisplay" class="font-serif text-2xl font-bold text-goldLight">0.00 h</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-luxuryCard border gold-border">
+                    <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Total Fournitures</span>
+                    <span id="weeklySuppliesDisplay" class="font-serif text-2xl font-bold text-goldLight">0.00 $</span>
+                </div>
             </div>
         </div>
 
-        <!-- SECTION PAIEMENTS & SYNTHÈSE -->
+        <!-- 2. DEUXIÈME ENCART : Synthèse des paiements de la semaine en cours -->
         <div class="bg-gradient-to-r from-luxuryCard via-[#14120a] to-luxuryCard border-2 border-gold rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
-            <h3 class="font-serif text-xl font-bold text-gold mb-6 text-center tracking-wider uppercase">💰 Synthèse des montants à régler</h3>
-            
-            <!-- Alerte Arriérés / Souffrance Précédente (Affichage en rouge séparé) -->
-            <div id="arrearsBanner" class="hidden mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/40 text-center">
-                <span class="text-xs uppercase tracking-widest text-red-400 font-bold block mb-1">⚠️ Montants en souffrance des semaines antérieures (Non inclus dans le solde de la semaine)</span>
-                <span id="arrearsAmountDisplay" class="font-serif text-xl font-bold text-red-400">0.00 $</span>
-            </div>
-
+            <h3 class="font-serif text-xl font-bold text-gold mb-6 text-center tracking-wider uppercase">2. Synthèse des paiements (Semaine en cours)</h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-                <!-- Montant Travail -->
                 <div class="p-4 rounded-2xl bg-luxuryBlack border gold-border">
                     <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Paiement Travail</span>
-                    <span class="text-[10px] text-beigeMuted block my-2">Calculé selon tarif</span>
+                    <span class="text-[10px] text-beigeMuted block my-2">Selon statut payé/impayé</span>
                     <span id="workPaymentDisplay" class="font-serif text-xl font-bold text-goldLight block">0.00 $</span>
                 </div>
-                <!-- Montant Transport -->
                 <div class="p-4 rounded-2xl bg-luxuryBlack border gold-border">
                     <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Paiement Transport</span>
-                    <span class="text-[10px] text-beigeMuted block my-2">Calculé selon tarif</span>
+                    <span class="text-[10px] text-beigeMuted block my-2">Selon statut payé/impayé</span>
                     <span id="transportPaymentDisplay" class="font-serif text-xl font-bold text-goldLight block">0.00 $</span>
                 </div>
-                <!-- Case Marchandise -->
                 <div class="p-4 rounded-2xl bg-luxuryBlack border gold-border">
                     <span class="block text-xs uppercase tracking-widest text-gold font-semibold mb-1">Marchandise / Achats</span>
-                    <span class="text-[10px] text-beigeMuted block my-2">Total fournitures</span>
+                    <span class="text-[10px] text-beigeMuted block my-2">Selon statut payé/impayé</span>
                     <span id="merchandisePaymentDisplay" class="font-serif text-xl font-bold text-goldLight block">0.00 $</span>
                 </div>
-                <!-- Total Général (Semaine en cours uniquement) -->
                 <div class="p-4 rounded-2xl bg-gold/10 border-2 border-gold shadow-lg flex flex-col justify-between">
                     <div>
                         <span class="block text-xs uppercase tracking-widest text-gold font-bold mb-1">TOTAL À PAYER</span>
-                        <span class="text-[10px] text-beigeMuted block">(Semaine en cours)</span>
+                        <span class="text-[10px] text-beigeMuted block">(Restant dû cette semaine)</span>
                     </div>
                     <span id="grandTotalPaymentDisplay" class="font-serif text-2xl font-bold gold-gradient-text block my-2">0.00 $</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- 3. TROISIÈME ENCART : Montants en retard / en souffrance (Semaines précédentes) -->
+        <div id="arrearsBanner" class="hidden bg-luxuryCard border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
+            <div class="text-center">
+                <span class="inline-block py-1.5 px-4 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 text-xs tracking-[0.3em] uppercase mb-3 font-bold">
+                    ⚠️ 3. Alerte financière • Arriérés & Retards
+                </span>
+                <h3 class="font-serif text-lg font-bold text-red-400 mb-2">Montants en souffrance des semaines antérieures</h3>
+                <p class="text-beigeMuted text-xs mb-4">Ces montants proviennent de semaines passées et n'entrent pas dans le solde de la semaine sélectionnée ci-dessus.</p>
+                <span id="arrearsAmountDisplay" class="font-serif text-3xl font-bold text-red-400 block">0.00 $</span>
             </div>
         </div>
 
@@ -411,9 +415,17 @@
                 return;
             }
 
-            let totalWork = 0;
-            let totalTransport = 0;
-            let totalSupplies = 0;
+            // Encart 1 : Total brut (sans regard au paiement)
+            let grossWork = 0;
+            let grossTransport = 0;
+            let grossSupplies = 0;
+
+            // Encart 2 : Paiements de la semaine en cours (filtre payé / non payé)
+            let netWork = 0;
+            let netTransport = 0;
+            let netSupplies = 0;
+
+            // Encart 3 : Arriérés (semaines précédentes non payées)
             let arrearsWork = 0;
             let arrearsTransport = 0;
             let arrearsSupplies = 0;
@@ -436,35 +448,42 @@
 
                             if (exactDate) {
                                 matchCondition = (actDate.getTime() === exactDate.getTime());
-                                isPrevious = (actDate < exactDate && !report.estPayeHeures && act.paye !== true);
+                                isPrevious = (actDate < exactDate);
                             } else if (sunday && saturday) {
                                 matchCondition = (actDate >= sunday && actDate <= saturday);
-                                isPrevious = (actDate < sunday && !report.estPayeHeures && act.paye !== true);
+                                isPrevious = (actDate < sunday);
                             }
 
                             const travail = parseFloat(act.travail) || 0;
                             const transport = parseFloat(act.transport) || 0;
 
-                            // Comptabilisation des arriérés (antérieurs à la période)
-                            if (isPrevious) {
-                                arrearsWork += travail;
-                                arrearsTransport += transport;
+                            // Si c'est dans la période sélectionnée
+                            if (matchCondition) {
+                                // Encart 1 : Brut sans regard au paiement
+                                grossWork += travail;
+                                grossTransport += transport;
+
+                                // Encart 2 : Paiement (uniquement si non payé)
+                                if (!report.estPayeHeures && act.paye !== true) {
+                                    netWork += travail;
+                                    netTransport += transport;
+
+                                    matchedEntries.push({
+                                        prestataire: report.prestataire || 'Inconnu',
+                                        projet: report.projet || 'Projet sans nom',
+                                        date: act.date,
+                                        description: act.description,
+                                        horaire: act.horaire || '-',
+                                        travail: travail,
+                                        transport: transport
+                                    });
+                                }
                             }
 
-                            // Comptabilisation de la période sélectionnée
-                            if (matchCondition && !report.estPayeHeures && act.paye !== true) {
-                                totalWork += travail;
-                                totalTransport += transport;
-
-                                matchedEntries.push({
-                                    prestataire: report.prestataire || 'Inconnu',
-                                    projet: report.projet || 'Projet sans nom',
-                                    date: act.date,
-                                    description: act.description,
-                                    horaire: act.horaire || '-',
-                                    travail: travail,
-                                    transport: transport
-                                });
+                            // Si c'est une semaine précédente et non payée -> Arriéré (Encart 3)
+                            if (isPrevious && (!report.estPayeHeures && act.paye !== true)) {
+                                arrearsWork += travail;
+                                arrearsTransport += transport;
                             }
                         }
                     });
@@ -480,39 +499,60 @@
 
                             if (exactDate) {
                                 matchCondition = (supDate.getTime() === exactDate.getTime());
-                                isPrevious = (supDate < exactDate && !report.estPayeAchats && sup.paye !== true);
+                                isPrevious = (supDate < exactDate);
                             } else if (sunday && saturday) {
                                 matchCondition = (supDate >= sunday && supDate <= saturday);
-                                isPrevious = (supDate < sunday && !report.estPayeAchats && sup.paye !== true);
+                                isPrevious = (supDate < sunday);
                             }
 
                             const montant = parseFloat(sup.montant) || 0;
 
-                            // Comptabilisation des arriérés d'achats
-                            if (isPrevious) {
-                                arrearsSupplies += montant;
+                            // Si c'est dans la période sélectionnée
+                            if (matchCondition) {
+                                // Encart 1 : Brut sans regard au paiement
+                                grossSupplies += montant;
+
+                                // Encart 2 : Paiement (uniquement si non payé)
+                                if (!report.estPayeAchats && sup.paye !== true) {
+                                    netSupplies += montant;
+
+                                    matchedSupplies.push({
+                                        prestataire: report.prestataire || 'Inconnu',
+                                        projet: report.projet || 'Projet sans nom',
+                                        date: sup.date,
+                                        description: sup.description,
+                                        montant: montant
+                                    });
+                                }
                             }
 
-                            // Comptabilisation de la période sélectionnée
-                            if (matchCondition && !report.estPayeAchats && sup.paye !== true) {
-                                totalSupplies += montant;
-
-                                matchedSupplies.push({
-                                    prestataire: report.prestataire || 'Inconnu',
-                                    projet: report.projet || 'Projet sans nom',
-                                    date: sup.date,
-                                    description: sup.description,
-                                    montant: montant
-                                });
+                            // Si c'est un achat antérieur non payé -> Arriéré (Encart 3)
+                            if (isPrevious && (!report.estPayeAchats && sup.paye !== true)) {
+                                arrearsSupplies += montant;
                             }
                         }
                     });
                 }
             });
 
-            // Calcul financier des arriérés (affiché en rouge, SANS l'ajouter au grand total de la semaine)
+            // Affichage Encart 1 : Totaux bruts de la semaine
+            document.getElementById('weeklyWorkDisplay').textContent = grossWork.toFixed(2) + ' h';
+            document.getElementById('weeklyTransportDisplay').textContent = grossTransport.toFixed(2) + ' h';
+            document.getElementById('weeklyTotalDisplay').textContent = (grossWork + grossTransport).toFixed(2) + ' h';
+            document.getElementById('weeklySuppliesDisplay').textContent = grossSupplies.toFixed(2) + ' $';
+
+            // Calculs Encart 2 : Paiements de la semaine
+            const workPayment = netWork * workRate;
+            const transportPayment = netTransport * transportRate;
+            const grandTotal = workPayment + transportPayment + netSupplies;
+
+            document.getElementById('workPaymentDisplay').textContent = workPayment.toFixed(2) + ' $';
+            document.getElementById('transportPaymentDisplay').textContent = transportPayment.toFixed(2) + ' $';
+            document.getElementById('merchandisePaymentDisplay').textContent = netSupplies.toFixed(2) + ' $';
+            document.getElementById('grandTotalPaymentDisplay').textContent = grandTotal.toFixed(2) + ' $';
+
+            // Calculs Encart 3 : Arriérés en retard (en rouge)
             const arrearsPayment = (arrearsWork * workRate) + (arrearsTransport * transportRate) + arrearsSupplies;
-            
             const arrearsBanner = document.getElementById('arrearsBanner');
             const arrearsAmountDisplay = document.getElementById('arrearsAmountDisplay');
             if (arrearsPayment > 0) {
@@ -521,22 +561,6 @@
             } else {
                 arrearsBanner.classList.add('hidden');
             }
-
-            // Affichage des totaux de la période
-            document.getElementById('weeklyWorkDisplay').textContent = totalWork.toFixed(2) + ' h';
-            document.getElementById('weeklyTransportDisplay').textContent = totalTransport.toFixed(2) + ' h';
-            document.getElementById('weeklyTotalDisplay').textContent = (totalWork + totalTransport).toFixed(2) + ' h';
-            document.getElementById('weeklySuppliesDisplay').textContent = totalSupplies.toFixed(2) + ' $';
-
-            // Calculs financiers de la période (Exclut strictement les arriérés)
-            const workPayment = totalWork * workRate;
-            const transportPayment = totalTransport * transportRate;
-            const grandTotal = workPayment + transportPayment + totalSupplies;
-
-            document.getElementById('workPaymentDisplay').textContent = workPayment.toFixed(2) + ' $';
-            document.getElementById('transportPaymentDisplay').textContent = transportPayment.toFixed(2) + ' $';
-            document.getElementById('merchandisePaymentDisplay').textContent = totalSupplies.toFixed(2) + ' $';
-            document.getElementById('grandTotalPaymentDisplay').textContent = grandTotal.toFixed(2) + ' $';
 
             // Rendu des tableaux de détails
             const container = document.getElementById('weeklyDetailsContainer');
