@@ -78,7 +78,7 @@
                 Total du Temps & Achats par <span class="gold-gradient-text">Semaine ou Date</span>
             </h1>
             <p class="text-beigeMuted text-sm sm:text-base font-light max-w-2xl mx-auto">
-                Sélectionnez une semaine, filtrez par date spécifique, configurez vos tarifs et consultez le détail des montants à régler.
+                Sélectionnez une semaine, filtrez par date spécifique, configurez vos tarifs synchronisés et consultez le détail des montants à régler.
             </p>
         </div>
 
@@ -97,17 +97,21 @@
 
             <!-- Panneau Masqué des Tarifs -->
             <div id="tarifPanel" class="hidden bg-luxuryBlack border gold-border rounded-2xl p-5 mb-6 transition-all duration-300">
-                <h4 class="font-serif text-sm font-bold text-gold uppercase tracking-wider mb-4">Paramétrage des taux horaires</h4>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 border-b gold-border pb-3 gap-2">
+                    <h4 class="font-serif text-sm font-bold text-gold uppercase tracking-wider">Paramétrage des taux horaires (Firebase)</h4>
+                    <span id="currentPrestataireLabel" class="text-xs text-beigeMuted bg-luxuryCard px-3 py-1 rounded-lg border gold-border">Prestataire : Tous</span>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[11px] uppercase tracking-widest text-beigeMuted mb-1.5">Tarif Heures Travaillées ($/h)</label>
-                        <input type="number" id="workRateInput" value="0" min="0" step="0.5" oninput="calculateWeeklyTotals()" class="w-full bg-luxuryCard border gold-border rounded-xl px-4 py-2.5 text-gold text-sm font-bold focus:outline-none">
+                        <input type="number" id="workRateInput" value="0" min="0" step="0.5" onchange="saveRatesToFirebase()" class="w-full bg-luxuryCard border gold-border rounded-xl px-4 py-2.5 text-gold text-sm font-bold focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-[11px] uppercase tracking-widest text-beigeMuted mb-1.5">Tarif Heures Transport ($/h)</label>
-                        <input type="number" id="transportRateInput" value="0" min="0" step="0.5" oninput="calculateWeeklyTotals()" class="w-full bg-luxuryCard border gold-border rounded-xl px-4 py-2.5 text-gold text-sm font-bold focus:outline-none">
+                        <input type="number" id="transportRateInput" value="0" min="0" step="0.5" onchange="saveRatesToFirebase()" class="w-full bg-luxuryCard border gold-border rounded-xl px-4 py-2.5 text-gold text-sm font-bold focus:outline-none">
                     </div>
                 </div>
+                <p class="text-[10px] text-beigeMuted mt-3 italic">* Les tarifs s'enregistrent automatiquement dans la base de données dès que vous quittez le champ.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
@@ -124,7 +128,7 @@
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-widest text-gold font-semibold mb-2">Filtrer par Prestataire</label>
-                    <select id="prestataireSelector" onchange="calculateWeeklyTotals()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
+                    <select id="prestataireSelector" onchange="onPrestataireChange()" class="w-full bg-luxuryBlack border gold-border rounded-xl px-4 py-3 text-beigeSoft text-sm focus:outline-none focus:border-gold transition-colors">
                         <option value="ALL">Tous les prestataires</option>
                     </select>
                 </div>
@@ -216,7 +220,7 @@
     <!-- Firebase Script & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
@@ -232,11 +236,74 @@
         const db = getFirestore(app);
 
         let allReports = [];
+        let ratesCache = {}; // Cache local des tarifs récupérés depuis Firebase
 
-        // Fonction pour afficher/masquer le panneau des tarifs
+        // Gestion de l'affichage du panneau des tarifs
         window.toggleTarifPanel = function() {
             const panel = document.getElementById('tarifPanel');
             panel.classList.toggle('hidden');
+        };
+
+        // Charger les tarifs depuis Firebase pour un prestataire donné
+        async function loadRatesForPrestataire(prestataire) {
+            const safePrest = prestataire || 'ALL';
+            document.getElementById('currentPrestataireLabel').textContent = `Prestataire : ${safePrest === 'ALL' ? 'Tous' : safePrest}`;
+
+            if (ratesCache[safePrest]) {
+                document.getElementById('workRateInput').value = ratesCache[safePrest].work || 0;
+                document.getElementById('transportRateInput').value = ratesCache[safePrest].transport || 0;
+                calculateWeeklyTotals();
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "tarifs", safePrest);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    ratesCache[safePrest] = {
+                        work: data.work || 0,
+                        transport: data.transport || 0
+                    };
+                } else {
+                    ratesCache[safePrest] = { work: 0, transport: 0 };
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement des tarifs depuis Firebase :", error);
+                ratesCache[safePrest] = { work: 0, transport: 0 };
+            }
+
+            document.getElementById('workRateInput').value = ratesCache[safePrest].work;
+            document.getElementById('transportRateInput').value = ratesCache[safePrest].transport;
+            calculateWeeklyTotals();
+        }
+
+        // Sauvegarder les tarifs dans Firebase
+        window.saveRatesToFirebase = async function() {
+            const prestataire = document.getElementById('prestataireSelector').value || 'ALL';
+            const workRate = parseFloat(document.getElementById('workRateInput').value) || 0;
+            const transportRate = parseFloat(document.getElementById('transportRateInput').value) || 0;
+
+            ratesCache[prestataire] = { work: workRate, transport: transportRate };
+
+            try {
+                await setDoc(doc(db, "tarifs", prestataire), {
+                    work: workRate,
+                    transport: transportRate,
+                    updatedAt: new Date().toISOString()
+                });
+                console.log(`Tarifs sauvegardés dans Firebase pour : ${prestataire}`);
+            } catch (error) {
+                console.error("Erreur lors de la sauvegarde des tarifs dans Firebase :", error);
+            }
+
+            calculateWeeklyTotals();
+        };
+
+        window.onPrestataireChange = async function() {
+            const prestataire = document.getElementById('prestataireSelector').value;
+            await loadRatesForPrestataire(prestataire);
         };
 
         async function loadAllReports() {
@@ -261,6 +328,7 @@
                     select.appendChild(opt);
                 });
 
+                await loadRatesForPrestataire('ALL');
                 setDefaultWeek();
             } catch (error) {
                 console.error("Erreur de chargement Firestore :", error);
