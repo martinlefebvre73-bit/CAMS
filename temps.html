@@ -8,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jsPDF CDN pour la génération de PDF professionnelle -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- PDF.js CDN pour la compression automatique des PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
     <!-- Google Fonts for Serif & Sans-serif elegance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,7 +157,7 @@
 
                 <!-- Section 3 : Pièces Justificatives -->
                 <div class="mb-10 pb-8 border-b gold-border">
-                    <h3 class="font-serif text-xl font-bold text-gold-light mb-2">3. Pièces Justificatives (Tous formats acceptés)</h3>
+                    <h3 class="font-serif text-xl font-bold text-gold-light mb-2">3. Pièces Justificatives (PDF & Images compressés automatiquement)</h3>
                     <p class="text-[11px] text-beigeMuted mb-4">Astuce : Double-cliquez sur une pièce jointe pour l'ouvrir dans un nouvel onglet[cite: 1].</p>
                     <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 relative">
                         <input type="file" id="attachments" multiple onchange="handleFiles(this)" class="w-full text-xs text-beigeMuted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:gold-border file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-gold/10 file:text-gold hover:file:bg-gold hover:file:text-luxuryBlack file:transition-all cursor-pointer">
@@ -399,7 +404,6 @@
                 data.achats.forEach(sup => addSupplyRow({ date: sup.date, desc: sup.description, montant: sup.montant }));
             } else { addSupplyRow(); }
 
-            // Sécurisation stricte lors du chargement des pièces jointes existantes
             window.compressedFiles = [];
             if (Array.isArray(data.piecesJointes)) {
                 data.piecesJointes.forEach(f => {
@@ -507,61 +511,89 @@
 
         function removeSupplyRow(supplyId) { document.getElementById(supplyId)?.remove(); calculateTotals(); }
 
-        // Gestion de tous les formats de fichiers (compression si image, lecture directe sinon)
-        function handleFiles(input) {
+        // Gestion de tous les formats avec compression automatique (PDF convertis en image & Images redimensionnées)
+        async function handleFiles(input) {
             if (!input.files || input.files.length === 0) return;
 
-            let processedCount = 0;
             const files = input.files;
 
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
 
-                reader.onload = function(e) {
-                    if (file.type.startsWith('image/')) {
-                        const img = new Image();
-                        img.onload = function() {
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 600;
-                            const MAX_HEIGHT = 600;
-                            let width = img.width;
-                            let height = img.height;
+                if (file.type === 'application/pdf') {
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                        const pdfDoc = await loadingTask.promise;
+                        const page = await pdfDoc.getPage(1);
+                        const viewport = page.getViewport({ scale: 1.0 });
 
-                            if (width > height) {
-                                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                            } else {
-                                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                            }
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = viewport.width > 800 ? 800 : viewport.width;
+                        canvas.height = (canvas.width / viewport.width) * viewport.height;
 
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-                            if (!window.compressedFiles) window.compressedFiles = [];
-                            window.compressedFiles.push({ name: String(file.name), data: String(dataUrl) });
-
-                            processedCount++;
-                            if (processedCount === files.length) {
-                                renderFilesDisplay();
-                                input.value = '';
-                            }
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: page.getViewport({ scale: canvas.width / viewport.width })
                         };
-                        img.src = e.target.result;
-                    } else {
-                        if (!window.compressedFiles) window.compressedFiles = [];
-                        window.compressedFiles.push({ name: String(file.name), data: String(e.target.result) });
 
-                        processedCount++;
-                        if (processedCount === files.length) {
-                            renderFilesDisplay();
-                            input.value = '';
-                        }
+                        await page.render(renderContext).promise;
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+
+                        if (!window.compressedFiles) window.compressedFiles = [];
+                        window.compressedFiles.push({ name: String(file.name), data: String(dataUrl) });
+                    } catch (error) {
+                        console.error("Erreur de compression PDF :", error);
+                        alert("Impossible de compresser ce PDF.");
                     }
-                };
-                reader.readAsDataURL(file);
-            });
+                } else if (file.type.startsWith('image/')) {
+                    await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = new Image();
+                            img.onload = function() {
+                                const canvas = document.createElement('canvas');
+                                const MAX_WIDTH = 600;
+                                const MAX_HEIGHT = 600;
+                                let width = img.width;
+                                let height = img.height;
+
+                                if (width > height) {
+                                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                                } else {
+                                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                                }
+
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                                if (!window.compressedFiles) window.compressedFiles = [];
+                                window.compressedFiles.push({ name: String(file.name), data: String(dataUrl) });
+                                resolve();
+                            };
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            if (!window.compressedFiles) window.compressedFiles = [];
+                            window.compressedFiles.push({ name: String(file.name), data: String(e.target.result) });
+                            resolve();
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            }
+
+            renderFilesDisplay();
+            input.value = '';
         }
 
         function renderFilesDisplay() {
@@ -579,7 +611,7 @@
                 badge.title = "Double-cliquez pour ouvrir le fichier";
                 
                 badge.innerHTML = `
-                    <span class="cursor-pointer truncate flex-1" ondblclick="openAttachment('${file.data}')">📎 ${file.name} <span class="text-[10px] opacity-75">(Double-clic pour ouvrir)</span></span>
+                    <span class="cursor-pointer truncate flex-1" ondblclick="openAttachment('${file.data}')">📎 ${file.name} <span class="text-[10px] opacity-75">(Double-clic pour ouvrir)</span>[cite: 1]</span>
                     <button type="button" onclick="removeAttachment(${index})" class="ml-2 w-6 h-6 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors">✕</button>
                 `;
                 display.appendChild(badge);
@@ -801,7 +833,7 @@
                 doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(212, 175, 55);
                 doc.text("Pièces justificatives jointes :", 20, y); y += 6;
                 doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(245, 245, 220);
-                window.compressedFiles.forEach(file => { doc.text(`• ${file.name}`, 25, y); y += 6; });
+                window.compressedFiles.forEach(file => { doc.text(`• ${file.name} (Compressé)`, 25, y); y += 6; });
             }
 
             y += 10; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
