@@ -185,7 +185,7 @@
                 <!-- Section 3 : Pièces Justificatives -->
                 <div class="mb-10 pb-8 border-b gold-border">
                     <h3 class="font-serif text-xl font-bold text-gold-light mb-2">3. Pièces Justificatives (PDF & Images compressés automatiquement)</h3>
-                    <p class="text-[11px] text-beigeMuted mb-4">Astuce : Double-cliquez sur une pièce jointe pour l'ouvrir dans un nouvel onglet[cite: 1].</p>
+                    <p class="text-[11px] text-beigeMuted mb-4">Astuce : Double-cliquez sur une pièce jointe pour l'ouvrir dans un nouvel onglet.</p>
                     <div class="bg-luxuryBlack border gold-border rounded-2xl p-6 relative">
                         <input type="file" id="attachments" multiple onchange="handleFiles(this)" class="w-full text-xs text-beigeMuted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:gold-border file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-gold/10 file:text-gold hover:file:bg-gold hover:file:text-luxuryBlack file:transition-all cursor-pointer">
                         <div id="fileListDisplay" class="mt-4 space-y-2 text-xs text-beigeSoft"></div>
@@ -700,7 +700,7 @@
                 badge.title = "Double-cliquez pour ouvrir le fichier";
                 
                 badge.innerHTML = `
-                    <span class="cursor-pointer truncate flex-1" ondblclick="openAttachment('${file.data}')">📎 ${file.name} <span class="text-[10px] opacity-75">(Double-clic pour ouvrir)</span>[cite: 1]</span>
+                    <span class="cursor-pointer truncate flex-1" ondblclick="openAttachment('${file.data}')">📎 ${file.name} <span class="text-[10px] opacity-75">(Double-clic pour ouvrir)</span></span>
                     <button type="button" onclick="removeAttachment(${index})" class="ml-2 w-6 h-6 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors">✕</button>
                 `;
                 display.appendChild(badge);
@@ -740,31 +740,40 @@
 
             const prestataire = document.getElementById('prestataire').value;
             const dateRemise = document.getElementById('dateRemise').value;
-            const estPayeHeures = document.getElementById('estPayeHeures').checked;
-            const datePaiementHeures = document.getElementById('datePaiementHeures').value;
-            const estPayeAchats = document.getElementById('estPayeAchats').checked;
-            const datePaiementAchats = document.getElementById('datePaiementAchats').value;
+
+            // Formater la date (ex: 2026-07-22 -> 22 juillet 2026)
+            const dateObj = new Date(dateRemise + 'T00:00:00');
+            const optionsDate = { day: 'numeric', month: 'long', year: 'numeric' };
+            const dateFormatee = dateObj.toLocaleDateString('fr-CA', optionsDate) || dateRemise;
+
+            function formatHeures(decimalHours) {
+                if (!decimalHours) return "0h00";
+                const h = Math.floor(decimalHours);
+                const m = Math.round((decimalHours - h) * 60);
+                return h + 'h' + m.toString().padStart(2, '0');
+            }
 
             let totalTravail = 0;
-            let totalTransport = 0;
-            let totalAchats = 0;
-
             let activitiesHtml = '';
             document.querySelectorAll('.activity-row').forEach(row => {
                 const date = row.querySelector('.row-date').value;
                 const desc = row.querySelector('.row-desc').value;
+                const horaire = row.querySelector('.row-horaire').value;
                 const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
-                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
                 totalTravail += travail;
-                totalTransport += transport;
+
+                const d = new Date(date + 'T00:00:00');
+                const dStr = d.toLocaleDateString('fr-CA', optionsDate) || date;
+                const descComplet = horaire ? `${desc} (${horaire})` : desc;
 
                 activitiesHtml += `<tr>
-                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${date}</td>
-                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${desc}</td>
-                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt; text-align: right;">${travail.toFixed(2)} h</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${dStr}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${descComplet}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${formatHeures(travail)}</td>
                 </tr>`;
             });
 
+            let totalAchats = 0;
             let suppliesHtml = '';
             document.querySelectorAll('.supply-row').forEach(row => {
                 const date = row.querySelector('.supply-date').value;
@@ -772,78 +781,79 @@
                 const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
                 totalAchats += montant;
 
+                const d = new Date(date + 'T00:00:00');
+                const dStr = d.toLocaleDateString('fr-CA', optionsDate) || date;
+
                 suppliesHtml += `<tr>
-                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${date}</td>
-                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt;">${desc}</td>
-                    <td style="border: 1px solid #d4af37; padding: 8px; font-size: 11pt; text-align: right;">${montant.toFixed(2)} $</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${dStr}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${desc}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${montant.toFixed(2).replace('.', ',')} $</td>
                 </tr>`;
             });
-
-            const statutHeuresHtml = estPayeHeures 
-                ? `<p style="color: #2e7d32; font-weight: bold;">STATUT HEURES : PAYÉ (Réglé le ${datePaiementHeures || 'N/A'})</p>` 
-                : `<p style="color: #c62828; font-weight: bold;">STATUT HEURES : EN ATTENTE DE PAIEMENT</p>`;
-
-            const statutAchatsHtml = estPayeAchats 
-                ? `<p style="color: #2e7d32; font-weight: bold;">STATUT MARCHANDISES : PAYÉ (Réglé le ${datePaiementAchats || 'N/A'})</p>` 
-                : `<p style="color: #c62828; font-weight: bold;">STATUT MARCHANDISES : EN ATTENTE DE PAIEMENT</p>`;
 
             const htmlContent = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
                     <meta charset="utf-8">
-                    <title>Export Facturation - C.A.M.S.</title>
+                    <title>Facture de services</title>
                     <style>
-                        body { font-family: 'Calibri', Arial, sans-serif; color: #050505; line-height: 1.6; }
-                        h1 { color: #aa8c2c; font-size: 20pt; text-transform: uppercase; border-bottom: 2px solid #d4af37; padding-bottom: 5px; }
-                        h2 { color: #aa8c2c; font-size: 14pt; margin-top: 20px; }
-                        p { font-size: 11pt; margin: 4px 0; }
+                        body { font-family: 'Arial', sans-serif; color: #000; line-height: 1.5; font-size: 11pt; }
+                        h1 { font-size: 18pt; margin-bottom: 20px; font-weight: bold; }
+                        h2 { font-size: 14pt; margin-top: 30px; margin-bottom: 10px; font-weight: bold; }
                         table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
-                        th { background-color: #0f0f0f; color: #d4af37; border: 1px solid #d4af37; padding: 10px; font-size: 11pt; text-align: left; }
-                        .totals { background-color: #f5f5dc; border: 1px solid #d4af37; padding: 15px; margin-top: 20px; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
+                        th { font-weight: bold; }
+                        .info-table { border-collapse: collapse; margin-bottom: 20px; width: 100%; }
+                        .info-table td { border: none; padding: 4px 8px 4px 0; }
+                        .info-table td:first-child { font-weight: bold; width: 150px; }
                     </style>
                 </head>
                 <body>
-                    <h1>C.A.M.S. — Résumé pour Facturation</h1>
-                    <p><b>Projet :</b> ${nomProjet}</p>
-                    <p><b>Prestataire :</b> ${prestataire}</p>
-                    <p><b>Date d'export :</b> ${dateRemise}</p>
-                    ${statutHeuresHtml}
-                    ${statutAchatsHtml}
+                    <h1>Facture de services</h1>
+                    
+                    <h2>Informations générales</h2>
+                    <table class="info-table">
+                        <tr><td>Nom du prestataire</td><td>| ${prestataire}</td></tr>
+                        <tr><td>Client</td><td>| Gestion CAMS</td></tr>
+                        <tr><td>Date</td><td>| ${dateFormatee}</td></tr>
+                        <tr><td>Lieu de travail</td><td>| ${nomProjet}</td></tr>
+                    </table>
 
-                    <h2>1. Détails des Tâches & Réalisations</h2>
+                    <h2>Détails des travaux et temps</h2>
                     <table>
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Description des Tâches / Réalisations</th>
-                                <th style="text-align: right;">Temps</th>
+                                <th>Description</th>
+                                <th>Heures travaillées</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${activitiesHtml}
+                            <tr>
+                                <td colspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold;">Total des heures</td>
+                                <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">${formatHeures(totalTravail)}</td>
+                            </tr>
                         </tbody>
                     </table>
 
-                    <h2>2. Achats de Fournitures & Marchandises</h2>
+                    <h2>Achats et déboursés</h2>
                     <table>
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Description de l'Achat</th>
-                                <th style="text-align: right;">Montant</th>
+                                <th>Date / Fournisseur</th>
+                                <th>Description de l'achat</th>
+                                <th>Montant</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${suppliesHtml || '<tr><td colspan="3" style="border: 1px solid #d4af37; padding: 8px; text-align: center;">Aucun achat enregistré.</td></tr>'}
+                            ${suppliesHtml || '<tr><td colspan="3" style="text-align: center; border: 1px solid #000; padding: 8px;">Aucun achat enregistré.</td></tr>'}
+                            <tr>
+                                <td colspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold;">Total des achats</td>
+                                <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">${totalAchats.toFixed(2).replace('.', ',')} $</td>
+                            </tr>
                         </tbody>
                     </table>
-
-                    <div class="totals">
-                        <h2 style="margin-top: 0; color: #aa8c2c;">Récapitulatif Global</h2>
-                        <p><b>Total Heures Travaillées :</b> ${totalTravail.toFixed(2)} h</p>
-                        <p><b>Total Heures Transport :</b> ${totalTransport.toFixed(2)} h</p>
-                        <p><b>Total Achats de Fournitures :</b> ${totalAchats.toFixed(2)} $</p>
-                    </div>
                 </body>
                 </html>
             `;
@@ -852,7 +862,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Facturation_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.doc`;
+            a.download = `Facture_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.doc`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
