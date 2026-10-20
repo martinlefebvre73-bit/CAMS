@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jsPDF CDN pour la génération de PDF professionnelle -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- PDF.js CDN pour la compression automatique des PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
@@ -216,11 +217,8 @@
                     <button type="button" onclick="saveReportExplicitly()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gold/20 border-2 border-gold text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold hover:text-luxuryBlack transition-all flex items-center justify-center space-x-2 shadow-lg">
                         <span>Enregistrer le Rapport</span>
                     </button>
-                    <button type="button" onclick="exportWordBilling()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
-                        <span>Export pour Facturation (Word)</span>
-                    </button>
-                    <button type="button" onclick="generatePDF()" class="w-full lg:w-auto px-6 py-4 rounded-xl bg-gold/10 border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold hover:text-luxuryBlack transition-all flex items-center justify-center space-x-2">
-                        <span>Générer le PDF</span>
+                    <button type="button" onclick="exportFacturePDF()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
+                        <span>Export pour Facturation (PDF)</span>
                     </button>
                     <button type="button" onclick="saveAndSendEmail()" class="w-full lg:w-auto px-6 py-4 rounded-xl border gold-border text-gold font-bold text-xs tracking-widest uppercase hover:bg-gold/10 transition-colors flex items-center justify-center space-x-2">
                         <span>Enregistrer & Courriel</span>
@@ -485,7 +483,7 @@
         };
     </script>
 
-    <!-- Logique d'interface & Fonctions Export Word -->
+    <!-- Logique d'interface & Fonctions Export -->
     <script>
         document.getElementById('dateRemise').valueAsDate = new Date();
         window.compressedFiles = [];
@@ -733,15 +731,12 @@
 
         window.addEventListener('DOMContentLoaded', () => { addRow(); addSupplyRow(); renderFilesDisplay(); });
 
-        // EXPORT POUR FACTURATION EN DOCUMENT WORD (.doc)
-        window.exportWordBilling = function() {
-            const nomProjet = document.getElementById('nomProjet').value;
-            if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
-
-            const prestataire = document.getElementById('prestataire').value;
+        // FONCTION UTILITAIRE POUR CONSTRUIRE LA FACTURE PDF
+        window.buildFacturePDFDoc = function() {
+            const nomProjet = document.getElementById('nomProjet').value || 'Projet';
+            const prestataire = document.getElementById('prestataire').value || 'Martin';
             const dateRemise = document.getElementById('dateRemise').value;
 
-            // Formater la date (ex: 2026-07-22 -> 22 juillet 2026)
             const dateObj = new Date(dateRemise + 'T00:00:00');
             const optionsDate = { day: 'numeric', month: 'long', year: 'numeric' };
             const dateFormatee = dateObj.toLocaleDateString('fr-CA', optionsDate) || dateRemise;
@@ -753,8 +748,35 @@
                 return h + 'h' + m.toString().padStart(2, '0');
             }
 
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("Facture de services", 14, 20);
+
+            doc.setFontSize(14);
+            doc.text("Informations générales", 14, 32);
+
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text("Nom du prestataire", 14, 40); doc.setFont("helvetica", "normal"); doc.text("| " + prestataire, 60, 40);
+            doc.setFont("helvetica", "bold");
+            doc.text("Client", 14, 46); doc.setFont("helvetica", "normal"); doc.text("| Gestion CAMS", 60, 46);
+            doc.setFont("helvetica", "bold");
+            doc.text("Date", 14, 52); doc.setFont("helvetica", "normal"); doc.text("| " + dateFormatee, 60, 52);
+            doc.setFont("helvetica", "bold");
+            doc.text("Lieu de travail", 14, 58); doc.setFont("helvetica", "normal"); doc.text("| " + nomProjet, 60, 58);
+
+            let startY = 70;
+
+            // SECTION 1 : TRAVAUX
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Détails des travaux et temps", 14, startY);
+
             let totalTravail = 0;
-            let activitiesHtml = '';
+            const travauxBody = [];
             document.querySelectorAll('.activity-row').forEach(row => {
                 const date = row.querySelector('.row-date').value;
                 const desc = row.querySelector('.row-desc').value;
@@ -765,16 +787,71 @@
                 const d = new Date(date + 'T00:00:00');
                 const dStr = d.toLocaleDateString('fr-CA', optionsDate) || date;
                 const descComplet = horaire ? `${desc} (${horaire})` : desc;
+                
+                if (travail > 0 || desc) {
+                    travauxBody.push([dStr, descComplet, formatHeures(travail)]);
+                }
+            });
+            travauxBody.push([{ content: 'Total des heures', colSpan: 2, styles: { fontStyle: 'bold' } }, { content: formatHeures(totalTravail), styles: { fontStyle: 'bold' } }]);
 
-                activitiesHtml += `<tr>
-                    <td style="border: 1px solid #000; padding: 8px;">${dStr}</td>
-                    <td style="border: 1px solid #000; padding: 8px;">${descComplet}</td>
-                    <td style="border: 1px solid #000; padding: 8px;">${formatHeures(travail)}</td>
-                </tr>`;
+            doc.autoTable({
+                startY: startY + 5,
+                head: [['Date', 'Description', 'Heures travaillées']],
+                body: travauxBody,
+                theme: 'grid',
+                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+                bodyStyles: { textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+                styles: { font: 'helvetica', fontSize: 11 }
             });
 
+            // SECTION 2 : TRANSPORT
+            startY = doc.lastAutoTable.finalY + 15;
+            if (startY > 260) { doc.addPage(); startY = 20; }
+
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Frais de transport", 14, startY);
+
+            let totalTransport = 0;
+            const transportBody = [];
+            document.querySelectorAll('.activity-row').forEach(row => {
+                const date = row.querySelector('.row-date').value;
+                const desc = row.querySelector('.row-desc').value;
+                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
+                
+                if (transport > 0) {
+                    totalTransport += transport;
+                    const d = new Date(date + 'T00:00:00');
+                    const dStr = d.toLocaleDateString('fr-CA', optionsDate) || date;
+                    transportBody.push([dStr, "Transport - " + desc, formatHeures(transport)]);
+                }
+            });
+
+            if (transportBody.length === 0) {
+                transportBody.push([{ content: 'Aucun transport enregistré.', colSpan: 3, styles: { halign: 'center' } }]);
+            }
+            transportBody.push([{ content: 'Total du transport', colSpan: 2, styles: { fontStyle: 'bold' } }, { content: formatHeures(totalTransport), styles: { fontStyle: 'bold' } }]);
+
+            doc.autoTable({
+                startY: startY + 5,
+                head: [['Date', 'Description', 'Heures transport']],
+                body: transportBody,
+                theme: 'grid',
+                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+                bodyStyles: { textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+                styles: { font: 'helvetica', fontSize: 11 }
+            });
+
+            // SECTION 3 : ACHATS
+            startY = doc.lastAutoTable.finalY + 15;
+            if (startY > 250) { doc.addPage(); startY = 20; }
+
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Achats et déboursés", 14, startY);
+
             let totalAchats = 0;
-            let suppliesHtml = '';
+            const achatsBody = [];
             document.querySelectorAll('.supply-row').forEach(row => {
                 const date = row.querySelector('.supply-date').value;
                 const desc = row.querySelector('.supply-desc').value;
@@ -783,202 +860,50 @@
 
                 const d = new Date(date + 'T00:00:00');
                 const dStr = d.toLocaleDateString('fr-CA', optionsDate) || date;
-
-                suppliesHtml += `<tr>
-                    <td style="border: 1px solid #000; padding: 8px;">${dStr}</td>
-                    <td style="border: 1px solid #000; padding: 8px;">${desc}</td>
-                    <td style="border: 1px solid #000; padding: 8px;">${montant.toFixed(2).replace('.', ',')} $</td>
-                </tr>`;
+                
+                if (desc || montant > 0) {
+                    achatsBody.push([dStr, desc, montant.toFixed(2).replace('.', ',') + " $"]);
+                }
             });
 
-            const htmlContent = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="utf-8">
-                    <title>Facture de services</title>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; color: #000; line-height: 1.5; font-size: 11pt; }
-                        h1 { font-size: 18pt; margin-bottom: 20px; font-weight: bold; }
-                        h2 { font-size: 14pt; margin-top: 30px; margin-bottom: 10px; font-weight: bold; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
-                        th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
-                        th { font-weight: bold; }
-                        .info-table { border-collapse: collapse; margin-bottom: 20px; width: 100%; }
-                        .info-table td { border: none; padding: 4px 8px 4px 0; }
-                        .info-table td:first-child { font-weight: bold; width: 150px; }
-                    </style>
-                </head>
-                <body>
-                    <h1>Facture de services</h1>
-                    
-                    <h2>Informations générales</h2>
-                    <table class="info-table">
-                        <tr><td>Nom du prestataire</td><td>| ${prestataire}</td></tr>
-                        <tr><td>Client</td><td>| Gestion CAMS</td></tr>
-                        <tr><td>Date</td><td>| ${dateFormatee}</td></tr>
-                        <tr><td>Lieu de travail</td><td>| ${nomProjet}</td></tr>
-                    </table>
+            if (achatsBody.length === 0) {
+                achatsBody.push([{ content: 'Aucun achat enregistré.', colSpan: 3, styles: { halign: 'center' } }]);
+            }
+            achatsBody.push([{ content: 'Total des achats', colSpan: 2, styles: { fontStyle: 'bold' } }, { content: totalAchats.toFixed(2).replace('.', ',') + " $", styles: { fontStyle: 'bold' } }]);
 
-                    <h2>Détails des travaux et temps</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Heures travaillées</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${activitiesHtml}
-                            <tr>
-                                <td colspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold;">Total des heures</td>
-                                <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">${formatHeures(totalTravail)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            doc.autoTable({
+                startY: startY + 5,
+                head: [['Date / Fournisseur', "Description de l'achat", 'Montant']],
+                body: achatsBody,
+                theme: 'grid',
+                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+                bodyStyles: { textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+                styles: { font: 'helvetica', fontSize: 11 }
+            });
 
-                    <h2>Achats et déboursés</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date / Fournisseur</th>
-                                <th>Description de l'achat</th>
-                                <th>Montant</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${suppliesHtml || '<tr><td colspan="3" style="text-align: center; border: 1px solid #000; padding: 8px;">Aucun achat enregistré.</td></tr>'}
-                            <tr>
-                                <td colspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold;">Total des achats</td>
-                                <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">${totalAchats.toFixed(2).replace('.', ',')} $</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
-
-            const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Facture_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.doc`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            return doc;
         }
 
-        // GÉNÉRATION DU PDF AVEC LE THÈME SOMBRE ET DORÉ DE C.A.M.S.
-        function generatePDF() {
+        // EXPORT POUR FACTURATION EN PDF
+        window.exportFacturePDF = function() {
             const nomProjet = document.getElementById('nomProjet').value;
             if (!nomProjet) { alert("Indiquez le nom du projet."); document.getElementById('nomProjet').focus(); return; }
+            const prestataire = document.getElementById('prestataire').value || 'Martin';
+            const doc = window.buildFacturePDFDoc();
+            doc.save(`Facture_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.pdf`);
+        }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const prestataire = document.getElementById('prestataire').value;
-            const dateRemise = document.getElementById('dateRemise').value;
-            const estPayeHeures = document.getElementById('estPayeHeures').checked;
-            const datePaiementHeures = document.getElementById('datePaiementHeures').value;
-            const estPayeAchats = document.getElementById('estPayeAchats').checked;
-            const datePaiementAchats = document.getElementById('datePaiementAchats').value;
-
-            doc.setFillColor(5, 5, 5);
-            doc.rect(0, 0, 210, 297, 'F');
-
-            doc.setFillColor(15, 15, 15);
-            doc.rect(15, 15, 180, 25, 'F');
-            doc.setDrawColor(212, 175, 55);
-            doc.setLineWidth(0.5);
-            doc.rect(15, 15, 180, 25, 'S');
-
-            doc.setTextColor(212, 175, 55); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("C.A.M.S.", 22, 28);
-            doc.setFontSize(9); doc.setTextColor(245, 245, 220); doc.text("COMPTE RENDU DES ACTIVITÉS & ACHATS", 22, 35);
-
-            doc.setTextColor(245, 245, 220); doc.setFontSize(10); doc.setFont("Helvetica", "normal");
-            doc.text(`Projet : ${nomProjet}`, 20, 47);
-            doc.text(`Prestataire : ${prestataire}`, 20, 54);
-            doc.text(`Date de remise : ${dateRemise}`, 20, 61);
-            
-            if (estPayeHeures) {
-                doc.setTextColor(100, 220, 100);
-                doc.text(`HEURES : PAYÉ (Le ${datePaiementHeures || 'N/A'})`, 20, 68);
-            } else {
-                doc.setTextColor(240, 160, 80);
-                doc.text(`HEURES : EN ATTENTE`, 20, 68);
+        // FONCTION UTILITAIRE POUR CONVERTIR LES DONNÉES EN FICHIERS RÉELS
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
             }
-
-            if (estPayeAchats) {
-                doc.setTextColor(100, 220, 100);
-                doc.text(`MARCHANDISES : PAYÉ (Le ${datePaiementAchats || 'N/A'})`, 110, 68);
-            } else {
-                doc.setTextColor(240, 160, 80);
-                doc.text(`MARCHANDISES : EN ATTENTE`, 110, 68);
-            }
-
-            let y = 78;
-
-            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("1. Activités & Temps", 20, y); y += 6;
-            
-            doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
-            doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
-            doc.text("Date", 23, y + 5.5); doc.text("Description", 55, y + 5.5); doc.text("Horaire", 125, y + 5.5); doc.text("Travail", 150, y + 5.5); doc.text("Transp.", 172, y + 5.5);
-
-            y += 10; doc.setFont("Helvetica", "normal"); doc.setTextColor(245, 245, 220);
-            let totalTravail = 0, totalTransport = 0;
-            document.querySelectorAll('.activity-row').forEach((row) => {
-                const date = row.querySelector('.row-date').value;
-                const desc = row.querySelector('.row-desc').value;
-                const horaire = row.querySelector('.row-horaire').value || '-';
-                const travail = parseFloat(row.querySelector('.row-travail').value) || 0;
-                const transport = parseFloat(row.querySelector('.row-transport').value) || 0;
-                totalTravail += travail; totalTransport += transport;
-
-                if (y > 260) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
-                doc.text(date, 23, y); doc.text(desc.substring(0, 35), 55, y); doc.text(horaire, 125, y); doc.text(travail.toFixed(2) + "h", 150, y); doc.text(transport.toFixed(2) + "h", 172, y);
-                y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
-            });
-
-            y += 8; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
-            doc.setFont("Helvetica", "bold"); doc.setTextColor(243, 229, 171); doc.text("2. Achats de Fournitures / Marchandises", 20, y); y += 6;
-            
-            doc.setFillColor(15, 15, 15); doc.rect(20, y, 170, 8, 'F');
-            doc.setDrawColor(212, 175, 55); doc.rect(20, y, 170, 8, 'S');
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(212, 175, 55);
-            doc.text("Date", 23, y + 5.5); doc.text("Description de la fourniture", 55, y + 5.5); doc.text("Montant ($)", 155, y + 5.5);
-
-            y += 10; doc.setFont("Helvetica", "normal"); doc.setTextColor(245, 245, 220);
-            let totalAchats = 0;
-            document.querySelectorAll('.supply-row').forEach((row) => {
-                const date = row.querySelector('.supply-date').value;
-                const desc = row.querySelector('.supply-desc').value;
-                const montant = parseFloat(row.querySelector('.supply-montant').value) || 0;
-                totalAchats += montant;
-
-                if (y > 260) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
-                doc.text(date, 23, y); doc.text(desc.substring(0, 50), 55, y); doc.text(montant.toFixed(2) + " $", 155, y);
-                y += 8; doc.setDrawColor(50, 50, 50); doc.line(20, y - 2, 190, y - 2); y += 2;
-            });
-
-            if (window.compressedFiles && window.compressedFiles.length > 0) {
-                y += 8; if (y > 240) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
-                doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(212, 175, 55);
-                doc.text("Pièces justificatives jointes :", 20, y); y += 6;
-                doc.setFont("Helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(245, 245, 220);
-                window.compressedFiles.forEach(file => { doc.text(`• ${file.name} (Compressé)`, 25, y); y += 6; });
-            }
-
-            y += 10; if (y > 230) { doc.addPage(); y = 20; doc.setFillColor(5, 5, 5); doc.rect(0, 0, 210, 297, 'F'); }
-            doc.setFillColor(15, 15, 15); doc.roundedRect(20, y, 170, 24, 2, 2, 'F');
-            doc.setDrawColor(212, 175, 55); doc.roundedRect(20, y, 170, 24, 2, 2, 'S');
-            
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(243, 229, 171);
-            doc.text(`Total Heures Travaillées : ${totalTravail.toFixed(2)} h`, 25, y + 7);
-            doc.text(`Total Heures Transport (à votre discrétion) : ${totalTransport.toFixed(2)} h`, 25, y + 14);
-            doc.text(`Total Achats de Fournitures : ${totalAchats.toFixed(2)} $`, 25, y + 21);
-
-            doc.save(`Rapport_Activites_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.pdf`);
+            return new File([u8arr], filename, { type: mime });
         }
 
         function generateReportText() {
@@ -1045,18 +970,95 @@
             const success = await window.saveReportToFirebase();
             if (!success) return;
 
-            const nomProjet = document.getElementById('nomProjet').value;
-            const subject = encodeURIComponent(`Compte Rendu d'Activités & Achats - ${nomProjet} - Martin`);
-            const body = encodeURIComponent(generateReportText());
-            window.location.href = `mailto:gestion_cams@hotmail.com?subject=${subject}&body=${body}`;
+            const nomProjet = document.getElementById('nomProjet').value || 'SansNom';
+            const prestataire = document.getElementById('prestataire').value || 'Martin';
+            const subject = `Compte Rendu d'Activités & Achats - ${nomProjet} - ${prestataire}`;
+            const bodyText = generateReportText();
+            const fileName = `Facture_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.pdf`;
+
+            // 1. Génération de la Facture PDF 
+            const doc = window.buildFacturePDFDoc();
+            const pdfBlob = doc.output('blob');
+            const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+            // 2. Préparation du tableau de fichiers à partager
+            const filesToShare = [pdfFile];
+
+            // 3. Ajout des pièces jointes converties
+            if (window.compressedFiles && window.compressedFiles.length > 0) {
+                window.compressedFiles.forEach(f => {
+                    try {
+                        filesToShare.push(dataURLtoFile(f.data, f.name));
+                    } catch (e) {
+                        console.error("Erreur d'attachement du fichier", f.name);
+                    }
+                });
+            }
+
+            // 4. Appel natif du téléphone
+            if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
+                try {
+                    await navigator.share({
+                        title: subject,
+                        text: bodyText,
+                        files: filesToShare
+                    });
+                } catch (error) {
+                    console.log("Partage annulé ou échoué", error);
+                }
+            } else {
+                // Fallback ordinateur
+                alert("Votre navigateur ne permet pas d'attacher automatiquement les fichiers. Le PDF de facturation va être téléchargé.");
+                doc.save(fileName);
+                window.location.href = `mailto:gestion_cams@hotmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+            }
         }
 
         window.saveAndSendSMS = async function() {
             const success = await window.saveReportToFirebase();
             if (!success) return;
 
-            const text = encodeURIComponent(generateReportText());
-            window.location.href = `sms:5149124573?body=${text}`;
+            const nomProjet = document.getElementById('nomProjet').value || 'SansNom';
+            const prestataire = document.getElementById('prestataire').value || 'Martin';
+            const textContent = generateReportText();
+            const fileName = `Facture_${nomProjet.replace(/\s+/g, '_')}_${prestataire}.pdf`;
+
+            // 1. Génération de la Facture PDF
+            const doc = window.buildFacturePDFDoc();
+            const pdfBlob = doc.output('blob');
+            const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+            // 2. Préparation du tableau de fichiers à partager
+            const filesToShare = [pdfFile];
+
+            // 3. Ajout des pièces jointes converties
+            if (window.compressedFiles && window.compressedFiles.length > 0) {
+                window.compressedFiles.forEach(f => {
+                    try {
+                        filesToShare.push(dataURLtoFile(f.data, f.name));
+                    } catch (e) {
+                        console.error("Erreur d'attachement du fichier", f.name);
+                    }
+                });
+            }
+
+            // 4. Appel natif du téléphone
+            if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
+                try {
+                    await navigator.share({
+                        title: `Facture - ${nomProjet}`,
+                        text: "Voici le compte rendu, la facture et les pièces justificatives en pièce jointe.",
+                        files: filesToShare
+                    });
+                } catch (error) {
+                    console.log("Partage SMS annulé ou échoué", error);
+                }
+            } else {
+                // Fallback ordinateur
+                alert("Votre appareil ne permet pas d'attacher automatiquement les fichiers au texto. La facture va être téléchargée.");
+                doc.save(fileName);
+                window.location.href = `sms:5149124573?body=${encodeURIComponent(textContent)}`;
+            }
         }
 
         function handleSubmit(event) { event.preventDefault(); }
