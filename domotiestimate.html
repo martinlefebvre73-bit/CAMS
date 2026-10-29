@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DomotiEstimate - Estimation Domotique Résidentielle</title>
+    <title>DomotiEstimate Pro - Estimation Domotique Résidentielle avec Cloud Firebase</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -72,12 +72,9 @@
             background: #475569;
         }
 
-        /* Glowing Amber Accent */
+        /* Glowing Accent */
         .glow-amber {
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
-        }
-        .glow-amber-lg {
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
         }
 
         /* Print Styles */
@@ -105,9 +102,6 @@
             .print-border {
                 border-color: #cbd5e1 !important;
             }
-            .page-break {
-                page-break-before: always;
-            }
         }
     </style>
 </head>
@@ -123,18 +117,26 @@
                         <i class="fa-solid fa-house-signal"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold text-slate-100 leading-tight">DomotiEstimate <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Pro v2.4</span></h1>
-                        <p class="text-xs text-slate-400 hidden sm:block">Calculateur d'Estimation Domotique Résidentielle</p>
+                        <h1 class="text-lg font-bold text-slate-100 leading-tight">DomotiEstimate <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Firebase Cloud</span></h1>
+                        <p class="text-xs text-slate-400 hidden sm:block">Estimation Domotique Résidentielle (ZOOZ, Tapo, Hubitat & Sauvegarde Cloud)</p>
                     </div>
                 </div>
 
-                <!-- Status & Action Controls -->
+                <!-- Action Controls -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <!-- Auto-save indicator -->
-                    <span v-if="saveStatus" class="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center space-x-1.5 transition-all duration-300">
-                        <i class="fa-solid fa-circle-check text-[10px]"></i>
-                        <span class="hidden md:inline">Sauvegardé</span>
-                    </span>
+                    <!-- FIREBASE CLOUD BUTTONS -->
+                    <button @click="saveToFirebase" :disabled="isSavingCloud" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 transition shadow">
+                        <i v-if="!isSavingCloud" class="fa-solid fa-cloud-arrow-up"></i>
+                        <i v-else class="fa-solid fa-spinner animate-spin"></i>
+                        <span>{{ isSavingCloud ? 'Enregistrement...' : 'Sauvegarder Cloud' }}</span>
+                    </button>
+
+                    <button @click="openCloudModal" class="bg-slate-700 hover:bg-slate-600 text-amber-400 font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 transition border border-amber-500/30">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                        <span>Mes Devis Cloud</span>
+                    </button>
+
+                    <div class="h-5 w-[1px] bg-slate-700 mx-1"></div>
 
                     <button @click="resetToDefaults" class="text-slate-400 hover:text-rose-400 p-2 rounded-lg hover:bg-slate-800 transition" title="Réinitialiser le projet">
                         <i class="fa-solid fa-rotate-left"></i>
@@ -159,17 +161,17 @@
             </div>
         </header>
 
-        <!-- PROJECT INFO BANNER -->
+        <!-- PROJECT METADATA BANNER -->
         <section class="no-print bg-navy-800/40 border-b border-slate-700/40 py-3">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
                 <div class="flex flex-wrap items-center gap-3 flex-1">
-                    <div class="flex items-center space-x-2 min-w-[220px]">
+                    <div class="flex items-center space-x-2 min-w-[200px]">
                         <i class="fa-solid fa-user text-amber-500"></i>
                         <input type="text" v-model="project.clientName" placeholder="Nom du Client" class="bg-navy-900/80 border border-slate-700 rounded px-2.5 py-1 text-sm text-slate-100 focus:border-amber-500 focus:outline-none w-full">
                     </div>
                     <div class="flex items-center space-x-2 min-w-[200px]">
                         <i class="fa-solid fa-location-dot text-slate-400"></i>
-                        <input type="text" v-model="project.address" placeholder="Adresse du projet" class="bg-navy-900/80 border border-slate-700 rounded px-2.5 py-1 text-sm text-slate-100 focus:border-amber-500 focus:outline-none w-full">
+                        <input type="text" v-model="project.address" placeholder="Adresse du chantier" class="bg-navy-900/80 border border-slate-700 rounded px-2.5 py-1 text-sm text-slate-100 focus:border-amber-500 focus:outline-none w-full">
                     </div>
                     <div class="flex items-center space-x-2 min-w-[140px]">
                         <i class="fa-solid fa-file-invoice text-slate-400"></i>
@@ -192,15 +194,21 @@
                     </div>
                     <div class="h-4 w-[1px] bg-slate-700"></div>
                     <div class="text-slate-400">
-                        Estimation TTC: <span class="text-amber-400 font-bold text-sm">{{ formatCurrency(grandTotal) }}</span>
+                        Total TTC: <span class="text-amber-400 font-bold text-sm">{{ formatCurrency(grandTotal) }}</span>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- CLOUD FEEDBACK NOTIFICATION BANNER -->
+        <div v-if="cloudNotification" :class="cloudNotification.type === 'error' ? 'bg-rose-500/20 border-rose-500 text-rose-300' : 'bg-emerald-500/20 border-emerald-500 text-emerald-300'" class="no-print border-b px-4 py-2 text-xs font-medium text-center flex items-center justify-center space-x-2">
+            <i :class="cloudNotification.type === 'error' ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check'"></i>
+            <span>{{ cloudNotification.message }}</span>
+        </div>
+
         <!-- MAIN TABS NAVIGATION -->
         <div class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-            <div class="flex space-x-1 sm:space-x-2 border-b border-slate-700/80 overflow-x-auto pb-1 scrollbar-none">
+            <div class="flex space-x-1 sm:space-x-2 border-b border-slate-700/80 overflow-x-auto pb-1">
                 <button @click="activeTab = 'rooms'" :class="activeTab === 'rooms' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-door-open"></i>
                     <span>1. Pièces & Éclairage</span>
@@ -215,7 +223,7 @@
 
                 <button @click="activeTab = 'catalog'" :class="activeTab === 'catalog' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-tags"></i>
-                    <span>3. Catalogue Modèles & Prix</span>
+                    <span>3. Catalogue Modèles & Prix ($ CAD)</span>
                 </button>
 
                 <button @click="activeTab = 'summary'" :class="activeTab === 'summary' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
@@ -234,23 +242,20 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-navy-800/60 p-4 rounded-xl border border-slate-700/60">
                     <div>
                         <h2 class="text-base font-semibold text-slate-100 flex items-center space-x-2">
-                            <span>Saisie de la Domotique par Pièce</span>
+                            <span>Configuration de la Domotique par Pièce</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Configurez le nombre d'interrupteurs et de panneaux de contrôle pour chaque zone de la résidence.</p>
+                        <p class="text-xs text-slate-400">Entrez le nombre d'interrupteurs (ZOOZ, Tapo, etc.) et de panneaux de contrôle par pièce.</p>
                     </div>
 
-                    <!-- Quick Add Room Buttons -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button @click="showAddRoomModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-semibold px-3 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition shadow">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>Nouvelle Pièce</span>
-                        </button>
-                    </div>
+                    <button @click="showAddRoomModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-semibold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition shadow">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Nouvelle Pièce</span>
+                    </button>
                 </div>
 
                 <!-- Room Templates Quick Selection Bar -->
                 <div class="bg-navy-800/40 p-3 rounded-xl border border-slate-700/40">
-                    <span class="text-xs font-medium text-slate-400 mr-2 block sm:inline mb-1 sm:mb-0">Ajout rapide de pièce prédéfinie :</span>
+                    <span class="text-xs font-medium text-slate-400 mr-2 block sm:inline mb-1 sm:mb-0">Ajout rapide de pièce :</span>
                     <div class="inline-flex flex-wrap gap-1.5">
                         <button v-for="preset in roomPresets" :key="preset.name" @click="addPresetRoom(preset)" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-md transition flex items-center space-x-1">
                             <i :class="preset.icon" class="text-amber-400 text-[11px]"></i>
@@ -261,7 +266,7 @@
 
                 <!-- ROOM CARDS GRID -->
                 <div v-if="rooms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                    <div v-for="(room, rIndex) in rooms" :key="room.id" class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg hover:border-slate-600 transition duration-200 flex flex-col">
+                    <div v-for="(room, rIndex) in rooms" :key="room.id" class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg hover:border-slate-600 transition flex flex-col">
                         <!-- Room Header -->
                         <div class="bg-slate-800/80 px-4 py-3 border-b border-slate-700/70 flex items-center justify-between">
                             <div class="flex items-center space-x-2.5">
@@ -270,15 +275,15 @@
                                 </div>
                                 <div>
                                     <input type="text" v-model="room.name" class="bg-transparent font-semibold text-slate-100 text-sm focus:outline-none focus:bg-navy-900/60 rounded px-1 -ml-1 border border-transparent focus:border-slate-600">
-                                    <div class="text-[11px] text-slate-400">Sous-total pièce : <span class="text-amber-400 font-semibold">{{ formatCurrency(calculateRoomSubtotal(room)) }}</span></div>
+                                    <div class="text-[11px] text-slate-400">Sous-total : <span class="text-amber-400 font-semibold">{{ formatCurrency(calculateRoomSubtotal(room)) }}</span></div>
                                 </div>
                             </div>
 
                             <div class="flex items-center space-x-1">
-                                <button @click="duplicateRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition" title="Dupliquer la pièce">
+                                <button @click="duplicateRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition" title="Dupliquer">
                                     <i class="fa-regular fa-copy text-xs"></i>
                                 </button>
-                                <button @click="deleteRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition" title="Supprimer la pièce">
+                                <button @click="deleteRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition" title="Supprimer">
                                     <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -292,7 +297,7 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
                                         <i class="fa-solid fa-toggle-on text-amber-400"></i>
-                                        <span>Interrupteurs & Gradateurs</span>
+                                        <span>Interrupteurs & Variateurs</span>
                                     </span>
                                     <button @click="addSwitchToRoom(room)" class="text-[11px] text-amber-400 hover:text-amber-300 flex items-center space-x-1">
                                         <i class="fa-solid fa-plus"></i>
@@ -305,7 +310,7 @@
                                         <!-- Model Select -->
                                         <select v-model="sw.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
                                             <option v-for="m in catalog.switches" :key="m.id" :value="m.id">
-                                                {{ m.name }} ({{ formatCurrency(m.price) }})
+                                                {{ m.name }} — {{ formatCurrency(m.price) }} [{{ m.retailer || 'Canada' }}]
                                             </option>
                                         </select>
 
@@ -317,7 +322,7 @@
                                         </div>
 
                                         <!-- Row total & Remove -->
-                                        <span class="text-xs text-slate-300 font-medium min-w-[65px] text-right">
+                                        <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
                                             {{ formatCurrency(getItemPrice('switches', sw.modelId) * sw.qty) }}
                                         </span>
                                         <button @click="room.switches.splice(swIdx, 1)" class="text-slate-500 hover:text-rose-400 p-1">
@@ -326,7 +331,7 @@
                                     </div>
 
                                     <div v-if="room.switches.length === 0" class="text-xs text-slate-500 italic p-2 text-center bg-navy-900/30 rounded border border-dashed border-slate-800">
-                                        Aucun interrupteur configuré pour cette pièce.
+                                        Aucun interrupteur dans cette pièce.
                                     </div>
                                 </div>
                             </div>
@@ -336,11 +341,11 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
                                         <i class="fa-solid fa-tablet-screen-button text-accent-blue"></i>
-                                        <span>Panneaux de Contrôle / Écrans</span>
+                                        <span>Panneaux de Contrôle / Hubs</span>
                                     </span>
                                     <button @click="addPanelToRoom(room)" class="text-[11px] text-accent-blue hover:underline flex items-center space-x-1">
                                         <i class="fa-solid fa-plus"></i>
-                                        <span>Ajouter écran</span>
+                                        <span>Ajouter écran/hub</span>
                                     </button>
                                 </div>
 
@@ -349,7 +354,7 @@
                                         <!-- Model Select -->
                                         <select v-model="panel.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
                                             <option v-for="m in catalog.panels" :key="m.id" :value="m.id">
-                                                {{ m.name }} ({{ formatCurrency(m.price) }})
+                                                {{ m.name }} — {{ formatCurrency(m.price) }} [{{ m.retailer || 'Canada' }}]
                                             </option>
                                         </select>
 
@@ -361,7 +366,7 @@
                                         </div>
 
                                         <!-- Row total & Remove -->
-                                        <span class="text-xs text-slate-300 font-medium min-w-[65px] text-right">
+                                        <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
                                             {{ formatCurrency(getItemPrice('panels', panel.modelId) * panel.qty) }}
                                         </span>
                                         <button @click="room.panels.splice(pIdx, 1)" class="text-slate-500 hover:text-rose-400 p-1">
@@ -377,27 +382,15 @@
 
                             <!-- Optional Room Note -->
                             <div class="pt-2">
-                                <input type="text" v-model="room.notes" placeholder="Note spécifique pour la pièce (ex: Gradateur 3-voies requis)..." class="w-full bg-navy-900/40 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-slate-500">
+                                <input type="text" v-model="room.notes" placeholder="Note ou consigne d'installation spécifique..." class="w-full bg-navy-900/40 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-slate-500">
                             </div>
 
                         </div>
                     </div>
                 </div>
 
-                <!-- Empty State Rooms -->
-                <div v-else class="text-center py-12 bg-navy-800/40 rounded-xl border border-dashed border-slate-700">
-                    <i class="fa-solid fa-house-chimney-crack text-4xl text-slate-600 mb-3"></i>
-                    <h3 class="text-base font-medium text-slate-300">Aucune pièce configurée pour le moment</h3>
-                    <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">Commencez par ajouter des pièces à votre projet ou utilisez les boutons d'ajout rapide ci-dessus.</p>
-                    <button @click="showAddRoomModal = true" class="bg-amber-500 text-navy-900 font-semibold px-4 py-2 rounded-lg text-xs">
-                        + Ajouter la première pièce
-                    </button>
-                </div>
-
                 <!-- ENCADRÉ SPÉCIFIQUE D'EXTENSION DU PROJET DE DOMOTIQUE -->
                 <div class="mt-8 bg-gradient-to-r from-navy-800 via-slate-800 to-navy-800 rounded-2xl border-2 border-amber-500/40 p-6 shadow-2xl relative overflow-hidden glow-amber">
-                    <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-700/70">
                         <div class="flex items-center space-x-3">
                             <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl shadow">
@@ -405,16 +398,16 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold text-slate-100 flex items-center space-x-2">
-                                    <span>Extension Domotique Complète</span>
+                                    <span>Extension Domotique Globale</span>
                                     <span class="text-xs font-normal px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Au-delà de l'éclairage</span>
                                 </h3>
-                                <p class="text-xs text-slate-300">Enrichissez le projet avec la gestion du chauffage, de la sécurité, du son multi-pièces, de la motorisation et des bornes d'énergie.</p>
+                                <p class="text-xs text-slate-300">Ajoutez le chauffage, la sécurité, les caméras, la musique, le réseau et les bornes de recharge EV.</p>
                             </div>
                         </div>
 
                         <button @click="activeTab = 'additional'" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2.5 rounded-lg text-xs flex items-center justify-center space-x-2 shadow-lg transition">
                             <i class="fa-solid fa-plus-circle"></i>
-                            <span>Gérer les équipements additionnels</span>
+                            <span>Ajouter des équipements additionnels</span>
                         </button>
                     </div>
 
@@ -428,17 +421,12 @@
                             </div>
                         </div>
                     </div>
-
-                    <div v-if="additionalItems.length === 0" class="text-xs text-slate-400 bg-navy-900/40 p-3 rounded-lg border border-slate-700/50 text-center">
-                        <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i>
-                        Aucun équipement additionnel sélectionné. Cliquez sur l'onglet <strong>"2. Équipements Additionnels"</strong> ou le bouton ci-dessus pour inclure thermostats, caméras, serrures ou bornes EV.
-                    </div>
                 </div>
 
             </div>
 
 
-            <!-- TAB 2: ÉQUIPEMENTS ADDITIONNELS (EXTENSION BEYOND LIGHTING) -->
+            <!-- TAB 2: ÉQUIPEMENTS ADDITIONNELS -->
             <div v-show="activeTab === 'additional'" class="space-y-6">
                 <!-- Banner Title -->
                 <div class="bg-navy-800/80 p-5 rounded-xl border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -447,18 +435,18 @@
                             <i class="fa-solid fa-microchip text-amber-500"></i>
                             <span>Équipements & Modules Domotiques Additionnels</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Ajoutez ici les sous-systèmes spécialisés pour une domotique globale et intelligente.</p>
+                        <p class="text-xs text-slate-400">Thermostats, caméras, clés USB Z-Wave, Hubs, capteurs et bornes de recharge EV.</p>
                     </div>
 
                     <button @click="showAddAdditionalModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition">
                         <i class="fa-solid fa-plus"></i>
-                        <span>Ajouter un équipement personnalisé</span>
+                        <span>Équipement personnalisé</span>
                     </button>
                 </div>
 
-                <!-- PRESET QUICK-ADD CAROUSEL / GRID -->
+                <!-- PRESET QUICK-ADD CAROUSEL -->
                 <div>
-                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Modules prédéfinis prêts à inclure :</h3>
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Saisie rapide d'équipements au tarif canadien ($ CAD) :</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         <div v-for="preset in additionalPresets" :key="preset.name" @click="addPresetAdditional(preset)" class="bg-navy-800/60 hover:bg-navy-800 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl cursor-pointer transition group flex flex-col justify-between">
                             <div>
@@ -471,7 +459,7 @@
                                     </span>
                                 </div>
                                 <div class="font-semibold text-xs text-slate-200 group-hover:text-amber-300 transition">{{ preset.name }}</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">{{ preset.category }}</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">{{ preset.category }} • <span class="text-amber-500/80">{{ preset.retailer }}</span></div>
                             </div>
                             <div class="mt-2 text-[11px] text-amber-400/80 group-hover:text-amber-400 font-medium flex items-center justify-end space-x-1">
                                 <span>+ Ajouter au devis</span>
@@ -485,12 +473,12 @@
                 <div class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg">
                     <div class="px-5 py-4 border-b border-slate-700/80 flex items-center justify-between">
                         <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
-                            <span>Liste des équipements additionnels sélectionnés</span>
+                            <span>Liste des équipements additionnels au devis</span>
                             <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2 py-0.5 rounded-full">{{ additionalItems.length }}</span>
                         </h3>
 
                         <span class="text-xs text-slate-400">
-                            Sous-total équipements : <strong class="text-amber-400 text-sm ml-1">{{ formatCurrency(additionalSubtotal) }}</strong>
+                            Sous-total : <strong class="text-amber-400 text-sm ml-1">{{ formatCurrency(additionalSubtotal) }}</strong>
                         </span>
                     </div>
 
@@ -500,8 +488,9 @@
                                 <tr>
                                     <th class="py-3 px-4">Équipement / Module</th>
                                     <th class="py-3 px-4">Catégorie</th>
+                                    <th class="py-3 px-4">Lieu d'Achat</th>
                                     <th class="py-3 px-4 text-center">Quantité</th>
-                                    <th class="py-3 px-4 text-right">Prix Unitaire</th>
+                                    <th class="py-3 px-4 text-right">Prix Unitaire ($ CAD)</th>
                                     <th class="py-3 px-4 text-right">Total HT</th>
                                     <th class="py-3 px-4 text-center">Actions</th>
                                 </tr>
@@ -513,15 +502,18 @@
                                     </td>
                                     <td class="py-3 px-4">
                                         <select v-model="item.category" class="bg-navy-900/60 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
+                                            <option value="Éclairage & Domotique">Éclairage & Domotique</option>
+                                            <option value="Hubs & Antennes Z-Wave">Hubs & Antennes Z-Wave</option>
                                             <option value="Climatisation & Chauffage">Climatisation & Chauffage</option>
                                             <option value="Sécurité & Accès">Sécurité & Accès</option>
                                             <option value="Audio & Multimédia">Audio & Multimédia</option>
-                                            <option value="Motorisation & Store">Motorisation & Store</option>
                                             <option value="Capteurs & Prévention">Capteurs & Prévention</option>
                                             <option value="Énergie & Borne EV">Énergie & Borne EV</option>
-                                            <option value="Réseau & Automatisme">Réseau & Automatisme</option>
                                             <option value="Autre">Autre</option>
                                         </select>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech / Amazon.ca" class="bg-navy-900/60 border border-slate-700 rounded px-2 py-1 text-xs text-amber-300 w-full focus:outline-none">
                                     </td>
                                     <td class="py-3 px-4">
                                         <div class="flex items-center justify-center space-x-1">
@@ -532,8 +524,8 @@
                                     </td>
                                     <td class="py-3 px-4 text-right">
                                         <div class="flex items-center justify-end space-x-1">
-                                            <span class="text-slate-500">$</span>
-                                            <input type="number" v-model.number="item.unitPrice" step="5" class="w-24 text-right bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200">
+                                            <input type="number" v-model.number="item.unitPrice" step="1" class="w-24 text-right bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200">
+                                            <span class="text-slate-400 text-[10px]">$ CAD</span>
                                         </div>
                                     </td>
                                     <td class="py-3 px-4 text-right font-bold text-amber-400 text-sm">
@@ -548,125 +540,122 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <div v-else class="p-8 text-center text-slate-500 text-xs">
-                        Aucun équipement additionnel configuré. Utilisez les boutons prédéfinis ci-dessus ou ajoutez un équipement sur mesure.
-                    </div>
                 </div>
             </div>
 
 
-            <!-- TAB 3: CATALOGUE MODÈLES ET PRIX -->
+            <!-- TAB 3: CATALOGUE MODÈLES, PRIX CAD ET MAGASINS -->
             <div v-show="activeTab === 'catalog'" class="space-y-6">
-                <!-- Catalog Header -->
                 <div class="bg-navy-800/80 p-5 rounded-xl border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-tags text-amber-500"></i>
-                            <span>Gestion du Catalogue des Modèles & Tarifs</span>
+                            <span>Catalogue des Équipements ZOOZ & TP-Link Tapo ($ CAD)</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Ajustez les prix unitaires et les taux horaires pour la main-d'œuvre (installation & programmation).</p>
+                        <p class="text-xs text-slate-400">Gérez les prix unitaires en Dollars Canadiens ($ CAD) et identifiez le lieu d'achat (Aartech Canada, Amazon.ca, etc.).</p>
                     </div>
 
-                    <div class="flex items-center space-x-2">
-                        <button @click="resetCatalogToDefault" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition">
-                            Réinitialiser prix par défaut
-                        </button>
+                    <button @click="resetCatalogToDefault" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition">
+                        Réinitialiser catalogue complet CAD
+                    </button>
+                </div>
+
+                <!-- MAIN-D'OEUVRE RATES -->
+                <div class="bg-navy-800/90 rounded-xl border border-amber-500/30 p-4 shadow-lg bg-gradient-to-r from-navy-800 via-slate-800 to-navy-800">
+                    <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2 mb-3">
+                        <i class="fa-solid fa-clock text-amber-400"></i>
+                        <span>Taux Horaires de Main-d'Œuvre ($ CAD)</span>
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700/70 flex items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-slate-200 text-xs">Installation Physique & Câblage</div>
+                                <div class="text-[11px] text-slate-400">Pose, fixation et raccordement électrique</div>
+                            </div>
+                            <div class="flex items-center bg-navy-800 border border-slate-700 rounded-lg px-2.5 py-1.5 ml-2">
+                                <input type="number" v-model.number="project.installRate" min="0" step="5" class="w-16 bg-transparent text-right font-bold text-amber-400 focus:outline-none">
+                                <span class="text-slate-400 text-[11px] ml-1">$ CAD / h</span>
+                            </div>
+                        </div>
+                        <div class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700/70 flex items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-slate-200 text-xs">Programmation Domotique</div>
+                                <div class="text-[11px] text-slate-400">Configuration Hub, paires Z-Wave, scénarios</div>
+                            </div>
+                            <div class="flex items-center bg-navy-800 border border-slate-700 rounded-lg px-2.5 py-1.5 ml-2">
+                                <input type="number" v-model.number="project.progRate" min="0" step="5" class="w-16 bg-transparent text-right font-bold text-amber-400 focus:outline-none">
+                                <span class="text-slate-400 text-[11px] ml-1">$ CAD / h</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- CATALOG TABLES GRID -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                    <!-- TAURES HORAIRES MAIN-D'OEUVRE -->
-                    <div class="lg:col-span-2 bg-navy-800/90 rounded-xl border border-amber-500/30 p-4 shadow-lg bg-gradient-to-r from-navy-800 via-slate-800 to-navy-800">
-                        <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2 mb-3">
-                            <i class="fa-solid fa-clock text-amber-400"></i>
-                            <span>Taux Horaires de Main-d'Œuvre (Par Défaut)</span>
-                        </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                            <div class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700/70 flex items-center justify-between">
-                                <div>
-                                    <div class="font-semibold text-slate-200 text-xs">Main-d'Œuvre d'Installation</div>
-                                    <div class="text-[11px] text-slate-400">Pose physique, câblage et raccordement</div>
-                                </div>
-                                <div class="flex items-center bg-navy-800 border border-slate-700 rounded-lg px-2.5 py-1.5 ml-2">
-                                    <span class="text-slate-400 mr-1">$</span>
-                                    <input type="number" v-model.number="project.installRate" min="0" step="5" class="w-16 bg-transparent text-right font-bold text-amber-400 focus:outline-none">
-                                    <span class="text-slate-400 text-[11px] ml-1">/h</span>
-                                </div>
-                            </div>
-                            <div class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700/70 flex items-center justify-between">
-                                <div>
-                                    <div class="font-semibold text-slate-200 text-xs">Programmation & Intégration</div>
-                                    <div class="text-[11px] text-slate-400">Configuration des scénarios, réseau et hub</div>
-                                </div>
-                                <div class="flex items-center bg-navy-800 border border-slate-700 rounded-lg px-2.5 py-1.5 ml-2">
-                                    <span class="text-slate-400 mr-1">$</span>
-                                    <input type="number" v-model.number="project.progRate" min="0" step="5" class="w-16 bg-transparent text-right font-bold text-amber-400 focus:outline-none">
-                                    <span class="text-slate-400 text-[11px] ml-1">/h</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CATEGORY: INTERRUPTEURS -->
+                    <!-- CATEGORY: INTERRUPTEURS ZOOZ & TAPO -->
                     <div class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg">
                         <div class="px-4 py-3 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between">
                             <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
                                 <i class="fa-solid fa-toggle-on text-amber-400"></i>
-                                <span>Modèles d'Interrupteurs & Gradateurs</span>
+                                <span>Interrupteurs & Variateurs (ZOOZ & Tapo)</span>
                             </h3>
                             <button @click="openAddCatalogModal('switches')" class="text-xs text-amber-400 hover:underline font-medium">
                                 + Ajouter modèle
                             </button>
                         </div>
 
-                        <div class="p-4 space-y-3">
-                            <div v-for="item in catalog.switches" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 flex items-center justify-between gap-3">
-                                <div class="flex-1">
+                        <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                            <div v-for="item in catalog.switches" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2">
+                                <div class="flex items-center justify-between gap-2">
                                     <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
-                                    <input type="text" v-model="item.description" placeholder="Description..." class="bg-transparent text-[11px] text-slate-400 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <div class="flex items-center bg-navy-800 border border-slate-700 rounded px-2 py-1">
-                                        <span class="text-xs text-slate-400 mr-1">$</span>
-                                        <input type="number" v-model.number="item.price" class="w-16 bg-transparent text-right font-bold text-xs text-amber-400 focus:outline-none">
-                                    </div>
                                     <button @click="deleteCatalogItem('switches', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Lieu d'achat / Détaillant :</label>
+                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-amber-300">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Prix Unitaire ($ CAD) :</label>
+                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- CATEGORY: PANNEAUX DE CONTRÔLE -->
+                    <!-- CATEGORY: PANNEAUX, HUBS & ANTENNES Z-WAVE -->
                     <div class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg">
                         <div class="px-4 py-3 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between">
                             <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
                                 <i class="fa-solid fa-tablet-screen-button text-accent-blue"></i>
-                                <span>Modèles de Panneaux de Contrôle</span>
+                                <span>Hubs Z-Wave, Écrans Tactiles & Clés USB</span>
                             </h3>
                             <button @click="openAddCatalogModal('panels')" class="text-xs text-amber-400 hover:underline font-medium">
                                 + Ajouter modèle
                             </button>
                         </div>
 
-                        <div class="p-4 space-y-3">
-                            <div v-for="item in catalog.panels" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 flex items-center justify-between gap-3">
-                                <div class="flex-1">
+                        <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                            <div v-for="item in catalog.panels" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2">
+                                <div class="flex items-center justify-between gap-2">
                                     <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
-                                    <input type="text" v-model="item.description" placeholder="Description..." class="bg-transparent text-[11px] text-slate-400 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <div class="flex items-center bg-navy-800 border border-slate-700 rounded px-2 py-1">
-                                        <span class="text-xs text-slate-400 mr-1">$</span>
-                                        <input type="number" v-model.number="item.price" class="w-20 bg-transparent text-right font-bold text-xs text-amber-400 focus:outline-none">
-                                    </div>
                                     <button @click="deleteCatalogItem('panels', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Lieu d'achat / Détaillant :</label>
+                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-amber-300">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Prix Unitaire ($ CAD) :</label>
+                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -682,22 +671,20 @@
                 <!-- Action Controls Bar -->
                 <div class="no-print bg-navy-800/80 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-base font-bold text-slate-100">Devis Officiel & Récapitulatif</h2>
-                        <p class="text-xs text-slate-400">Ce résumé consolidé est formaté pour l'impression ou la sauvegarde PDF.</p>
+                        <h2 class="text-base font-bold text-slate-100">Devis Officiel & Résumé d'Approvisionnement</h2>
+                        <p class="text-xs text-slate-400">Récapitulatif financier et nomenclature du matériel (BOM) imprimable en Dollars Canadiens ($ CAD).</p>
                     </div>
 
-                    <div class="flex items-center space-x-3">
-                        <button @click="printQuote" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2 rounded-lg text-xs shadow flex items-center space-x-2">
-                            <i class="fa-solid fa-print"></i>
-                            <span>Lancer l'impression / PDF</span>
-                        </button>
-                    </div>
+                    <button @click="printQuote" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2 rounded-lg text-xs shadow flex items-center space-x-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Lancer l'impression / Exporter PDF</span>
+                    </button>
                 </div>
 
-                <!-- PROPOSAL / QUOTE FORMAL SHEET DOCUMENT (PRINTABLE CONTAINER) -->
+                <!-- PROPOSAL SHEET DOCUMENT -->
                 <div id="print-area" class="bg-navy-800 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-8 shadow-2xl print-card">
                     
-                    <!-- QUOTE HEADER & BRANDING -->
+                    <!-- HEADER -->
                     <div class="flex flex-col sm:flex-row justify-between items-start border-b border-slate-700 pb-6 print-border">
                         <div class="space-y-1">
                             <div class="flex items-center space-x-2">
@@ -706,35 +693,35 @@
                                 </div>
                                 <span class="text-xl font-extrabold tracking-tight text-slate-100 print-text-dark">DOMOTI-ESTIMATE PRO</span>
                             </div>
-                            <p class="text-xs text-slate-400 print-text-dark">Solutions de Domotique & Intégration Résidentielle HAUT DE GAMME</p>
+                            <p class="text-xs text-slate-400 print-text-dark">Soumission d'Intégration Domotique Résidentielle ($ CAD)</p>
                         </div>
 
                         <div class="mt-4 sm:mt-0 text-left sm:text-right text-xs text-slate-300 print-text-dark space-y-1">
                             <div class="font-bold text-sm text-amber-400">SOUMISSION / DEVIS #{{ project.quoteNo || 'DOM-2026-001' }}</div>
                             <div>Date : <strong>{{ project.date }}</strong></div>
-                            <div>Validité : <strong>30 jours</strong></div>
+                            <div>Devise : <strong>CAD ($)</strong></div>
                         </div>
                     </div>
 
-                    <!-- CLIENT & CONTRACTOR INFO BLOCK -->
+                    <!-- CLIENT INFO -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-navy-900/60 p-4 rounded-xl border border-slate-700/60 print-card">
                         <div>
-                            <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-1">Information Client :</span>
+                            <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-1">Client :</span>
                             <div class="text-sm font-semibold text-slate-100 print-text-dark">{{ project.clientName || 'Client non spécifié' }}</div>
-                            <div class="text-xs text-slate-300 print-text-dark">{{ project.address || 'Adresse du chantier non spécifiée' }}</div>
+                            <div class="text-xs text-slate-300 print-text-dark">{{ project.address || 'Adresse non spécifiée' }}</div>
                         </div>
                         <div class="sm:text-right">
-                            <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-1">Intégrateur Certifié :</span>
-                            <div class="text-sm font-semibold text-slate-100 print-text-dark">SmartHome Solutions Inc.</div>
-                            <div class="text-xs text-slate-300 print-text-dark">contact@smarthomesolutions.ca | (514) 555-0199</div>
+                            <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-1">Intégrateur Domotique :</span>
+                            <div class="text-sm font-semibold text-slate-100 print-text-dark">C.A.M.S. Domotique & Maintenance</div>
+                            <div class="text-xs text-slate-300 print-text-dark">gestion_cams@hotmail.com | Québec, Canada</div>
                         </div>
                     </div>
 
-                    <!-- FINANCIAL HIGHLIGHTS SUMMARY GRID -->
+                    <!-- FINANCIAL HIGHLIGHTS -->
                     <div>
                         <h3 class="text-sm font-bold text-slate-200 print-text-dark uppercase tracking-wider mb-3 flex items-center space-x-2">
                             <i class="fa-solid fa-calculator text-amber-500"></i>
-                            <span>Synthèse Financière</span>
+                            <span>Synthèse Financière ($ CAD)</span>
                         </h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -764,7 +751,7 @@
                         </div>
                     </div>
 
-                    <!-- ROOM-BY-ROOM SUMMARY BREAKDOWN -->
+                    <!-- ROOM-BY-ROOM BREAKDOWN -->
                     <div>
                         <h3 class="text-sm font-bold text-slate-200 print-text-dark uppercase tracking-wider mb-3">
                             Détail par Pièce (Éclairage & Contrôle)
@@ -775,9 +762,9 @@
                                 <thead class="bg-slate-800 text-slate-300 uppercase print-card">
                                     <tr>
                                         <th class="py-2.5 px-3">Pièce</th>
-                                        <th class="py-2.5 px-3">Interrupteurs</th>
-                                        <th class="py-2.5 px-3">Panneaux Tactiles</th>
-                                        <th class="py-2.5 px-3 text-right">Sous-Total Pièce</th>
+                                        <th class="py-2.5 px-3">Interrupteurs (ZOOZ/Tapo)</th>
+                                        <th class="py-2.5 px-3">Panneaux Tactiles / Hubs</th>
+                                        <th class="py-2.5 px-3 text-right">Sous-Total Pièce ($ CAD)</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-700/60 print-text-dark">
@@ -789,16 +776,16 @@
                                         </td>
                                         <td class="py-2.5 px-3 text-slate-300 print-text-dark">
                                             <span v-if="room.switches.length > 0">
-                                                <span v-for="(sw, i) in room.switches" :key="i" class="inline-block mr-2">
-                                                    {{ sw.qty }}x {{ getItemName('switches', sw.modelId) }}
+                                                <span v-for="(sw, i) in room.switches" :key="i" class="inline-block mr-2 mb-1">
+                                                    <strong>{{ sw.qty }}x</strong> {{ getItemName('switches', sw.modelId) }}
                                                 </span>
                                             </span>
                                             <span v-else class="text-slate-500">-</span>
                                         </td>
                                         <td class="py-2.5 px-3 text-slate-300 print-text-dark">
                                             <span v-if="room.panels.length > 0">
-                                                <span v-for="(p, i) in room.panels" :key="i" class="inline-block mr-2">
-                                                    {{ p.qty }}x {{ getItemName('panels', p.modelId) }}
+                                                <span v-for="(p, i) in room.panels" :key="i" class="inline-block mr-2 mb-1">
+                                                    <strong>{{ p.qty }}x</strong> {{ getItemName('panels', p.modelId) }}
                                                 </span>
                                             </span>
                                             <span v-else class="text-slate-500">-</span>
@@ -812,27 +799,29 @@
                         </div>
                     </div>
 
-                    <!-- CONSOLIDATED MATERIAL LIST (BOM - BILL OF MATERIALS) -->
+                    <!-- CONSOLIDATED BOM (BILL OF MATERIALS) WITH RETAILERS -->
                     <div>
                         <h3 class="text-sm font-bold text-slate-200 print-text-dark uppercase tracking-wider mb-3">
-                            Liste Consolidée du Matériel à Commander (BOM)
+                            Liste Consolidée du Matériel à Commander & Lieux d'Achat (BOM)
                         </h3>
 
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-slate-800 text-slate-300 uppercase print-card">
                                     <tr>
-                                        <th class="py-2.5 px-3">Désignation Équipement / Modèle</th>
+                                        <th class="py-2.5 px-3">Modèle / Équipement</th>
                                         <th class="py-2.5 px-3">Catégorie</th>
-                                        <th class="py-2.5 px-3 text-center">Quantité Totale</th>
+                                        <th class="py-2.5 px-3">Détaillant / Lieu d'achat</th>
+                                        <th class="py-2.5 px-3 text-center">Quantité</th>
                                         <th class="py-2.5 px-3 text-right">Prix Unitaire</th>
-                                        <th class="py-2.5 px-3 text-right">Montant Total</th>
+                                        <th class="py-2.5 px-3 text-right">Montant Total ($ CAD)</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-700/60 print-text-dark">
                                     <tr v-for="item in consolidatedBOM" :key="item.key">
                                         <td class="py-2 px-3 font-medium text-slate-200 print-text-dark">{{ item.name }}</td>
                                         <td class="py-2 px-3 text-slate-400 print-text-dark">{{ item.category }}</td>
+                                        <td class="py-2 px-3 text-amber-300 font-medium print-text-dark">{{ item.retailer }}</td>
                                         <td class="py-2 px-3 text-center font-bold text-amber-400 print-text-dark">{{ item.totalQty }}</td>
                                         <td class="py-2 px-3 text-right text-slate-300 print-text-dark">{{ formatCurrency(item.unitPrice) }}</td>
                                         <td class="py-2 px-3 text-right font-bold text-slate-100 print-text-dark">{{ formatCurrency(item.totalQty * item.unitPrice) }}</td>
@@ -842,15 +831,15 @@
                         </div>
                     </div>
 
-                    <!-- LABOR & TAXES ADJUSTMENT PANEL (NO-PRINT INTERACTIVE CONTROLS) -->
+                    <!-- LABOR & TAXES ADJUSTMENT PANEL -->
                     <div class="no-print bg-navy-900/80 p-5 rounded-xl border border-slate-700/80 space-y-4">
                         <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-2">
                             <i class="fa-solid fa-clock-rotate-left"></i>
-                            <span>Saisie des Heures de Main-d'Œuvre & Régime Fiscal</span>
+                            <span>Réglages Main-d'Œuvre et Régime Fiscal Québec/Canada</span>
                         </h4>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                            <!-- Installation Hours & Rate -->
+                            <!-- Installation -->
                             <div class="bg-navy-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2">
                                 <div class="font-bold text-slate-200 flex items-center justify-between">
                                     <span class="flex items-center space-x-1.5">
@@ -865,13 +854,13 @@
                                         <input type="number" v-model.number="project.installHours" min="0" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none focus:border-amber-500">
                                     </div>
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Taux ($/h) :</label>
+                                        <label class="block text-[11px] text-slate-400 mb-1">Taux ($ CAD/h) :</label>
                                         <input type="number" v-model.number="project.installRate" min="0" step="5" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-amber-500">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Programming Hours & Rate -->
+                            <!-- Programming -->
                             <div class="bg-navy-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2">
                                 <div class="font-bold text-slate-200 flex items-center justify-between">
                                     <span class="flex items-center space-x-1.5">
@@ -886,19 +875,18 @@
                                         <input type="number" v-model.number="project.progHours" min="0" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none focus:border-amber-500">
                                     </div>
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Taux ($/h) :</label>
+                                        <label class="block text-[11px] text-slate-400 mb-1">Taux ($ CAD/h) :</label>
                                         <input type="number" v-model.number="project.progRate" min="0" step="5" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-amber-500">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Taxes Preset -->
+                            <!-- Taxes -->
                             <div class="bg-navy-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2">
                                 <label class="block font-bold text-slate-200">Taxes Applicables :</label>
                                 <select v-model="project.taxRegime" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-2 text-slate-200 focus:outline-none focus:border-amber-500 text-xs mt-1">
                                     <option value="QC">Québec (TPS 5% + TVQ 9.975% = 14.975%)</option>
                                     <option value="CA_TPS">Canada TPS 5% seulement</option>
-                                    <option value="FR_TVA">France TVA 20%</option>
                                     <option value="NONE">Sans Taxe (0%)</option>
                                 </select>
                             </div>
@@ -929,26 +917,26 @@
                                 <span>{{ formatCurrency(tax.amount) }}</span>
                             </div>
                             <div class="flex justify-between text-base font-black text-amber-400 pt-2 border-t-2 border-amber-500 print-text-dark">
-                                <span>TOTAL TTC DU DEVIS :</span>
+                                <span>TOTAL TTC DU DEVIS ($ CAD) :</span>
                                 <span>{{ formatCurrency(grandTotal) }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SIGNATURE & TERMS FOOTER (PRINT READY) -->
+                    <!-- SIGNATURE & TERMS FOOTER -->
                     <div class="pt-8 grid grid-cols-2 gap-8 border-t border-slate-700 text-xs text-slate-400 print-text-dark print-border">
                         <div>
                             <div class="font-bold mb-1">Acceptation de la Soumission :</div>
-                            <p class="text-[10px] mb-6">En signant ci-dessous, le client accepte l'estimation détaillée et autorise la commande des équipements domotiques.</p>
+                            <p class="text-[10px] mb-6">En signant ci-dessous, le client accepte l'estimation détaillée et autorise la commande du matériel domotique.</p>
                             <div class="border-b border-slate-600 w-48 h-8"></div>
                             <div class="text-[10px] mt-1">Signature du Client & Date</div>
                         </div>
 
                         <div class="text-right">
                             <div class="font-bold mb-1">Intégrateur Domotique :</div>
-                            <p class="text-[10px] mb-6">Merci pour votre confiance. Projet garanti matériel et main-d'œuvre.</p>
+                            <p class="text-[10px] mb-6">Projet garanti matériel et main-d'œuvre. Merci pour votre confiance !</p>
                             <div class="border-b border-slate-600 w-48 ml-auto h-8"></div>
-                            <div class="text-[10px] mt-1">Représentant Autorisé</div>
+                            <div class="text-[10px] mt-1">Représentant C.A.M.S.</div>
                         </div>
                     </div>
 
@@ -957,24 +945,78 @@
 
         </main>
 
-        <!-- MODAL 1: ADD NEW ROOM -->
-        <div v-if="showAddRoomModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-navy-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+        <!-- MODAL FIREBASE CLOUD DEVIS RECOVERY -->
+        <div v-if="showCloudModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-navy-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[85vh] flex flex-col">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                    <h3 class="font-bold text-slate-100 text-sm">Ajouter une nouvelle pièce</h3>
-                    <button @click="showAddRoomModal = false" class="text-slate-400 hover:text-slate-200">
+                    <h3 class="font-bold text-slate-100 text-base flex items-center space-x-2">
+                        <i class="fa-solid fa-cloud text-amber-400"></i>
+                        <span>Devis Sauvegardés dans Firebase Cloud (cams-cf723)</span>
+                    </h3>
+                    <button @click="showCloudModal = false" class="text-slate-400 hover:text-slate-200">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
+                <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                    <div v-if="isLoadingCloud" class="text-center py-8 text-slate-400 text-xs">
+                        <i class="fa-solid fa-spinner animate-spin text-amber-400 text-2xl mb-2"></i>
+                        <p>Chargement des devis depuis Firebase...</p>
+                    </div>
+
+                    <div v-else-if="cloudEstimates.length === 0" class="text-center py-8 text-slate-500 text-xs">
+                        Aucun devis trouvé sur Firebase Cloud.
+                    </div>
+
+                    <div v-else v-for="est in cloudEstimates" :key="est.id" class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-amber-500/50 transition">
+                        <div>
+                            <div class="font-bold text-amber-400 text-sm flex items-center space-x-2">
+                                <span>#{{ est.project?.quoteNo || est.id }}</span>
+                                <span class="text-xs text-slate-200 font-normal">— {{ est.project?.clientName || 'Client anonyme' }}</span>
+                            </div>
+                            <div class="text-xs text-slate-400 mt-0.5">
+                                {{ est.project?.address || 'Adresse inconnue' }} • {{ est.project?.date }}
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-1">
+                                Total TTC: <span class="text-emerald-400 font-semibold">{{ formatCurrency(est.grandTotal) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button @click="loadEstimateFromCloud(est)" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow">
+                                <i class="fa-solid fa-folder-open"></i>
+                                <span>Ouvrir & Modifier</span>
+                            </button>
+                            <button @click="deleteEstimateFromCloud(est.id)" class="text-rose-400 hover:bg-rose-500/10 p-1.5 rounded text-xs transition" title="Supprimer du Cloud">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-3 border-t border-slate-700 text-xs text-slate-400">
+                    <span>Base de données Firestore : <strong>cams-cf723</strong></span>
+                    <button @click="showCloudModal = false" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-200">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODALS (ROOM / ADDITIONAL / CATALOG) -->
+        <div v-if="showAddRoomModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-navy-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                    <h3 class="font-bold text-slate-100 text-sm">Ajouter une pièce</h3>
+                    <button @click="showAddRoomModal = false" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+                </div>
                 <div class="space-y-3 text-xs">
                     <div>
                         <label class="block text-slate-400 mb-1">Nom de la pièce :</label>
-                        <input type="text" v-model="newRoom.name" placeholder="Ex: Salon principal" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
+                        <input type="text" v-model="newRoom.name" placeholder="Ex: Bureau" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
                     </div>
-
                     <div>
-                        <label class="block text-slate-400 mb-1">Icône d'illustration :</label>
+                        <label class="block text-slate-400 mb-1">Icône :</label>
                         <select v-model="newRoom.icon" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                             <option value="fa-solid fa-couch">Salon / Séjour</option>
                             <option value="fa-solid fa-utensils">Cuisine / Salle à manger</option>
@@ -982,98 +1024,86 @@
                             <option value="fa-solid fa-bath">Salle de bain</option>
                             <option value="fa-solid fa-car">Garage</option>
                             <option value="fa-solid fa-sun">Terrasse / Extérieur</option>
-                            <option value="fa-solid fa-briefcase">Bureau / Travail</option>
-                            <option value="fa-solid fa-door-open">Entrée / Couloir</option>
+                            <option value="fa-solid fa-briefcase">Bureau</option>
                         </select>
                     </div>
                 </div>
-
                 <div class="flex justify-end space-x-2 pt-3 border-t border-slate-700">
-                    <button @click="showAddRoomModal = false" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-200">Annuler</button>
-                    <button @click="confirmAddRoom" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded text-xs font-bold text-navy-900">Créer la pièce</button>
+                    <button @click="showAddRoomModal = false" class="px-3 py-1.5 bg-slate-700 rounded text-xs text-slate-200">Annuler</button>
+                    <button @click="confirmAddRoom" class="px-4 py-1.5 bg-amber-500 rounded text-xs font-bold text-navy-900">Créer</button>
                 </div>
             </div>
         </div>
 
-        <!-- MODAL 2: ADD CUSTOM ADDITIONAL EQUIPMENT -->
         <div v-if="showAddAdditionalModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
             <div class="bg-navy-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                    <h3 class="font-bold text-slate-100 text-sm">Ajouter un équipement additionnel</h3>
-                    <button @click="showAddAdditionalModal = false" class="text-slate-400 hover:text-slate-200">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <h3 class="font-bold text-slate-100 text-sm">Ajouter un équipement</h3>
+                    <button @click="showAddAdditionalModal = false" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="block text-slate-400 mb-1">Nom de l'équipement :</label>
-                        <input type="text" v-model="newAdditional.name" placeholder="Ex: Détecteur d'inondation connecté" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
+                        <label class="block text-slate-400 mb-1">Désignation :</label>
+                        <input type="text" v-model="newAdditional.name" placeholder="Ex: Capteur d'ouverture de porte" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
                     </div>
-
                     <div>
                         <label class="block text-slate-400 mb-1">Catégorie :</label>
                         <select v-model="newAdditional.category" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                            <option value="Éclairage & Domotique">Éclairage & Domotique</option>
+                            <option value="Hubs & Antennes Z-Wave">Hubs & Antennes Z-Wave</option>
                             <option value="Climatisation & Chauffage">Climatisation & Chauffage</option>
                             <option value="Sécurité & Accès">Sécurité & Accès</option>
                             <option value="Audio & Multimédia">Audio & Multimédia</option>
-                            <option value="Motorisation & Store">Motorisation & Store</option>
                             <option value="Capteurs & Prévention">Capteurs & Prévention</option>
                             <option value="Énergie & Borne EV">Énergie & Borne EV</option>
-                            <option value="Réseau & Automatisme">Réseau & Automatisme</option>
                             <option value="Autre">Autre</option>
                         </select>
                     </div>
-
+                    <div>
+                        <label class="block text-slate-400 mb-1">Lieu d'achat :</label>
+                        <input type="text" v-model="newAdditional.retailer" placeholder="Ex: Aartech Canada / Amazon.ca" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                    </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-slate-400 mb-1">Quantité :</label>
                             <input type="number" v-model.number="newAdditional.qty" min="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-slate-400 mb-1">Prix Unitaire ($) :</label>
-                            <input type="number" v-model.number="newAdditional.unitPrice" step="5" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                            <label class="block text-slate-400 mb-1">Prix Unitaire ($ CAD) :</label>
+                            <input type="number" v-model.number="newAdditional.unitPrice" step="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                         </div>
                     </div>
                 </div>
-
                 <div class="flex justify-end space-x-2 pt-3 border-t border-slate-700">
-                    <button @click="showAddAdditionalModal = false" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-200">Annuler</button>
-                    <button @click="confirmAddAdditional" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded text-xs font-bold text-navy-900">Ajouter</button>
+                    <button @click="showAddAdditionalModal = false" class="px-3 py-1.5 bg-slate-700 rounded text-xs text-slate-200">Annuler</button>
+                    <button @click="confirmAddAdditional" class="px-4 py-1.5 bg-amber-500 rounded text-xs font-bold text-navy-900">Ajouter</button>
                 </div>
             </div>
         </div>
 
-        <!-- MODAL 3: ADD CATALOG MODEL -->
         <div v-if="showAddCatalogModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
             <div class="bg-navy-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <h3 class="font-bold text-slate-100 text-sm">Nouveau Modèle au Catalogue</h3>
-                    <button @click="showAddCatalogModal = false" class="text-slate-400 hover:text-slate-200">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <button @click="showAddCatalogModal = false" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-
                 <div class="space-y-3 text-xs">
                     <div>
                         <label class="block text-slate-400 mb-1">Nom du modèle :</label>
-                        <input type="text" v-model="newCatalogItem.name" placeholder="Ex: Gradateur Intelligent Pro v2" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
+                        <input type="text" v-model="newCatalogItem.name" placeholder="Ex: Interrupteur ZOOZ ZEN..." class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
                     </div>
-
                     <div>
-                        <label class="block text-slate-400 mb-1">Prix unitaire ($) :</label>
-                        <input type="number" v-model.number="newCatalogItem.price" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        <label class="block text-slate-400 mb-1">Prix unitaire ($ CAD) :</label>
+                        <input type="number" v-model.number="newCatalogItem.price" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                     </div>
-
                     <div>
-                        <label class="block text-slate-400 mb-1">Description courte :</label>
-                        <input type="text" v-model="newCatalogItem.description" placeholder="Ex: Avec variateur LED et neutre" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        <label class="block text-slate-400 mb-1">Détaillant / Lieu d'achat :</label>
+                        <input type="text" v-model="newCatalogItem.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                     </div>
                 </div>
-
                 <div class="flex justify-end space-x-2 pt-3 border-t border-slate-700">
-                    <button @click="showAddCatalogModal = false" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-200">Annuler</button>
-                    <button @click="confirmAddCatalogItem" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded text-xs font-bold text-navy-900">Enregistrer</button>
+                    <button @click="showAddCatalogModal = false" class="px-3 py-1.5 bg-slate-700 rounded text-xs text-slate-200">Annuler</button>
+                    <button @click="confirmAddCatalogItem" class="px-4 py-1.5 bg-amber-500 rounded text-xs font-bold text-navy-900">Enregistrer</button>
                 </div>
             </div>
         </div>
@@ -1081,58 +1111,90 @@
         <!-- FOOTER -->
         <footer class="no-print mt-auto bg-navy-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
             <div class="max-w-7xl mx-auto px-4">
-                DomotiEstimate Pro &copy; {{ new Date().getFullYear() }} — Application de chiffrage et devis domotique résidentiel.
+                DomotiEstimate Pro &copy; {{ new Date().getFullYear() }} — C.A.M.S. Québec, Canada (Projet Firebase: cams-cf723).
             </div>
         </footer>
 
     </div>
 
-    <!-- VUE 3 APPLICATION LOGIC -->
-    <script>
+    <!-- FIREBASE & VUE 3 APPLICATION LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // FIREBASE CONFIGURATION (CAMS PROJECT)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO9v_-k8HSgJFkYk3cxBHDq58A9OTb9FY",
+            authDomain: "cams-cf723.firebaseapp.com",
+            projectId: "cams-cf723",
+            storageBucket: "cams-cf723.firebasestorage.app",
+            messagingSenderId: "1037636451682",
+            appId: "1:1037636451682:web:6dfff33104b1c1c79b403b",
+            measurementId: "G-8Q2V3660XZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         const { createApp, ref, computed, watch, onMounted } = Vue;
 
         createApp({
             setup() {
-                // ACTIVE NAVIGATION TAB
                 const activeTab = ref('rooms');
                 const saveStatus = ref(false);
 
-                // MODAL STATES
+                // FIREBASE STATES
+                const isSavingCloud = ref(false);
+                const isLoadingCloud = ref(false);
+                const showCloudModal = ref(false);
+                const cloudEstimates = ref([]);
+                const cloudNotification = ref(null);
+
                 const showAddRoomModal = ref(false);
                 const showAddAdditionalModal = ref(false);
                 const showAddCatalogModal = ref(false);
                 const catalogModalCategory = ref('switches');
 
-                // PROJECT GENERAL METADATA
                 const project = ref({
-                    clientName: 'M. & Mme Tremblay',
-                    address: '1245 Rue des Érables, Montréal QC',
-                    quoteNo: 'DOM-2026-089',
+                    clientName: 'Client Résidentiel',
+                    address: 'Saint-Jean-sur-Richelieu, QC',
+                    quoteNo: 'DOM-2026-001',
                     date: new Date().toISOString().split('T')[0],
-                    installHours: 16,
+                    installHours: 12,
                     installRate: 85,
-                    progHours: 8,
+                    progHours: 6,
                     progRate: 105,
-                    taxRegime: 'QC' // 'QC', 'CA_TPS', 'FR_TVA', 'NONE'
+                    taxRegime: 'QC'
                 });
 
-                // INITIAL HARDWARE CATALOG
                 const defaultCatalog = () => ({
                     switches: [
-                        { id: 'sw_std', name: 'Interrupteur Smart Standard On/Off', price: 75, description: 'Module Wi-Fi / Zigbee encastré' },
-                        { id: 'sw_dim', name: 'Interrupteur Gradateur / Dimmer Pro', price: 95, description: 'Contrôle progressif d\'intensité lumineuse' },
-                        { id: 'sw_keypad', name: 'Clavier Multi-boutons Programmable (4 scénarios)', price: 185, description: 'Rétroéclairé avec gravure sur mesure' }
+                        { id: 'tapo_s505d', name: 'TP-Link Tapo S505D (Gradateur Matter Wi-Fi)', price: 24.99, retailer: 'Amazon.ca / TP-Link Canada' },
+                        { id: 'tapo_s505', name: 'TP-Link Tapo S505 (Interrupteur On/Off Matter Wi-Fi)', price: 19.99, retailer: 'Amazon.ca / TP-Link Canada' },
+                        { id: 'tapo_s500d', name: 'TP-Link Tapo S500D (Gradateur Smart Wi-Fi)', price: 22.99, retailer: 'Amazon.ca' },
+                        { id: 'tapo_s500', name: 'TP-Link Tapo S500 (Interrupteur Smart Wi-Fi)', price: 17.99, retailer: 'Amazon.ca' },
+                        { id: 'tapo_s515d', name: 'TP-Link Tapo S515D (Gradateur 3-Voies Smart)', price: 29.99, retailer: 'Amazon.ca' },
+                        { id: 'tapo_s515', name: 'TP-Link Tapo S515 (Interrupteur 3-Voies Smart)', price: 24.99, retailer: 'Amazon.ca' },
+                        { id: 'tapo_s200b', name: 'TP-Link Tapo S200B (Bouton Intelligent / Sub-1G)', price: 19.99, retailer: 'Amazon.ca' },
+                        { id: 'zooz_zen71', name: 'Zooz ZEN71 800LR (Interrupteur On/Off Z-Wave)', price: 45.95, retailer: 'Aartech Canada' },
+                        { id: 'zooz_zen72', name: 'Zooz ZEN72 800LR (Gradateur Dimmer Z-Wave)', price: 46.95, retailer: 'Aartech Canada' },
+                        { id: 'zooz_zen76', name: 'Zooz ZEN76 800LR (Interrupteur S2 800 Series)', price: 47.95, retailer: 'Aartech Canada' },
+                        { id: 'zooz_zen77', name: 'Zooz ZEN77 800LR (Gradateur S2 800 Series)', price: 51.95, retailer: 'Aartech Canada' },
+                        { id: 'zooz_zen32', name: 'Zooz ZEN32 800LR (Interrupteur Scènes 5-Boutons)', price: 54.95, retailer: 'Aartech Canada' },
+                        { id: 'zooz_zen51', name: 'Zooz ZEN51 800LR (Relais Contact Sec Encastré)', price: 42.95, retailer: 'Aartech Canada' }
                     ],
                     panels: [
-                        { id: 'panel_4', name: 'Écran Tactile Mural 4" HD', price: 450, description: 'Affichage compact pour pièce individuelle' },
-                        { id: 'panel_7', name: 'Écran Tactile Mural 7" Premium', price: 850, description: 'Contrôle global multi-zones & portier' },
-                        { id: 'panel_10', name: 'Panneaux Maître 10" Ultra HD', price: 1350, description: 'Écran central haute résolution pour séjour' }
+                        { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', price: 29.99, retailer: 'Amazon.ca / TP-Link Canada' },
+                        { id: 'zooz_zbox', name: 'Zooz Z-Box Hub (Automate Domotique Z-Wave)', price: 144.95, retailer: 'Aartech Canada / Amazon.ca' },
+                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 (Hub Z-Wave & Zigbee Pro)', price: 219.00, retailer: 'Aartech Canada' },
+                        { id: 'zooz_zst39', name: 'Zooz ZST39 LR 800 (Clé USB Antenne Z-Wave)', price: 40.95, retailer: 'Aartech Canada' },
+                        { id: 'panel_7', name: 'Écran Tactile Mural 7" HD', price: 850.00, retailer: 'Distributeur Pro Canada' },
+                        { id: 'panel_10', name: 'Écran Maître 10" Ultra HD', price: 1350.00, retailer: 'Distributeur Pro Canada' }
                     ]
                 });
 
                 const catalog = ref(defaultCatalog());
 
-                // ROOM PRESETS
                 const roomPresets = [
                     { name: 'Salon / Séjour', icon: 'fa-solid fa-couch' },
                     { name: 'Cuisine', icon: 'fa-solid fa-utensils' },
@@ -1142,75 +1204,48 @@
                     { name: 'Terrasse', icon: 'fa-solid fa-sun' }
                 ];
 
-                // INITIAL ROOMS LIST
                 const defaultRooms = () => [
                     {
                         id: 'room_1',
                         name: 'Salon / Séjour',
                         icon: 'fa-solid fa-couch',
-                        switches: [{ modelId: 'sw_dim', qty: 3 }, { modelId: 'sw_keypad', qty: 1 }],
-                        panels: [{ modelId: 'panel_7', qty: 1 }],
-                        notes: 'Gradateur pour zone plafonnier et rubans LED'
+                        switches: [{ modelId: 'zooz_zen72', qty: 3 }, { modelId: 'zooz_zen32', qty: 1 }],
+                        panels: [{ modelId: 'zooz_zbox', qty: 1 }],
+                        notes: 'Zooz ZEN72 pour lumières encastrées'
                     },
                     {
                         id: 'room_2',
                         name: 'Cuisine & Salle à Manger',
                         icon: 'fa-solid fa-utensils',
-                        switches: [{ modelId: 'sw_dim', qty: 4 }, { modelId: 'sw_std', qty: 2 }],
-                        panels: [{ modelId: 'panel_4', qty: 1 }],
-                        notes: 'Intégration sous-comptoir'
-                    },
-                    {
-                        id: 'room_3',
-                        name: 'Suite Parentale',
-                        icon: 'fa-solid fa-bed',
-                        switches: [{ modelId: 'sw_dim', qty: 2 }],
+                        switches: [{ modelId: 'tapo_s505d', qty: 3 }, { modelId: 'tapo_s505', qty: 2 }],
                         panels: [],
-                        notes: ''
-                    },
-                    {
-                        id: 'room_4',
-                        name: 'Garage & Accès',
-                        icon: 'fa-solid fa-car',
-                        switches: [{ modelId: 'sw_std', qty: 2 }],
-                        panels: [],
-                        notes: ''
+                        notes: 'Variateurs Tapo Matter Wi-Fi'
                     }
                 ];
 
                 const rooms = ref(defaultRooms());
 
-                // ADDITIONAL EQUIPMENT PRESETS (EXTENSIONS BEYOND LIGHTING)
                 const additionalPresets = [
-                    { name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', price: 280, icon: 'fa-solid fa-temperature-arrow-up' },
-                    { name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', price: 340, icon: 'fa-solid fa-lock' },
-                    { name: 'Caméra Extérieure 4K IR Vision Nuit', category: 'Sécurité & Accès', price: 220, icon: 'fa-solid fa-video' },
-                    { name: 'Haut-Parleur Encastré Hi-Fi 8"', category: 'Audio & Multimédia', price: 210, icon: 'fa-solid fa-volume-high' },
-                    { name: 'Module Motorisation de Store', category: 'Motorisation & Store', price: 160, icon: 'fa-solid fa-blinds' },
-                    { name: 'Capteur de Fuite d\'Eau & Inondation', category: 'Capteurs & Prévention', price: 65, icon: 'fa-solid fa-droplet' },
-                    { name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', price: 380, icon: 'fa-solid fa-faucet-drip' },
-                    { name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', price: 950, icon: 'fa-solid fa-charging-station' },
-                    { name: 'Hub / Automate Domotique Central Pro', category: 'Réseau & Automatisme', price: 680, icon: 'fa-solid fa-network-wired' }
+                    { name: 'Zooz ZSE11 Multi-capteur 4-en-1', category: 'Capteurs & Prévention', price: 54.95, retailer: 'Aartech Canada', icon: 'fa-solid fa-eye' },
+                    { name: 'Zooz ZEN04 Prise Intelligente 800', category: 'Éclairage & Domotique', price: 37.99, retailer: 'Aartech Canada', icon: 'fa-solid fa-plug' },
+                    { name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', price: 280.00, retailer: 'Hydro-Québec / Amazon.ca', icon: 'fa-solid fa-temperature-arrow-up' },
+                    { name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', price: 340.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-lock' },
+                    { name: 'Caméra Extérieure 4K IR Vision Nuit', category: 'Sécurité & Accès', price: 220.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-video' },
+                    { name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', price: 380.00, retailer: 'Aartech Canada', icon: 'fa-solid fa-faucet-drip' },
+                    { name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', price: 950.00, retailer: 'Master Électricien', icon: 'fa-solid fa-charging-station' }
                 ];
 
-                // INITIAL ADDITIONAL ITEMS
                 const defaultAdditionalItems = () => [
-                    { id: 'add_1', name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', qty: 3, unitPrice: 280 },
-                    { id: 'add_2', name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', qty: 2, unitPrice: 340 },
-                    { id: 'add_3', name: 'Caméra Extérieure 4K IR', category: 'Sécurité & Accès', qty: 4, unitPrice: 220 },
-                    { id: 'add_4', name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', qty: 1, unitPrice: 380 },
-                    { id: 'add_5', name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', qty: 1, unitPrice: 950 },
-                    { id: 'add_6', name: 'Hub Domotique Central Pro', category: 'Réseau & Automatisme', qty: 1, unitPrice: 680 }
+                    { id: 'add_1', name: 'Zooz ZST39 LR 800 Clé USB Antenne', category: 'Hubs & Antennes Z-Wave', retailer: 'Aartech Canada', qty: 1, unitPrice: 40.95 },
+                    { id: 'add_2', name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', retailer: 'Amazon.ca', qty: 2, unitPrice: 280.00 }
                 ];
 
                 const additionalItems = ref(defaultAdditionalItems());
 
-                // MODAL INPUT OBJECTS
                 const newRoom = ref({ name: '', icon: 'fa-solid fa-couch' });
-                const newAdditional = ref({ name: '', category: 'Climatisation & Chauffage', qty: 1, unitPrice: 150 });
-                const newCatalogItem = ref({ name: '', price: 100, description: '' });
+                const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', retailer: 'Aartech Canada', qty: 1, unitPrice: 50 });
+                const newCatalogItem = ref({ name: '', price: 45, retailer: 'Aartech Canada' });
 
-                // HELPER METHODS FOR PRICING LOOKUP
                 const getItemPrice = (cat, id) => {
                     const found = catalog.value[cat]?.find(m => m.id === id);
                     return found ? found.price : 0;
@@ -1221,7 +1256,6 @@
                     return found ? found.name : id;
                 };
 
-                // CALCULATIONS
                 const calculateRoomSubtotal = (room) => {
                     let total = 0;
                     room.switches.forEach(s => {
@@ -1260,7 +1294,6 @@
                     return count;
                 });
 
-                // LABOR CALCULATIONS (INSTALLATION & PROGRAMMING)
                 const installLaborCost = computed(() => {
                     return (project.value.installHours || 0) * (project.value.installRate || 0);
                 });
@@ -1285,13 +1318,11 @@
                         const tps = base * 0.05;
                         const tvq = base * 0.09975;
                         return [
-                            { name: 'TPS', rate: 5, amount: tps },
-                            { name: 'TVQ', rate: 9.975, amount: tvq }
+                            { name: 'TPS (5%)', rate: 5, amount: tps },
+                            { name: 'TVQ (9.975%)', rate: 9.975, amount: tvq }
                         ];
                     } else if (regime === 'CA_TPS') {
-                        return [{ name: 'TPS', rate: 5, amount: base * 0.05 }];
-                    } else if (regime === 'FR_TVA') {
-                        return [{ name: 'TVA', rate: 20, amount: base * 0.20 }];
+                        return [{ name: 'TPS (5%)', rate: 5, amount: base * 0.05 }];
                     } else {
                         return [];
                     }
@@ -1307,26 +1338,24 @@
 
                 const activeTaxLabel = computed(() => {
                     const r = project.value.taxRegime;
-                    if (r === 'QC') return 'QC: 14.975%';
+                    if (r === 'QC') return 'QC: TPS + TVQ (14.975%)';
                     if (r === 'CA_TPS') return 'TPS: 5%';
-                    if (r === 'FR_TVA') return 'TVA: 20%';
                     return '0%';
                 });
 
-                // CONSOLIDATED BILL OF MATERIALS (BOM)
                 const consolidatedBOM = computed(() => {
                     const map = {};
 
-                    // Process room switches
                     rooms.value.forEach(r => {
                         r.switches.forEach(sw => {
                             const model = catalog.value.switches.find(m => m.id === sw.modelId);
                             const name = model ? model.name : sw.modelId;
                             const price = model ? model.price : 0;
+                            const retailer = model ? (model.retailer || 'Canada') : 'Canada';
                             const key = 'sw_' + sw.modelId;
 
                             if (!map[key]) {
-                                map[key] = { key, name, category: 'Interrupteur', unitPrice: price, totalQty: 0 };
+                                map[key] = { key, name, category: 'Interrupteur / Gradateur', retailer, unitPrice: price, totalQty: 0 };
                             }
                             map[key].totalQty += (sw.qty || 0);
                         });
@@ -1335,20 +1364,20 @@
                             const model = catalog.value.panels.find(m => m.id === p.modelId);
                             const name = model ? model.name : p.modelId;
                             const price = model ? model.price : 0;
+                            const retailer = model ? (model.retailer || 'Canada') : 'Canada';
                             const key = 'panel_' + p.modelId;
 
                             if (!map[key]) {
-                                map[key] = { key, name, category: 'Panneau de contrôle', unitPrice: price, totalQty: 0 };
+                                map[key] = { key, name, category: 'Hub / Panneau tactile', retailer, unitPrice: price, totalQty: 0 };
                             }
                             map[key].totalQty += (p.qty || 0);
                         });
                     });
 
-                    // Process additional items
                     additionalItems.value.forEach(item => {
                         const key = 'add_' + item.name.toLowerCase().replace(/\s+/g, '_');
                         if (!map[key]) {
-                            map[key] = { key, name: item.name, category: item.category, unitPrice: item.unitPrice, totalQty: 0 };
+                            map[key] = { key, name: item.name, category: item.category, retailer: item.retailer || 'Canada', unitPrice: item.unitPrice, totalQty: 0 };
                         }
                         map[key].totalQty += (item.qty || 0);
                     });
@@ -1356,7 +1385,85 @@
                     return Object.values(map);
                 });
 
-                // ACTIONS: ROOM MANAGEMENT
+                // --- FIREBASE CLOUD INTEGRATION METHODS ---
+                const showNotification = (msg, type = 'success') => {
+                    cloudNotification.value = { message: msg, type };
+                    setTimeout(() => { cloudNotification.value = null; }, 4000);
+                };
+
+                const saveToFirebase = async () => {
+                    if (!project.value.quoteNo) {
+                        project.value.quoteNo = 'DOM-' + Date.now().toString().slice(-6);
+                    }
+
+                    isSavingCloud.value = true;
+                    try {
+                        const docId = project.value.quoteNo.replace(/[^a-zA-Z0-9_-]/g, '_');
+                        const payload = {
+                            project: project.value,
+                            catalog: catalog.value,
+                            rooms: rooms.value,
+                            additionalItems: additionalItems.value,
+                            grandTotal: grandTotal.value,
+                            updatedAt: new Date().toISOString()
+                        };
+
+                        await setDoc(doc(db, "estimations_domotique", docId), payload, { merge: true });
+                        showNotification(`Devis #${project.value.quoteNo} enregistré sur Firebase avec succès !`);
+                    } catch (error) {
+                        console.error("Erreur Firebase :", error);
+                        showNotification("Erreur lors de la sauvegarde sur Firebase.", 'error');
+                    } finally {
+                        isSavingCloud.value = false;
+                    }
+                };
+
+                const openCloudModal = async () => {
+                    showCloudModal.value = true;
+                    isLoadingCloud.value = true;
+                    cloudEstimates.value = [];
+
+                    try {
+                        const querySnapshot = await getDocs(collection(db, "estimations_domotique"));
+                        const list = [];
+                        querySnapshot.forEach((doc) => {
+                            list.push({ id: doc.id, ...doc.data() });
+                        });
+                        cloudEstimates.value = list;
+                    } catch (error) {
+                        console.error("Erreur de chargement Firebase :", error);
+                        showNotification("Impossible de charger les devis depuis Firebase.", 'error');
+                    } finally {
+                        isLoadingCloud.value = false;
+                    }
+                };
+
+                const loadEstimateFromCloud = (est) => {
+                    if (confirm(`Charger le devis #${est.project?.quoteNo || est.id} pour modification ?`)) {
+                        if (est.project) project.value = est.project;
+                        if (est.catalog) catalog.value = est.catalog;
+                        if (est.rooms) rooms.value = est.rooms;
+                        if (est.additionalItems) additionalItems.value = est.additionalItems;
+
+                        showCloudModal.value = false;
+                        showNotification(`Devis #${project.value.quoteNo} chargé avec succès !`);
+                    }
+                };
+
+                const deleteEstimateFromCloud = async (docId) => {
+                    if (confirm(`Voulez-vous vraiment supprimer le devis #${docId} du Cloud ?`)) {
+                        try {
+                            await deleteDoc(doc(db, "estimations_domotique", docId));
+                            cloudEstimates.value = cloudEstimates.value.filter(e => e.id !== docId);
+                            showNotification(`Devis #${docId} supprimé de Firebase.`);
+                        } catch (error) {
+                            console.error("Erreur lors de la suppression :", error);
+                            showNotification("Erreur lors de la suppression sur Firebase.", 'error');
+                        }
+                    }
+                };
+
+                // --- UI & EDIT METHODS ---
                 const confirmAddRoom = () => {
                     if (!newRoom.value.name.trim()) return;
                     rooms.value.push({
@@ -1369,7 +1476,6 @@
                     });
                     newRoom.value.name = '';
                     showAddRoomModal.value = false;
-                    triggerSave();
                 };
 
                 const addPresetRoom = (preset) => {
@@ -1381,7 +1487,6 @@
                         panels: [],
                         notes: ''
                     });
-                    triggerSave();
                 };
 
                 const duplicateRoom = (index) => {
@@ -1390,39 +1495,34 @@
                     copy.id = 'room_' + Date.now();
                     copy.name = copy.name + ' (Copie)';
                     rooms.value.splice(index + 1, 0, copy);
-                    triggerSave();
                 };
 
                 const deleteRoom = (index) => {
                     rooms.value.splice(index, 1);
-                    triggerSave();
                 };
 
                 const addSwitchToRoom = (room) => {
                     const firstId = catalog.value.switches[0]?.id || '';
                     room.switches.push({ modelId: firstId, qty: 1 });
-                    triggerSave();
                 };
 
                 const addPanelToRoom = (room) => {
                     const firstId = catalog.value.panels[0]?.id || '';
                     room.panels.push({ modelId: firstId, qty: 1 });
-                    triggerSave();
                 };
 
-                // ACTIONS: ADDITIONAL ITEMS MANAGEMENT
                 const confirmAddAdditional = () => {
                     if (!newAdditional.value.name.trim()) return;
                     additionalItems.value.push({
                         id: 'add_' + Date.now(),
                         name: newAdditional.value.name,
                         category: newAdditional.value.category,
+                        retailer: newAdditional.value.retailer || 'Canada',
                         qty: newAdditional.value.qty || 1,
                         unitPrice: newAdditional.value.unitPrice || 0
                     });
                     newAdditional.value.name = '';
                     showAddAdditionalModal.value = false;
-                    triggerSave();
                 };
 
                 const addPresetAdditional = (preset) => {
@@ -1434,17 +1534,16 @@
                             id: 'add_' + Date.now(),
                             name: preset.name,
                             category: preset.category,
+                            retailer: preset.retailer || 'Canada',
                             qty: 1,
                             unitPrice: preset.price
                         });
                     }
-                    triggerSave();
                 };
 
-                // ACTIONS: CATALOG MANAGEMENT
                 const openAddCatalogModal = (category) => {
                     catalogModalCategory.value = category;
-                    newCatalogItem.value = { name: '', price: 100, description: '' };
+                    newCatalogItem.value = { name: '', price: 45, retailer: 'Aartech Canada' };
                     showAddCatalogModal.value = true;
                 };
 
@@ -1456,35 +1555,27 @@
                         id: newId,
                         name: newCatalogItem.value.name,
                         price: newCatalogItem.value.price || 0,
-                        description: newCatalogItem.value.description || ''
+                        retailer: newCatalogItem.value.retailer || 'Canada'
                     });
                     showAddCatalogModal.value = false;
-                    triggerSave();
                 };
 
                 const deleteCatalogItem = (category, itemId) => {
                     catalog.value[category] = catalog.value[category].filter(i => i.id !== itemId);
-                    triggerSave();
                 };
 
                 const resetCatalogToDefault = () => {
                     catalog.value = defaultCatalog();
-                    triggerSave();
                 };
 
-                // RESET PROJECT TO DEFAULTS
                 const resetToDefaults = () => {
-                    if (confirm("Voulez-vous réinitialiser toutes les données de l'estimation ?")) {
+                    if (confirm("Voulez-vous réinitialiser toutes les données du devis ?")) {
                         catalog.value = defaultCatalog();
                         rooms.value = defaultRooms();
                         additionalItems.value = defaultAdditionalItems();
-                        project.value.clientName = 'M. & Mme Tremblay';
-                        project.value.address = '1245 Rue des Érables, Montréal QC';
-                        triggerSave();
                     }
                 };
 
-                // LOCAL STORAGE & EXPORT / IMPORT
                 const triggerSave = () => {
                     saveStatus.value = true;
                     const payload = {
@@ -1493,13 +1584,13 @@
                         rooms: rooms.value,
                         additionalItems: additionalItems.value
                     };
-                    localStorage.setItem('domoti_estimate_data', JSON.stringify(payload));
+                    localStorage.setItem('domoti_estimate_cad_data', JSON.stringify(payload));
                     setTimeout(() => { saveStatus.value = false; }, 1200);
                 };
 
                 const loadSavedData = () => {
                     try {
-                        const raw = localStorage.getItem('domoti_estimate_data');
+                        const raw = localStorage.getItem('domoti_estimate_cad_data');
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed.project) project.value = parsed.project;
@@ -1508,7 +1599,7 @@
                             if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
                         }
                     } catch (e) {
-                        console.error("Erreur lors du chargement des données locales", e);
+                        console.error("Erreur lors du chargement des données", e);
                     }
                 };
 
@@ -1523,7 +1614,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `Domotique_Devis_${project.value.quoteNo || 'Export'}.json`;
+                    a.download = `Domotique_Devis_CAD_${project.value.quoteNo || 'Export'}.json`;
                     a.click();
                     URL.revokeObjectURL(url);
                 };
@@ -1555,12 +1646,10 @@
                     }, 200);
                 };
 
-                // UTILITY FORM-FORMATTER
                 const formatCurrency = (val) => {
                     return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
                 };
 
-                // AUTO SAVE WATCHERS
                 watch([project, catalog, rooms, additionalItems], () => {
                     triggerSave();
                 }, { deep: true });
@@ -1572,6 +1661,11 @@
                 return {
                     activeTab,
                     saveStatus,
+                    isSavingCloud,
+                    isLoadingCloud,
+                    showCloudModal,
+                    cloudEstimates,
+                    cloudNotification,
                     showAddRoomModal,
                     showAddAdditionalModal,
                     showAddCatalogModal,
@@ -1599,6 +1693,10 @@
                     grandTotal,
                     activeTaxLabel,
                     consolidatedBOM,
+                    saveToFirebase,
+                    openCloudModal,
+                    loadEstimateFromCloud,
+                    deleteEstimateFromCloud,
                     confirmAddRoom,
                     addPresetRoom,
                     duplicateRoom,
