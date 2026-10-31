@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DomotiEstimate Pro - Estimation Domotique Résidentielle avec Cloud Firebase</title>
+    <title>DomotiEstimate Pro - Estimation Domotique Résidentielle</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -56,7 +56,6 @@
             color: #f8fafc;
         }
 
-        /* Custom Scrollbars */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -72,12 +71,10 @@
             background: #475569;
         }
 
-        /* Glowing Accent */
         .glow-amber {
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
         }
 
-        /* Print Styles */
         @media print {
             .no-print {
                 display: none !important;
@@ -111,7 +108,6 @@
         <!-- TOP HEADER BAR -->
         <header class="no-print bg-navy-800/90 backdrop-blur border-b border-slate-700/60 sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <!-- Logo & Title -->
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-navy-900 font-bold text-xl shadow-lg shadow-amber-500/20">
                         <i class="fa-solid fa-house-signal"></i>
@@ -122,9 +118,7 @@
                     </div>
                 </div>
 
-                <!-- Action Controls -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <!-- FIREBASE CLOUD BUTTONS -->
                     <button @click="saveToFirebase" :disabled="isSavingCloud" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 transition shadow">
                         <i v-if="!isSavingCloud" class="fa-solid fa-cloud-arrow-up"></i>
                         <i v-else class="fa-solid fa-spinner animate-spin"></i>
@@ -223,12 +217,18 @@
 
                 <button @click="activeTab = 'catalog'" :class="activeTab === 'catalog' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-tags"></i>
-                    <span>3. Catalogue Modèles & Prix ($ CAD)</span>
+                    <span>3. Catalogue Modèles, Temps & Prix</span>
                 </button>
 
                 <button @click="activeTab = 'summary'" :class="activeTab === 'summary' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                     <span>4. Devis & Résumé Client</span>
+                </button>
+
+                <button @click="activeTab = 'orderList'" :class="activeTab === 'orderList' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>5. Liste de Commande</span>
+                    <span class="ml-1.5 bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full border border-slate-700">{{ consolidatedBOM.length }}</span>
                 </button>
             </div>
         </div>
@@ -244,7 +244,7 @@
                         <h2 class="text-base font-semibold text-slate-100 flex items-center space-x-2">
                             <span>Configuration de la Domotique par Pièce</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Entrez le nombre d'interrupteurs (ZOOZ, Tapo, etc.) et de panneaux de contrôle par pièce.</p>
+                        <p class="text-xs text-slate-400">Entrez, ajustez ou retirez les équipements (ZOOZ, Tapo, etc.) et les panneaux de contrôle par pièce.</p>
                     </div>
 
                     <button @click="showAddRoomModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-semibold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition shadow">
@@ -275,15 +275,21 @@
                                 </div>
                                 <div>
                                     <input type="text" v-model="room.name" class="bg-transparent font-semibold text-slate-100 text-sm focus:outline-none focus:bg-navy-900/60 rounded px-1 -ml-1 border border-transparent focus:border-slate-600">
-                                    <div class="text-[11px] text-slate-400">Sous-total : <span class="text-amber-400 font-semibold">{{ formatCurrency(calculateRoomSubtotal(room)) }}</span></div>
+                                    <div class="text-[11px] text-slate-400">
+                                        Équipements : <span class="text-emerald-400 font-semibold">{{ calculateRoomDeviceCount(room) }} unité(s)</span> • 
+                                        Sous-total : <span class="text-amber-400 font-semibold">{{ formatCurrency(calculateRoomSubtotal(room)) }}</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="flex items-center space-x-1">
-                                <button @click="duplicateRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition" title="Dupliquer">
+                                <button @click="clearRoomEquipment(room)" class="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded transition" title="Retirer tous les équipements de cette pièce">
+                                    <i class="fa-solid fa-broom text-xs"></i>
+                                </button>
+                                <button @click="duplicateRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition" title="Dupliquer la pièce">
                                     <i class="fa-regular fa-copy text-xs"></i>
                                 </button>
-                                <button @click="deleteRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition" title="Supprimer">
+                                <button @click="deleteRoom(rIndex)" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition" title="Supprimer la pièce">
                                     <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -316,16 +322,16 @@
 
                                         <!-- Quantity Control -->
                                         <div class="flex items-center bg-navy-800 border border-slate-700 rounded overflow-hidden">
-                                            <button @click="sw.qty = Math.max(1, sw.qty - 1)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">-</button>
+                                            <button @click="decrementSwitchQty(room, swIdx)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs" title="Réduire ou retirer">-</button>
                                             <input type="number" v-model.number="sw.qty" min="1" class="w-10 text-center bg-transparent text-xs text-amber-400 font-bold focus:outline-none">
                                             <button @click="sw.qty++" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">+</button>
                                         </div>
 
-                                        <!-- Row total & Remove -->
+                                        <!-- Row total & Remove Button -->
                                         <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
                                             {{ formatCurrency(getItemPrice('switches', sw.modelId) * sw.qty) }}
                                         </span>
-                                        <button @click="room.switches.splice(swIdx, 1)" class="text-slate-500 hover:text-rose-400 p-1">
+                                        <button @click="removeSwitch(room, swIdx)" class="text-slate-500 hover:text-rose-400 p-1" title="Retirer cet équipement">
                                             <i class="fa-solid fa-xmark text-xs"></i>
                                         </button>
                                     </div>
@@ -360,16 +366,16 @@
 
                                         <!-- Quantity Control -->
                                         <div class="flex items-center bg-navy-800 border border-slate-700 rounded overflow-hidden">
-                                            <button @click="panel.qty = Math.max(1, panel.qty - 1)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">-</button>
+                                            <button @click="decrementPanelQty(room, pIdx)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs" title="Réduire ou retirer">-</button>
                                             <input type="number" v-model.number="panel.qty" min="1" class="w-10 text-center bg-transparent text-xs text-amber-400 font-bold focus:outline-none">
                                             <button @click="panel.qty++" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">+</button>
                                         </div>
 
-                                        <!-- Row total & Remove -->
+                                        <!-- Row total & Remove Button -->
                                         <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
                                             {{ formatCurrency(getItemPrice('panels', panel.modelId) * panel.qty) }}
                                         </span>
-                                        <button @click="room.panels.splice(pIdx, 1)" class="text-slate-500 hover:text-rose-400 p-1">
+                                        <button @click="removePanel(room, pIdx)" class="text-slate-500 hover:text-rose-400 p-1" title="Retirer cet équipement">
                                             <i class="fa-solid fa-xmark text-xs"></i>
                                         </button>
                                     </div>
@@ -488,9 +494,10 @@
                                 <tr>
                                     <th class="py-3 px-4">Équipement / Module</th>
                                     <th class="py-3 px-4">Catégorie</th>
-                                    <th class="py-3 px-4">Lieu d'Achat</th>
-                                    <th class="py-3 px-4 text-center">Quantité</th>
-                                    <th class="py-3 px-4 text-right">Prix Unitaire ($ CAD)</th>
+                                    <th class="py-3 px-4 text-center">Qté</th>
+                                    <th class="py-3 px-4 text-right">Prix Unitaire</th>
+                                    <th class="py-3 px-4 text-center">Inst. (h)</th>
+                                    <th class="py-3 px-4 text-center">Prog. (h)</th>
                                     <th class="py-3 px-4 text-right">Total HT</th>
                                     <th class="py-3 px-4 text-center">Actions</th>
                                 </tr>
@@ -513,20 +520,22 @@
                                         </select>
                                     </td>
                                     <td class="py-3 px-4">
-                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech / Amazon.ca" class="bg-navy-900/60 border border-slate-700 rounded px-2 py-1 text-xs text-amber-300 w-full focus:outline-none">
-                                    </td>
-                                    <td class="py-3 px-4">
                                         <div class="flex items-center justify-center space-x-1">
                                             <button @click="item.qty = Math.max(1, item.qty - 1)" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 flex items-center justify-center">-</button>
-                                            <input type="number" v-model.number="item.qty" min="1" class="w-12 text-center bg-navy-900 border border-slate-700 rounded py-0.5 font-bold text-amber-400">
+                                            <input type="number" v-model.number="item.qty" min="1" class="w-10 text-center bg-navy-900 border border-slate-700 rounded py-0.5 font-bold text-amber-400">
                                             <button @click="item.qty++" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 flex items-center justify-center">+</button>
                                         </div>
                                     </td>
                                     <td class="py-3 px-4 text-right">
                                         <div class="flex items-center justify-end space-x-1">
-                                            <input type="number" v-model.number="item.unitPrice" step="1" class="w-24 text-right bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200">
-                                            <span class="text-slate-400 text-[10px]">$ CAD</span>
+                                            <input type="number" v-model.number="item.unitPrice" step="1" class="w-20 text-right bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200">
                                         </div>
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <input type="number" v-model.number="item.installTime" step="0.1" class="w-12 text-center bg-navy-900 border border-slate-700 rounded py-0.5 text-slate-200 focus:border-amber-500">
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <input type="number" v-model.number="item.progTime" step="0.1" class="w-12 text-center bg-navy-900 border border-slate-700 rounded py-0.5 text-slate-200 focus:border-amber-500">
                                     </td>
                                     <td class="py-3 px-4 text-right font-bold text-amber-400 text-sm">
                                         {{ formatCurrency(item.qty * item.unitPrice) }}
@@ -550,44 +559,14 @@
                     <div>
                         <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-tags text-amber-500"></i>
-                            <span>Catalogue des Équipements ZOOZ & TP-Link Tapo ($ CAD)</span>
+                            <span>Catalogue des Équipements & Temps de Main-d'Œuvre</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Gérez les prix unitaires en Dollars Canadiens ($ CAD) et identifiez le lieu d'achat (Aartech Canada, Amazon.ca, etc.).</p>
+                        <p class="text-xs text-slate-400">Gérez les prix unitaires ($ CAD) ainsi que le temps alloué (en heures) pour l'installation et la programmation de chaque modèle.</p>
                     </div>
 
                     <button @click="resetCatalogToDefault" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition">
                         Réinitialiser catalogue complet CAD
                     </button>
-                </div>
-
-                <!-- MAIN-D'OEUVRE RATES -->
-                <div class="bg-navy-800/90 rounded-xl border border-amber-500/30 p-4 shadow-lg bg-gradient-to-r from-navy-800 via-slate-800 to-navy-800">
-                    <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2 mb-3">
-                        <i class="fa-solid fa-clock text-amber-400"></i>
-                        <span>Taux Horaires de Main-d'Œuvre ($ CAD)</span>
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700/70 flex items-center justify-between">
-                            <div>
-                                <div class="font-semibold text-slate-200 text-xs">Installation Physique & Câblage</div>
-                                <div class="text-[11px] text-slate-400">Pose, fixation et raccordement électrique</div>
-                            </div>
-                            <div class="flex items-center bg-navy-800 border border-slate-700 rounded-lg px-2.5 py-1.5 ml-2">
-                                <input type="number" v-model.number="project.installRate" min="0" step="5" class="w-16 bg-transparent text-right font-bold text-amber-400 focus:outline-none">
-                                <span class="text-slate-400 text-[11px] ml-1">$ CAD / h</span>
-                            </div>
-                        </div>
-                        <div class="bg-navy-900/80 p-3.5 rounded-xl border border-slate-700/70 flex items-center justify-between">
-                            <div>
-                                <div class="font-semibold text-slate-200 text-xs">Programmation Domotique</div>
-                                <div class="text-[11px] text-slate-400">Configuration Hub, paires Z-Wave, scénarios</div>
-                            </div>
-                            <div class="flex items-center bg-navy-800 border border-slate-700 rounded-lg px-2.5 py-1.5 ml-2">
-                                <input type="number" v-model.number="project.progRate" min="0" step="5" class="w-16 bg-transparent text-right font-bold text-amber-400 focus:outline-none">
-                                <span class="text-slate-400 text-[11px] ml-1">$ CAD / h</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- CATALOG TABLES GRID -->
@@ -605,22 +584,30 @@
                             </button>
                         </div>
 
-                        <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                            <div v-for="item in catalog.switches" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2">
+                        <div class="p-4 space-y-3 max-h-[550px] overflow-y-auto">
+                            <div v-for="item in catalog.switches" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2 hover:border-amber-500/50 transition">
                                 <div class="flex items-center justify-between gap-2">
                                     <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
                                     <button @click="deleteCatalogItem('switches', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-                                        <label class="text-[10px] text-slate-400 block">Lieu d'achat / Détaillant :</label>
-                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-amber-300">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="text-[10px] text-slate-400 block">Détaillant :</label>
+                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-slate-300">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="text-[10px] text-slate-400 block">Prix ($ CAD) :</label>
+                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prix Unitaire ($ CAD) :</label>
-                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
+                                        <label class="text-[10px] text-slate-400 block">Inst. (h) :</label>
+                                        <input type="number" v-model.number="item.installTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Prog. (h) :</label>
+                                        <input type="number" v-model.number="item.progTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
                                     </div>
                                 </div>
                             </div>
@@ -639,22 +626,30 @@
                             </button>
                         </div>
 
-                        <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                            <div v-for="item in catalog.panels" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2">
+                        <div class="p-4 space-y-3 max-h-[550px] overflow-y-auto">
+                            <div v-for="item in catalog.panels" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2 hover:border-accent-blue/50 transition">
                                 <div class="flex items-center justify-between gap-2">
                                     <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
                                     <button @click="deleteCatalogItem('panels', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-                                        <label class="text-[10px] text-slate-400 block">Lieu d'achat / Détaillant :</label>
-                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-amber-300">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="text-[10px] text-slate-400 block">Détaillant :</label>
+                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-slate-300">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="text-[10px] text-slate-400 block">Prix ($ CAD) :</label>
+                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prix Unitaire ($ CAD) :</label>
-                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
+                                        <label class="text-[10px] text-slate-400 block">Inst. (h) :</label>
+                                        <input type="number" v-model.number="item.installTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Prog. (h) :</label>
+                                        <input type="number" v-model.number="item.progTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
                                     </div>
                                 </div>
                             </div>
@@ -751,7 +746,7 @@
                         </div>
                     </div>
 
-                    <!-- ROOM-BY-ROOM BREAKDOWN -->
+                    <!-- ROOM-BY-ROOM BREAKDOWN WITH TOTAL EQUIPMENT COUNT -->
                     <div>
                         <h3 class="text-sm font-bold text-slate-200 print-text-dark uppercase tracking-wider mb-3">
                             Détail par Pièce (Éclairage & Contrôle)
@@ -764,6 +759,7 @@
                                         <th class="py-2.5 px-3">Pièce</th>
                                         <th class="py-2.5 px-3">Interrupteurs (ZOOZ/Tapo)</th>
                                         <th class="py-2.5 px-3">Panneaux Tactiles / Hubs</th>
+                                        <th class="py-2.5 px-3 text-center">Total Équipements</th>
                                         <th class="py-2.5 px-3 text-right">Sous-Total Pièce ($ CAD)</th>
                                     </tr>
                                 </thead>
@@ -789,6 +785,9 @@
                                                 </span>
                                             </span>
                                             <span v-else class="text-slate-500">-</span>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-center font-bold text-amber-400 print-text-dark">
+                                            {{ calculateRoomDeviceCount(room) }} unité(s)
                                         </td>
                                         <td class="py-2.5 px-3 text-right font-bold text-amber-400 print-text-dark">
                                             {{ formatCurrency(calculateRoomSubtotal(room)) }}
@@ -835,7 +834,7 @@
                     <div class="no-print bg-navy-900/80 p-5 rounded-xl border border-slate-700/80 space-y-4">
                         <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-2">
                             <i class="fa-solid fa-clock-rotate-left"></i>
-                            <span>Réglages Main-d'Œuvre et Régime Fiscal Québec/Canada</span>
+                            <span>Réglages Main-d'Œuvre et Régime Fiscal</span>
                         </h4>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
@@ -850,8 +849,8 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Heures (h) :</label>
-                                        <input type="number" v-model.number="project.installHours" min="0" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                                        <label class="block text-[11px] text-slate-400 mb-1">Total calculé (h) :</label>
+                                        <input type="number" :value="project.installHours" readonly class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none cursor-not-allowed opacity-75" title="Les heures se calculent selon le temps assigné dans le catalogue par équipement">
                                     </div>
                                     <div>
                                         <label class="block text-[11px] text-slate-400 mb-1">Taux ($ CAD/h) :</label>
@@ -871,8 +870,8 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Heures (h) :</label>
-                                        <input type="number" v-model.number="project.progHours" min="0" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                                        <label class="block text-[11px] text-slate-400 mb-1">Total calculé (h) :</label>
+                                        <input type="number" :value="project.progHours" readonly class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none cursor-not-allowed opacity-75" title="Les heures se calculent selon le temps assigné dans le catalogue par équipement">
                                     </div>
                                     <div>
                                         <label class="block text-[11px] text-slate-400 mb-1">Taux ($ CAD/h) :</label>
@@ -940,6 +939,103 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            <!-- TAB 5: LISTE DE COMMANDE (BOM COMPLET) -->
+            <div v-show="activeTab === 'orderList'" class="space-y-6">
+                <!-- Action Controls Bar -->
+                <div class="no-print bg-navy-800/80 p-5 rounded-xl border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
+                            <i class="fa-solid fa-cart-shopping text-amber-500"></i>
+                            <span>Liste de Commande Globale du Matériel</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Nomenclature complète des équipements à commander, quantités totales, prix unitaires et montants totaux.</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button @click="copyOrderListToClipboard" class="bg-slate-700 hover:bg-slate-600 text-amber-400 font-semibold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition border border-amber-500/30 shadow">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>Copier la liste</span>
+                        </button>
+                        <button @click="printQuote" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2 rounded-lg text-xs shadow flex items-center space-x-2">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Imprimer / PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SUMMARY CARDS FOR ORDER -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-navy-800/90 p-4 rounded-xl border border-slate-700 shadow">
+                        <div class="text-xs text-slate-400">Articles / Modèles Différents</div>
+                        <div class="text-xl font-bold text-slate-100 mt-1">{{ consolidatedBOM.length }} références</div>
+                    </div>
+                    <div class="bg-navy-800/90 p-4 rounded-xl border border-slate-700 shadow">
+                        <div class="text-xs text-slate-400">Total Pièces à Commander</div>
+                        <div class="text-xl font-bold text-amber-400 mt-1">{{ totalDeviceCount }} unités</div>
+                    </div>
+                    <div class="bg-navy-800/90 p-4 rounded-xl border border-amber-500/40 shadow">
+                        <div class="text-xs text-slate-400">Total Matériel HT ($ CAD)</div>
+                        <div class="text-xl font-bold text-emerald-400 mt-1">{{ formatCurrency(lightingSubtotal + additionalSubtotal) }}</div>
+                    </div>
+                </div>
+
+                <!-- TABLE ORDER LIST -->
+                <div class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg">
+                    <div class="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
+                            <i class="fa-solid fa-boxes-packing text-amber-400"></i>
+                            <span>Détail du Bon de Commande par Équipement</span>
+                        </h3>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-800/80 text-slate-300 uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="py-3 px-4">Équipement / Modèle</th>
+                                    <th class="py-3 px-4">Catégorie</th>
+                                    <th class="py-3 px-4">Détaillant / Lieu d'achat</th>
+                                    <th class="py-3 px-4 text-center">Quantité Totale</th>
+                                    <th class="py-3 px-4 text-right">Prix Pièce ($ CAD)</th>
+                                    <th class="py-3 px-4 text-right">Prix Total ($ CAD)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                <tr v-for="item in consolidatedBOM" :key="item.key" class="hover:bg-slate-800/40 transition">
+                                    <td class="py-3 px-4 font-semibold text-slate-100">{{ item.name }}</td>
+                                    <td class="py-3 px-4 text-slate-400">{{ item.category }}</td>
+                                    <td class="py-3 px-4 text-amber-300 font-medium">{{ item.retailer }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="bg-navy-900 border border-slate-700 px-2.5 py-1 rounded font-bold text-amber-400 text-xs">
+                                            {{ item.totalQty }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-300">{{ formatCurrency(item.unitPrice) }}</td>
+                                    <td class="py-3 px-4 text-right font-bold text-amber-400 text-sm">
+                                        {{ formatCurrency(item.totalQty * item.unitPrice) }}
+                                    </td>
+                                </tr>
+                                <tr v-if="consolidatedBOM.length === 0">
+                                    <td colspan="6" class="py-8 text-center text-slate-500 italic">
+                                        Aucun équipement sélectionné dans le projet.
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="bg-slate-800/90 font-bold border-t border-slate-700 text-slate-200">
+                                <tr>
+                                    <td colspan="3" class="py-3 px-4 text-right uppercase">Total Général Matériel :</td>
+                                    <td class="py-3 px-4 text-center text-amber-400 font-extrabold text-sm">{{ totalDeviceCount }}</td>
+                                    <td></td>
+                                    <td class="py-3 px-4 text-right text-amber-400 text-base font-black">
+                                        {{ formatCurrency(lightingSubtotal + additionalSubtotal) }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -1073,6 +1169,16 @@
                             <input type="number" v-model.number="newAdditional.unitPrice" step="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Temps Inst. (h) :</label>
+                            <input type="number" v-model.number="newAdditional.installTime" step="0.1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Temps Prog. (h) :</label>
+                            <input type="number" v-model.number="newAdditional.progTime" step="0.1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        </div>
+                    </div>
                 </div>
                 <div class="flex justify-end space-x-2 pt-3 border-t border-slate-700">
                     <button @click="showAddAdditionalModal = false" class="px-3 py-1.5 bg-slate-700 rounded text-xs text-slate-200">Annuler</button>
@@ -1093,12 +1199,22 @@
                         <input type="text" v-model="newCatalogItem.name" placeholder="Ex: Interrupteur ZOOZ ZEN..." class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
+                        <label class="block text-slate-400 mb-1">Détaillant / Lieu d'achat :</label>
+                        <input type="text" v-model="newCatalogItem.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                    </div>
+                    <div>
                         <label class="block text-slate-400 mb-1">Prix unitaire ($ CAD) :</label>
                         <input type="number" v-model.number="newCatalogItem.price" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                     </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Détaillant / Lieu d'achat :</label>
-                        <input type="text" v-model="newCatalogItem.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Temps Inst. (h) :</label>
+                            <input type="number" v-model.number="newCatalogItem.installTime" step="0.1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Temps Prog. (h) :</label>
+                            <input type="number" v-model.number="newCatalogItem.progTime" step="0.1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        </div>
                     </div>
                 </div>
                 <div class="flex justify-end space-x-2 pt-3 border-t border-slate-700">
@@ -1143,7 +1259,6 @@
                 const activeTab = ref('rooms');
                 const saveStatus = ref(false);
 
-                // FIREBASE STATES
                 const isSavingCloud = ref(false);
                 const isLoadingCloud = ref(false);
                 const showCloudModal = ref(false);
@@ -1160,36 +1275,36 @@
                     address: 'Saint-Jean-sur-Richelieu, QC',
                     quoteNo: 'DOM-2026-001',
                     date: new Date().toISOString().split('T')[0],
-                    installHours: 12,
+                    installHours: 0,
                     installRate: 85,
-                    progHours: 6,
+                    progHours: 0,
                     progRate: 105,
                     taxRegime: 'QC'
                 });
 
                 const defaultCatalog = () => ({
                     switches: [
-                        { id: 'tapo_s505d', name: 'TP-Link Tapo S505D (Gradateur Matter Wi-Fi)', price: 24.99, retailer: 'Amazon.ca / TP-Link Canada' },
-                        { id: 'tapo_s505', name: 'TP-Link Tapo S505 (Interrupteur On/Off Matter Wi-Fi)', price: 19.99, retailer: 'Amazon.ca / TP-Link Canada' },
-                        { id: 'tapo_s500d', name: 'TP-Link Tapo S500D (Gradateur Smart Wi-Fi)', price: 22.99, retailer: 'Amazon.ca' },
-                        { id: 'tapo_s500', name: 'TP-Link Tapo S500 (Interrupteur Smart Wi-Fi)', price: 17.99, retailer: 'Amazon.ca' },
-                        { id: 'tapo_s515d', name: 'TP-Link Tapo S515D (Gradateur 3-Voies Smart)', price: 29.99, retailer: 'Amazon.ca' },
-                        { id: 'tapo_s515', name: 'TP-Link Tapo S515 (Interrupteur 3-Voies Smart)', price: 24.99, retailer: 'Amazon.ca' },
-                        { id: 'tapo_s200b', name: 'TP-Link Tapo S200B (Bouton Intelligent / Sub-1G)', price: 19.99, retailer: 'Amazon.ca' },
-                        { id: 'zooz_zen71', name: 'Zooz ZEN71 800LR (Interrupteur On/Off Z-Wave)', price: 45.95, retailer: 'Aartech Canada' },
-                        { id: 'zooz_zen72', name: 'Zooz ZEN72 800LR (Gradateur Dimmer Z-Wave)', price: 46.95, retailer: 'Aartech Canada' },
-                        { id: 'zooz_zen76', name: 'Zooz ZEN76 800LR (Interrupteur S2 800 Series)', price: 47.95, retailer: 'Aartech Canada' },
-                        { id: 'zooz_zen77', name: 'Zooz ZEN77 800LR (Gradateur S2 800 Series)', price: 51.95, retailer: 'Aartech Canada' },
-                        { id: 'zooz_zen32', name: 'Zooz ZEN32 800LR (Interrupteur Scènes 5-Boutons)', price: 54.95, retailer: 'Aartech Canada' },
-                        { id: 'zooz_zen51', name: 'Zooz ZEN51 800LR (Relais Contact Sec Encastré)', price: 42.95, retailer: 'Aartech Canada' }
+                        { id: 'tapo_s505d', name: 'TP-Link Tapo S505D (Gradateur Matter Wi-Fi)', price: 24.99, retailer: 'Amazon.ca / TP-Link Canada', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s505', name: 'TP-Link Tapo S505 (Interrupteur On/Off Matter Wi-Fi)', price: 19.99, retailer: 'Amazon.ca / TP-Link Canada', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s500d', name: 'TP-Link Tapo S500D (Gradateur Smart Wi-Fi)', price: 22.99, retailer: 'Amazon.ca', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s500', name: 'TP-Link Tapo S500 (Interrupteur Smart Wi-Fi)', price: 17.99, retailer: 'Amazon.ca', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s515d', name: 'TP-Link Tapo S515D (Gradateur 3-Voies Smart)', price: 29.99, retailer: 'Amazon.ca', installTime: 0.75, progTime: 0.25 },
+                        { id: 'tapo_s515', name: 'TP-Link Tapo S515 (Interrupteur 3-Voies Smart)', price: 24.99, retailer: 'Amazon.ca', installTime: 0.75, progTime: 0.25 },
+                        { id: 'tapo_s200b', name: 'TP-Link Tapo S200B (Bouton Intelligent / Sub-1G)', price: 19.99, retailer: 'Amazon.ca', installTime: 0.25, progTime: 0.1 },
+                        { id: 'zooz_zen71', name: 'Zooz ZEN71 800LR (Interrupteur On/Off Z-Wave)', price: 45.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen72', name: 'Zooz ZEN72 800LR (Gradateur Dimmer Z-Wave)', price: 46.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen76', name: 'Zooz ZEN76 800LR (Interrupteur S2 800 Series)', price: 47.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen77', name: 'Zooz ZEN77 800LR (Gradateur S2 800 Series)', price: 51.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen32', name: 'Zooz ZEN32 800LR (Interrupteur Scènes 5-Boutons)', price: 54.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.5 },
+                        { id: 'zooz_zen51', name: 'Zooz ZEN51 800LR (Relais Contact Sec Encastré)', price: 42.95, retailer: 'Aartech Canada', installTime: 0.75, progTime: 0.25 }
                     ],
                     panels: [
-                        { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', price: 29.99, retailer: 'Amazon.ca / TP-Link Canada' },
-                        { id: 'zooz_zbox', name: 'Zooz Z-Box Hub (Automate Domotique Z-Wave)', price: 144.95, retailer: 'Aartech Canada / Amazon.ca' },
-                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 (Hub Z-Wave & Zigbee Pro)', price: 219.00, retailer: 'Aartech Canada' },
-                        { id: 'zooz_zst39', name: 'Zooz ZST39 LR 800 (Clé USB Antenne Z-Wave)', price: 40.95, retailer: 'Aartech Canada' },
-                        { id: 'panel_7', name: 'Écran Tactile Mural 7" HD', price: 850.00, retailer: 'Distributeur Pro Canada' },
-                        { id: 'panel_10', name: 'Écran Maître 10" Ultra HD', price: 1350.00, retailer: 'Distributeur Pro Canada' }
+                        { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', price: 29.99, retailer: 'Amazon.ca / TP-Link Canada', installTime: 0.25, progTime: 0.5 },
+                        { id: 'zooz_zbox', name: 'Zooz Z-Box Hub (Automate Domotique Z-Wave)', price: 144.95, retailer: 'Aartech Canada / Amazon.ca', installTime: 0.5, progTime: 1.5 },
+                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 (Hub Z-Wave & Zigbee Pro)', price: 219.00, retailer: 'Aartech Canada', installTime: 0.5, progTime: 2.0 },
+                        { id: 'zooz_zst39', name: 'Zooz ZST39 LR 800 (Clé USB Antenne Z-Wave)', price: 40.95, retailer: 'Aartech Canada', installTime: 0.25, progTime: 0.5 },
+                        { id: 'panel_7', name: 'Écran Tactile Mural 7" HD', price: 850.00, retailer: 'Distributeur Pro Canada', installTime: 1.0, progTime: 1.0 },
+                        { id: 'panel_10', name: 'Écran Maître 10" Ultra HD', price: 1350.00, retailer: 'Distributeur Pro Canada', installTime: 1.5, progTime: 1.5 }
                     ]
                 });
 
@@ -1226,25 +1341,25 @@
                 const rooms = ref(defaultRooms());
 
                 const additionalPresets = [
-                    { name: 'Zooz ZSE11 Multi-capteur 4-en-1', category: 'Capteurs & Prévention', price: 54.95, retailer: 'Aartech Canada', icon: 'fa-solid fa-eye' },
-                    { name: 'Zooz ZEN04 Prise Intelligente 800', category: 'Éclairage & Domotique', price: 37.99, retailer: 'Aartech Canada', icon: 'fa-solid fa-plug' },
-                    { name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', price: 280.00, retailer: 'Hydro-Québec / Amazon.ca', icon: 'fa-solid fa-temperature-arrow-up' },
-                    { name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', price: 340.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-lock' },
-                    { name: 'Caméra Extérieure 4K IR Vision Nuit', category: 'Sécurité & Accès', price: 220.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-video' },
-                    { name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', price: 380.00, retailer: 'Aartech Canada', icon: 'fa-solid fa-faucet-drip' },
-                    { name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', price: 950.00, retailer: 'Master Électricien', icon: 'fa-solid fa-charging-station' }
+                    { name: 'Zooz ZSE11 Multi-capteur 4-en-1', category: 'Capteurs & Prévention', price: 54.95, retailer: 'Aartech Canada', icon: 'fa-solid fa-eye', installTime: 0.5, progTime: 0.25 },
+                    { name: 'Zooz ZEN04 Prise Intelligente 800', category: 'Éclairage & Domotique', price: 37.99, retailer: 'Aartech Canada', icon: 'fa-solid fa-plug', installTime: 0.1, progTime: 0.1 },
+                    { name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', price: 280.00, retailer: 'Hydro-Québec / Amazon.ca', icon: 'fa-solid fa-temperature-arrow-up', installTime: 1.0, progTime: 0.5 },
+                    { name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', price: 340.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-lock', installTime: 1.5, progTime: 0.5 },
+                    { name: 'Caméra Extérieure 4K IR Vision Nuit', category: 'Sécurité & Accès', price: 220.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-video', installTime: 1.5, progTime: 0.5 },
+                    { name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', price: 380.00, retailer: 'Aartech Canada', icon: 'fa-solid fa-faucet-drip', installTime: 2.0, progTime: 0.5 },
+                    { name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', price: 950.00, retailer: 'Master Électricien', icon: 'fa-solid fa-charging-station', installTime: 4.0, progTime: 0.5 }
                 ];
 
                 const defaultAdditionalItems = () => [
-                    { id: 'add_1', name: 'Zooz ZST39 LR 800 Clé USB Antenne', category: 'Hubs & Antennes Z-Wave', retailer: 'Aartech Canada', qty: 1, unitPrice: 40.95 },
-                    { id: 'add_2', name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', retailer: 'Amazon.ca', qty: 2, unitPrice: 280.00 }
+                    { id: 'add_1', name: 'Zooz ZST39 LR 800 Clé USB Antenne', category: 'Hubs & Antennes Z-Wave', retailer: 'Aartech Canada', qty: 1, unitPrice: 40.95, installTime: 0.25, progTime: 0.5 },
+                    { id: 'add_2', name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', retailer: 'Amazon.ca', qty: 2, unitPrice: 280.00, installTime: 1.0, progTime: 0.5 }
                 ];
 
                 const additionalItems = ref(defaultAdditionalItems());
 
                 const newRoom = ref({ name: '', icon: 'fa-solid fa-couch' });
-                const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', retailer: 'Aartech Canada', qty: 1, unitPrice: 50 });
-                const newCatalogItem = ref({ name: '', price: 45, retailer: 'Aartech Canada' });
+                const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', retailer: 'Aartech Canada', qty: 1, unitPrice: 50, installTime: 0.5, progTime: 0.25 });
+                const newCatalogItem = ref({ name: '', price: 45, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 });
 
                 const getItemPrice = (cat, id) => {
                     const found = catalog.value[cat]?.find(m => m.id === id);
@@ -1258,13 +1373,24 @@
 
                 const calculateRoomSubtotal = (room) => {
                     let total = 0;
-                    room.switches.forEach(s => {
-                        total += getItemPrice('switches', s.modelId) * (s.qty || 0);
-                    });
-                    room.panels.forEach(p => {
-                        total += getItemPrice('panels', p.modelId) * (p.qty || 0);
-                    });
+                    if (room.switches) {
+                        room.switches.forEach(s => {
+                            total += getItemPrice('switches', s.modelId) * (s.qty || 0);
+                        });
+                    }
+                    if (room.panels) {
+                        room.panels.forEach(p => {
+                            total += getItemPrice('panels', p.modelId) * (p.qty || 0);
+                        });
+                    }
                     return total;
+                };
+
+                const calculateRoomDeviceCount = (room) => {
+                    let count = 0;
+                    if (room.switches) room.switches.forEach(s => count += (s.qty || 0));
+                    if (room.panels) room.panels.forEach(p => count += (p.qty || 0));
+                    return count;
                 };
 
                 const lightingSubtotal = computed(() => {
@@ -1278,8 +1404,7 @@
                 const totalDeviceCount = computed(() => {
                     let count = 0;
                     rooms.value.forEach(r => {
-                        r.switches.forEach(s => count += (s.qty || 0));
-                        r.panels.forEach(p => count += (p.qty || 0));
+                        count += calculateRoomDeviceCount(r);
                     });
                     additionalItems.value.forEach(item => count += (item.qty || 0));
                     return count;
@@ -1288,8 +1413,7 @@
                 const totalRoomSwitchesAndPanelsCount = computed(() => {
                     let count = 0;
                     rooms.value.forEach(r => {
-                        r.switches.forEach(s => count += (s.qty || 0));
-                        r.panels.forEach(p => count += (p.qty || 0));
+                        count += calculateRoomDeviceCount(r);
                     });
                     return count;
                 });
@@ -1347,31 +1471,35 @@
                     const map = {};
 
                     rooms.value.forEach(r => {
-                        r.switches.forEach(sw => {
-                            const model = catalog.value.switches.find(m => m.id === sw.modelId);
-                            const name = model ? model.name : sw.modelId;
-                            const price = model ? model.price : 0;
-                            const retailer = model ? (model.retailer || 'Canada') : 'Canada';
-                            const key = 'sw_' + sw.modelId;
+                        if (r.switches) {
+                            r.switches.forEach(sw => {
+                                const model = catalog.value.switches.find(m => m.id === sw.modelId);
+                                const name = model ? model.name : sw.modelId;
+                                const price = model ? model.price : 0;
+                                const retailer = model ? (model.retailer || 'Canada') : 'Canada';
+                                const key = 'sw_' + sw.modelId;
 
-                            if (!map[key]) {
-                                map[key] = { key, name, category: 'Interrupteur / Gradateur', retailer, unitPrice: price, totalQty: 0 };
-                            }
-                            map[key].totalQty += (sw.qty || 0);
-                        });
+                                if (!map[key]) {
+                                    map[key] = { key, name, category: 'Interrupteur / Gradateur', retailer, unitPrice: price, totalQty: 0 };
+                                }
+                                map[key].totalQty += (sw.qty || 0);
+                            });
+                        }
 
-                        r.panels.forEach(p => {
-                            const model = catalog.value.panels.find(m => m.id === p.modelId);
-                            const name = model ? model.name : p.modelId;
-                            const price = model ? model.price : 0;
-                            const retailer = model ? (model.retailer || 'Canada') : 'Canada';
-                            const key = 'panel_' + p.modelId;
+                        if (r.panels) {
+                            r.panels.forEach(p => {
+                                const model = catalog.value.panels.find(m => m.id === p.modelId);
+                                const name = model ? model.name : p.modelId;
+                                const price = model ? model.price : 0;
+                                const retailer = model ? (model.retailer || 'Canada') : 'Canada';
+                                const key = 'panel_' + p.modelId;
 
-                            if (!map[key]) {
-                                map[key] = { key, name, category: 'Hub / Panneau tactile', retailer, unitPrice: price, totalQty: 0 };
-                            }
-                            map[key].totalQty += (p.qty || 0);
-                        });
+                                if (!map[key]) {
+                                    map[key] = { key, name, category: 'Hub / Panneau tactile', retailer, unitPrice: price, totalQty: 0 };
+                                }
+                                map[key].totalQty += (p.qty || 0);
+                            });
+                        }
                     });
 
                     additionalItems.value.forEach(item => {
@@ -1385,7 +1513,7 @@
                     return Object.values(map);
                 });
 
-                // --- FIREBASE CLOUD INTEGRATION METHODS ---
+                // --- CLOUD METHODS ---
                 const showNotification = (msg, type = 'success') => {
                     cloudNotification.value = { message: msg, type };
                     setTimeout(() => { cloudNotification.value = null; }, 4000);
@@ -1395,7 +1523,6 @@
                     if (!project.value.quoteNo) {
                         project.value.quoteNo = 'DOM-' + Date.now().toString().slice(-6);
                     }
-
                     isSavingCloud.value = true;
                     try {
                         const docId = project.value.quoteNo.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -1407,7 +1534,6 @@
                             grandTotal: grandTotal.value,
                             updatedAt: new Date().toISOString()
                         };
-
                         await setDoc(doc(db, "estimations_domotique", docId), payload, { merge: true });
                         showNotification(`Devis #${project.value.quoteNo} enregistré sur Firebase avec succès !`);
                     } catch (error) {
@@ -1422,7 +1548,6 @@
                     showCloudModal.value = true;
                     isLoadingCloud.value = true;
                     cloudEstimates.value = [];
-
                     try {
                         const querySnapshot = await getDocs(collection(db, "estimations_domotique"));
                         const list = [];
@@ -1444,7 +1569,6 @@
                         if (est.catalog) catalog.value = est.catalog;
                         if (est.rooms) rooms.value = est.rooms;
                         if (est.additionalItems) additionalItems.value = est.additionalItems;
-
                         showCloudModal.value = false;
                         showNotification(`Devis #${project.value.quoteNo} chargé avec succès !`);
                     }
@@ -1463,7 +1587,7 @@
                     }
                 };
 
-                // --- UI & EDIT METHODS ---
+                // --- UI METHODS ---
                 const confirmAddRoom = () => {
                     if (!newRoom.value.name.trim()) return;
                     rooms.value.push({
@@ -1502,13 +1626,45 @@
                 };
 
                 const addSwitchToRoom = (room) => {
+                    if (!room.switches) room.switches = [];
                     const firstId = catalog.value.switches[0]?.id || '';
                     room.switches.push({ modelId: firstId, qty: 1 });
                 };
 
                 const addPanelToRoom = (room) => {
+                    if (!room.panels) room.panels = [];
                     const firstId = catalog.value.panels[0]?.id || '';
                     room.panels.push({ modelId: firstId, qty: 1 });
+                };
+
+                const removeSwitch = (room, index) => {
+                    room.switches.splice(index, 1);
+                };
+
+                const removePanel = (room, index) => {
+                    room.panels.splice(index, 1);
+                };
+
+                const decrementSwitchQty = (room, index) => {
+                    if (room.switches[index].qty > 1) {
+                        room.switches[index].qty--;
+                    } else {
+                        removeSwitch(room, index);
+                    }
+                };
+
+                const decrementPanelQty = (room, index) => {
+                    if (room.panels[index].qty > 1) {
+                        room.panels[index].qty--;
+                    } else {
+                        removePanel(room, index);
+                    }
+                };
+
+                const clearRoomEquipment = (room) => {
+                    room.switches = [];
+                    room.panels = [];
+                    showNotification(`Équipements retirés de la pièce "${room.name}".`);
                 };
 
                 const confirmAddAdditional = () => {
@@ -1519,7 +1675,9 @@
                         category: newAdditional.value.category,
                         retailer: newAdditional.value.retailer || 'Canada',
                         qty: newAdditional.value.qty || 1,
-                        unitPrice: newAdditional.value.unitPrice || 0
+                        unitPrice: newAdditional.value.unitPrice || 0,
+                        installTime: newAdditional.value.installTime || 0,
+                        progTime: newAdditional.value.progTime || 0
                     });
                     newAdditional.value.name = '';
                     showAddAdditionalModal.value = false;
@@ -1536,14 +1694,16 @@
                             category: preset.category,
                             retailer: preset.retailer || 'Canada',
                             qty: 1,
-                            unitPrice: preset.price
+                            unitPrice: preset.price,
+                            installTime: preset.installTime || 0.5,
+                            progTime: preset.progTime || 0.25
                         });
                     }
                 };
 
                 const openAddCatalogModal = (category) => {
                     catalogModalCategory.value = category;
-                    newCatalogItem.value = { name: '', price: 45, retailer: 'Aartech Canada' };
+                    newCatalogItem.value = { name: '', price: 45, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 };
                     showAddCatalogModal.value = true;
                 };
 
@@ -1555,7 +1715,9 @@
                         id: newId,
                         name: newCatalogItem.value.name,
                         price: newCatalogItem.value.price || 0,
-                        retailer: newCatalogItem.value.retailer || 'Canada'
+                        retailer: newCatalogItem.value.retailer || 'Canada',
+                        installTime: newCatalogItem.value.installTime || 0,
+                        progTime: newCatalogItem.value.progTime || 0
                     });
                     showAddCatalogModal.value = false;
                 };
@@ -1574,6 +1736,19 @@
                         rooms.value = defaultRooms();
                         additionalItems.value = defaultAdditionalItems();
                     }
+                };
+
+                const copyOrderListToClipboard = () => {
+                    const header = "Équipement\tCatégorie\tDétaillant\tQuantité Totale\tPrix Pièce ($ CAD)\tPrix Total ($ CAD)\n";
+                    const rows = consolidatedBOM.value.map(item => 
+                        `${item.name}\t${item.category}\t${item.retailer}\t${item.totalQty}\t${item.unitPrice.toFixed(2)}\t${(item.totalQty * item.unitPrice).toFixed(2)}`
+                    ).join('\n');
+                    
+                    navigator.clipboard.writeText(header + rows).then(() => {
+                        showNotification("Liste de commande copiée dans le presse-papier !");
+                    }).catch(err => {
+                        console.error("Erreur de copie :", err);
+                    });
                 };
 
                 const triggerSave = () => {
@@ -1650,7 +1825,45 @@
                     return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
                 };
 
-                watch([project, catalog, rooms, additionalItems], () => {
+                // OBSERVATEUR: Calcul automatique du temps total de main d'oeuvre
+                watch([catalog, rooms, additionalItems], () => {
+                    let totalInst = 0;
+                    let totalProg = 0;
+
+                    rooms.value.forEach(r => {
+                        if (r.switches) {
+                            r.switches.forEach(sw => {
+                                const model = catalog.value.switches.find(m => m.id === sw.modelId);
+                                if (model) {
+                                    totalInst += (model.installTime || 0) * (sw.qty || 0);
+                                    totalProg += (model.progTime || 0) * (sw.qty || 0);
+                                }
+                            });
+                        }
+                        if (r.panels) {
+                            r.panels.forEach(p => {
+                                const model = catalog.value.panels.find(m => m.id === p.modelId);
+                                if (model) {
+                                    totalInst += (model.installTime || 0) * (p.qty || 0);
+                                    totalProg += (model.progTime || 0) * (p.qty || 0);
+                                }
+                            });
+                        }
+                    });
+
+                    additionalItems.value.forEach(item => {
+                        totalInst += (item.installTime || 0) * (item.qty || 0);
+                        totalProg += (item.progTime || 0) * (item.qty || 0);
+                    });
+
+                    project.value.installHours = parseFloat(totalInst.toFixed(2));
+                    project.value.progHours = parseFloat(totalProg.toFixed(2));
+
+                    triggerSave();
+                }, { immediate: true, deep: true });
+
+
+                watch(project, () => {
                     triggerSave();
                 }, { deep: true });
 
@@ -1681,6 +1894,7 @@
                     getItemPrice,
                     getItemName,
                     calculateRoomSubtotal,
+                    calculateRoomDeviceCount,
                     lightingSubtotal,
                     additionalSubtotal,
                     totalDeviceCount,
@@ -1703,6 +1917,11 @@
                     deleteRoom,
                     addSwitchToRoom,
                     addPanelToRoom,
+                    removeSwitch,
+                    removePanel,
+                    decrementSwitchQty,
+                    decrementPanelQty,
+                    clearRoomEquipment,
                     confirmAddAdditional,
                     addPresetAdditional,
                     openAddCatalogModal,
@@ -1710,6 +1929,7 @@
                     deleteCatalogItem,
                     resetCatalogToDefault,
                     resetToDefaults,
+                    copyOrderListToClipboard,
                     exportJSON,
                     importJSON,
                     printQuote,
