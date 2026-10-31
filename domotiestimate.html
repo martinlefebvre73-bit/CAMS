@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DomotiEstimate Pro - Estimation Domotique Résidentielle</title>
+    <title>DomotiEstimate Pro - Multi-Fournisseurs & Estimation Domotique</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -117,8 +117,8 @@
                         <i class="fa-solid fa-house-signal"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold text-slate-100 leading-tight">DomotiEstimate <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Firebase Cloud</span></h1>
-                        <p class="text-xs text-slate-400 hidden sm:block">Estimation Domotique Résidentielle (ZOOZ, Tapo, Hubitat & Sauvegarde Cloud)</p>
+                        <h1 class="text-lg font-bold text-slate-100 leading-tight">DomotiEstimate Pro <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Multi-Fournisseurs</span></h1>
+                        <p class="text-xs text-slate-400 hidden sm:block">Comparateur Aartech vs Amazon.ca & Estimation Domotique (Firebase cams-cf723)</p>
                     </div>
                 </div>
 
@@ -159,6 +159,47 @@
             </div>
         </header>
 
+        <!-- GLOBAL SUPPLIER CONTROL BANNER -->
+        <section class="no-print bg-navy-800/80 border-b border-slate-700/80 py-3 backdrop-blur">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                <div class="flex items-center space-x-2">
+                    <div class="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-200">Mode Fournisseur Global :</span>
+                        <span class="text-slate-400 ml-1">Appliquez la stratégie de prix à tous les articles du catalogue et équipements.</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <button 
+                        @click="applyGlobalSupplier('aartech')"
+                        :class="globalSupplierMode === 'aartech' ? 'bg-indigo-600 text-white font-bold border-indigo-400 shadow' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'"
+                        class="px-3 py-1.5 rounded-lg text-xs border transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-store text-indigo-300"></i>
+                        <span>🏢 Tout Aartech Canada</span>
+                    </button>
+
+                    <button 
+                        @click="applyGlobalSupplier('amazon')"
+                        :class="globalSupplierMode === 'amazon' ? 'bg-amber-600 text-white font-bold border-amber-400 shadow' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'"
+                        class="px-3 py-1.5 rounded-lg text-xs border transition flex items-center space-x-1.5">
+                        <i class="fa-brands fa-amazon text-amber-300"></i>
+                        <span>📦 Tout Amazon.ca</span>
+                    </button>
+
+                    <button 
+                        @click="applyGlobalSupplier('optimized')"
+                        :class="globalSupplierMode === 'optimized' ? 'bg-emerald-600 text-white font-bold border-emerald-400 ring-2 ring-emerald-500/30 shadow' : 'bg-slate-800 hover:bg-emerald-500/10 text-emerald-400 border-slate-700'"
+                        class="px-3.5 py-1.5 rounded-lg text-xs border transition flex items-center space-x-1.5 font-bold">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-300"></i>
+                        <span>⚡ Mode Optimisé (Meilleur Prix)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- PROJECT METADATA BANNER -->
         <section class="no-print bg-navy-800/40 border-b border-slate-700/40 py-3">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
@@ -188,7 +229,7 @@
                     </div>
                     <div class="h-4 w-[1px] bg-slate-700"></div>
                     <div class="text-slate-400">
-                        Main-d'Œuvre: <span class="text-emerald-400 font-bold text-sm">{{ (project.installHours || 0) + (project.progHours || 0) }}h</span>
+                        Économie: <span class="text-emerald-400 font-bold text-sm">{{ formatCurrency(totalSavingsTTC) }}</span>
                     </div>
                     <div class="h-4 w-[1px] bg-slate-700"></div>
                     <div class="text-slate-400">
@@ -221,7 +262,7 @@
 
                 <button @click="activeTab = 'catalog'" :class="activeTab === 'catalog' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-tags"></i>
-                    <span>3. Catalogue Modèles, Temps & Prix</span>
+                    <span>3. Catalogue Modèles, Fournisseurs & Temps</span>
                 </button>
 
                 <button @click="activeTab = 'summary'" :class="activeTab === 'summary' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
@@ -231,7 +272,7 @@
 
                 <button @click="activeTab = 'orderList'" :class="activeTab === 'orderList' ? 'bg-amber-500/10 text-amber-400 border-amber-500' : 'text-slate-400 hover:text-slate-200 border-transparent'" class="px-4 py-2.5 rounded-t-lg font-medium text-sm border-b-2 flex items-center space-x-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-list-check"></i>
-                    <span>5. Liste de Commande</span>
+                    <span>5. Liste de Commande (BOM)</span>
                     <span class="ml-1.5 bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full border border-slate-700">{{ consolidatedBOM.length }}</span>
                 </button>
             </div>
@@ -316,28 +357,44 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <div v-for="(sw, swIdx) in room.switches" :key="swIdx" class="flex items-center gap-2 bg-navy-900/70 p-2 rounded-lg border border-slate-700/50">
-                                        <!-- Model Select -->
-                                        <select v-model="sw.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
-                                            <option v-for="m in catalog.switches" :key="m.id" :value="m.id">
-                                                {{ m.name }} — {{ formatCurrency(m.price) }}
-                                            </option>
-                                        </select>
+                                    <div v-for="(sw, swIdx) in room.switches" :key="swIdx" class="flex flex-col gap-1.5 bg-navy-900/70 p-2.5 rounded-lg border border-slate-700/50">
+                                        <div class="flex items-center gap-2">
+                                            <!-- Model Select -->
+                                            <select v-model="sw.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
+                                                <option v-for="m in catalog.switches" :key="m.id" :value="m.id">
+                                                    {{ m.name }} — {{ formatCurrency(getEffectivePrice(m)) }} ({{ getSupplierLabel(m.selectedSupplier) }})
+                                                </option>
+                                            </select>
 
-                                        <!-- Quantity Control -->
-                                        <div class="flex items-center bg-navy-800 border border-slate-700 rounded overflow-hidden">
-                                            <button @click="decrementSwitchQty(room, swIdx)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs" title="Réduire ou retirer">-</button>
-                                            <input type="number" v-model.number="sw.qty" min="1" class="w-10 text-center bg-transparent text-xs text-amber-400 font-bold focus:outline-none">
-                                            <button @click="sw.qty++" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">+</button>
+                                            <!-- Quantity Control -->
+                                            <div class="flex items-center bg-navy-800 border border-slate-700 rounded overflow-hidden">
+                                                <button @click="decrementSwitchQty(room, swIdx)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs" title="Réduire ou retirer">-</button>
+                                                <input type="number" v-model.number="sw.qty" min="1" class="w-10 text-center bg-transparent text-xs text-amber-400 font-bold focus:outline-none">
+                                                <button @click="sw.qty++" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">+</button>
+                                            </div>
+
+                                            <!-- Row total & Remove Button -->
+                                            <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
+                                                {{ formatCurrency(getItemPrice('switches', sw.modelId) * sw.qty) }}
+                                            </span>
+                                            <button @click="removeSwitch(room, swIdx)" class="text-slate-500 hover:text-rose-400 p-1" title="Retirer cet équipement">
+                                                <i class="fa-solid fa-xmark text-xs"></i>
+                                            </button>
                                         </div>
 
-                                        <!-- Row total & Remove Button -->
-                                        <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
-                                            {{ formatCurrency(getItemPrice('switches', sw.modelId) * sw.qty) }}
-                                        </span>
-                                        <button @click="removeSwitch(room, swIdx)" class="text-slate-500 hover:text-rose-400 p-1" title="Retirer cet équipement">
-                                            <i class="fa-solid fa-xmark text-xs"></i>
-                                        </button>
+                                        <!-- Supplier Quick Choice Badge -->
+                                        <div v-if="getSwitchItem(sw.modelId)" class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+                                            <span class="flex items-center gap-1">
+                                                Fournisseur: 
+                                                <select v-model="getSwitchItem(sw.modelId).selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-950 border border-slate-700 rounded text-[11px] text-amber-300 px-1.5 py-0.5">
+                                                    <option value="aartech">Aartech ({{ formatCurrency(getSwitchItem(sw.modelId).prices.aartech) }})</option>
+                                                    <option value="amazon">Amazon ({{ formatCurrency(getSwitchItem(sw.modelId).prices.amazon) }})</option>
+                                                </select>
+                                            </span>
+                                            <span :class="isCheapestSupplier(getSwitchItem(sw.modelId)) ? 'text-emerald-400 font-semibold' : 'text-amber-400'">
+                                                {{ isCheapestSupplier(getSwitchItem(sw.modelId)) ? '✓ Meilleur prix' : '+' + formatCurrency(getPriceDiff(getSwitchItem(sw.modelId))) + ' vs alt' }}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div v-if="room.switches.length === 0" class="text-xs text-slate-500 italic p-2 text-center bg-navy-900/30 rounded border border-dashed border-slate-800">
@@ -360,28 +417,44 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <div v-for="(panel, pIdx) in room.panels" :key="pIdx" class="flex items-center gap-2 bg-navy-900/70 p-2 rounded-lg border border-slate-700/50">
-                                        <!-- Model Select -->
-                                        <select v-model="panel.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
-                                            <option v-for="m in catalog.panels" :key="m.id" :value="m.id">
-                                                {{ m.name }} — {{ formatCurrency(m.price) }}
-                                            </option>
-                                        </select>
+                                    <div v-for="(panel, pIdx) in room.panels" :key="pIdx" class="flex flex-col gap-1.5 bg-navy-900/70 p-2.5 rounded-lg border border-slate-700/50">
+                                        <div class="flex items-center gap-2">
+                                            <!-- Model Select -->
+                                            <select v-model="panel.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
+                                                <option v-for="m in catalog.panels" :key="m.id" :value="m.id">
+                                                    {{ m.name }} — {{ formatCurrency(getEffectivePrice(m)) }} ({{ getSupplierLabel(m.selectedSupplier) }})
+                                                </option>
+                                            </select>
 
-                                        <!-- Quantity Control -->
-                                        <div class="flex items-center bg-navy-800 border border-slate-700 rounded overflow-hidden">
-                                            <button @click="decrementPanelQty(room, pIdx)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs" title="Réduire ou retirer">-</button>
-                                            <input type="number" v-model.number="panel.qty" min="1" class="w-10 text-center bg-transparent text-xs text-amber-400 font-bold focus:outline-none">
-                                            <button @click="panel.qty++" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">+</button>
+                                            <!-- Quantity Control -->
+                                            <div class="flex items-center bg-navy-800 border border-slate-700 rounded overflow-hidden">
+                                                <button @click="decrementPanelQty(room, pIdx)" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs" title="Réduire ou retirer">-</button>
+                                                <input type="number" v-model.number="panel.qty" min="1" class="w-10 text-center bg-transparent text-xs text-amber-400 font-bold focus:outline-none">
+                                                <button @click="panel.qty++" class="px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 text-xs">+</button>
+                                            </div>
+
+                                            <!-- Row total & Remove Button -->
+                                            <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
+                                                {{ formatCurrency(getItemPrice('panels', panel.modelId) * panel.qty) }}
+                                            </span>
+                                            <button @click="removePanel(room, pIdx)" class="text-slate-500 hover:text-rose-400 p-1" title="Retirer cet équipement">
+                                                <i class="fa-solid fa-xmark text-xs"></i>
+                                            </button>
                                         </div>
 
-                                        <!-- Row total & Remove Button -->
-                                        <span class="text-xs text-slate-300 font-medium min-w-[70px] text-right">
-                                            {{ formatCurrency(getItemPrice('panels', panel.modelId) * panel.qty) }}
-                                        </span>
-                                        <button @click="removePanel(room, pIdx)" class="text-slate-500 hover:text-rose-400 p-1" title="Retirer cet équipement">
-                                            <i class="fa-solid fa-xmark text-xs"></i>
-                                        </button>
+                                        <!-- Supplier Quick Choice Badge -->
+                                        <div v-if="getPanelItem(panel.modelId)" class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+                                            <span class="flex items-center gap-1">
+                                                Fournisseur: 
+                                                <select v-model="getPanelItem(panel.modelId).selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-950 border border-slate-700 rounded text-[11px] text-amber-300 px-1.5 py-0.5">
+                                                    <option value="aartech">Aartech ({{ formatCurrency(getPanelItem(panel.modelId).prices.aartech) }})</option>
+                                                    <option value="amazon">Amazon ({{ formatCurrency(getPanelItem(panel.modelId).prices.amazon) }})</option>
+                                                </select>
+                                            </span>
+                                            <span :class="isCheapestSupplier(getPanelItem(panel.modelId)) ? 'text-emerald-400 font-semibold' : 'text-amber-400'">
+                                                {{ isCheapestSupplier(getPanelItem(panel.modelId)) ? '✓ Meilleur prix' : '+' + formatCurrency(getPriceDiff(getPanelItem(panel.modelId))) + ' vs alt' }}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div v-if="room.panels.length === 0" class="text-xs text-slate-500 italic p-2 text-center bg-navy-900/30 rounded border border-dashed border-slate-800">
@@ -427,7 +500,7 @@
                             <div class="text-[11px] font-medium text-slate-300 truncate" :title="item.name">{{ item.name }}</div>
                             <div class="flex items-center justify-between mt-1 text-xs">
                                 <span class="text-amber-400 font-bold">x{{ item.qty }}</span>
-                                <span class="text-slate-400 font-semibold text-[11px]">{{ formatCurrency(item.unitPrice * item.qty) }}</span>
+                                <span class="text-slate-400 font-semibold text-[11px]">{{ formatCurrency(getEffectivePrice(item) * item.qty) }}</span>
                             </div>
                         </div>
                     </div>
@@ -445,7 +518,7 @@
                             <i class="fa-solid fa-microchip text-amber-500"></i>
                             <span>Équipements & Modules Domotiques Additionnels</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Thermostats, caméras, clés USB Z-Wave, Hubs, capteurs et bornes de recharge EV.</p>
+                        <p class="text-xs text-slate-400">Thermostats, caméras, clés USB Z-Wave, Hubs, capteurs et bornes de recharge EV avec choix du fournisseur.</p>
                     </div>
 
                     <button @click="showAddAdditionalModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition">
@@ -465,11 +538,11 @@
                                         <i :class="preset.icon"></i>
                                     </div>
                                     <span class="text-[11px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                                        {{ formatCurrency(preset.price) }}
+                                        {{ formatCurrency(getEffectivePrice(preset)) }}
                                     </span>
                                 </div>
                                 <div class="font-semibold text-xs text-slate-200 group-hover:text-amber-300 transition">{{ preset.name }}</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">{{ preset.category }} • <span class="text-amber-500/80">{{ preset.retailer }}</span></div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">{{ preset.category }} • <span class="text-amber-500/80">{{ getSupplierLabel(preset.selectedSupplier) }}</span></div>
                             </div>
                             <div class="mt-2 text-[11px] text-amber-400/80 group-hover:text-amber-400 font-medium flex items-center justify-end space-x-1">
                                 <span>+ Ajouter au devis</span>
@@ -498,6 +571,7 @@
                                 <tr>
                                     <th class="py-3 px-4">Équipement / Module</th>
                                     <th class="py-3 px-4">Catégorie</th>
+                                    <th class="py-3 px-4">Fournisseur Choisi</th>
                                     <th class="py-3 px-4 text-center">Qté</th>
                                     <th class="py-3 px-4 text-right">Prix Unitaire</th>
                                     <th class="py-3 px-4 text-center">Inst. (h)</th>
@@ -524,6 +598,12 @@
                                         </select>
                                     </td>
                                     <td class="py-3 px-4">
+                                        <select v-model="item.selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-900 border border-slate-700 rounded px-2 py-1 text-xs text-amber-300 font-medium focus:outline-none">
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices?.aartech || item.unitPrice) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices?.amazon || item.unitPrice) }})</option>
+                                        </select>
+                                    </td>
+                                    <td class="py-3 px-4">
                                         <div class="flex items-center justify-center space-x-1">
                                             <button @click="item.qty = Math.max(1, item.qty - 1)" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 flex items-center justify-center">-</button>
                                             <input type="number" v-model.number="item.qty" min="1" class="w-10 text-center bg-navy-900 border border-slate-700 rounded py-0.5 font-bold text-amber-400">
@@ -531,9 +611,7 @@
                                         </div>
                                     </td>
                                     <td class="py-3 px-4 text-right">
-                                        <div class="flex items-center justify-end space-x-1">
-                                            <input type="number" v-model.number="item.unitPrice" step="1" class="w-20 text-right bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200">
-                                        </div>
+                                        <span class="font-bold text-slate-200">{{ formatCurrency(getEffectivePrice(item)) }}</span>
                                     </td>
                                     <td class="py-3 px-4 text-center">
                                         <input type="number" v-model.number="item.installTime" step="0.1" class="w-12 text-center bg-navy-900 border border-slate-700 rounded py-0.5 text-slate-200 focus:border-amber-500">
@@ -542,7 +620,7 @@
                                         <input type="number" v-model.number="item.progTime" step="0.1" class="w-12 text-center bg-navy-900 border border-slate-700 rounded py-0.5 text-slate-200 focus:border-amber-500">
                                     </td>
                                     <td class="py-3 px-4 text-right font-bold text-amber-400 text-sm">
-                                        {{ formatCurrency(item.qty * item.unitPrice) }}
+                                        {{ formatCurrency(item.qty * getEffectivePrice(item)) }}
                                     </td>
                                     <td class="py-3 px-4 text-center">
                                         <button @click="additionalItems.splice(idx, 1)" class="text-slate-500 hover:text-rose-400 p-1 transition" title="Supprimer">
@@ -557,15 +635,15 @@
             </div>
 
 
-            <!-- TAB 3: CATALOGUE MODÈLES, PRIX CAD ET MAGASINS -->
+            <!-- TAB 3: CATALOGUE MODÈLES, PRIX CAD MULTI-FOURNISSEURS -->
             <div v-show="activeTab === 'catalog'" class="space-y-6">
                 <div class="bg-navy-800/80 p-5 rounded-xl border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-tags text-amber-500"></i>
-                            <span>Catalogue des Équipements & Temps de Main-d'Œuvre</span>
+                            <span>Catalogue Domotique Multi-Fournisseurs (Aartech & Amazon)</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Gérez les prix unitaires ($ CAD) ainsi que le temps alloué (en heures) pour l'installation et la programmation de chaque modèle.</p>
+                        <p class="text-xs text-slate-400">Gérez les tarifs unitaires d'Aartech Canada et Amazon.ca, sélectionnez le fournisseur actif et allouez le temps de main-d'œuvre.</p>
                     </div>
 
                     <button @click="resetCatalogToDefault" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition">
@@ -606,31 +684,43 @@
                             </div>
                         </div>
 
-                        <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                            <div v-for="item in catalog.switches" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2 hover:border-amber-500/50 transition">
+                        <div class="p-4 space-y-3 max-h-[550px] overflow-y-auto">
+                            <div v-for="item in catalog.switches" :key="item.id" class="bg-navy-900/60 p-3.5 rounded-lg border border-slate-700/60 space-y-2 hover:border-amber-500/50 transition">
                                 <div class="flex items-center justify-between gap-2">
                                     <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
                                     <button @click="deleteCatalogItem('switches', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                                    <div class="col-span-2 sm:col-span-1">
-                                        <label class="text-[10px] text-slate-400 block">Détaillant :</label>
-                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-slate-300">
-                                    </div>
-                                    <div class="col-span-2 sm:col-span-1">
-                                        <label class="text-[10px] text-slate-400 block">Prix ($ CAD) :</label>
-                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
+                                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Prix Aartech ($) :</label>
+                                        <input type="number" v-model.number="item.prices.aartech" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-indigo-300">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Inst. (h) :</label>
-                                        <input type="number" v-model.number="item.installTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
+                                        <label class="text-[10px] text-slate-400 block">Prix Amazon ($) :</label>
+                                        <input type="number" v-model.number="item.prices.amazon" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-amber-300">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prog. (h) :</label>
-                                        <input type="number" v-model.number="item.progTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
+                                        <label class="text-[10px] text-slate-400 block">Choix Fournisseur :</label>
+                                        <select v-model="item.selectedSupplier" @change="globalSupplierMode = 'custom'" class="w-full bg-navy-800 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-amber-400 font-bold">
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices.aartech) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices.amazon) }})</option>
+                                        </select>
                                     </div>
+                                    <div class="flex items-end">
+                                        <span v-if="isCheapestSupplier(item)" class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded w-full text-center">
+                                            ✓ Meilleur prix
+                                        </span>
+                                        <span v-else class="text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-1 rounded w-full text-center">
+                                            +{{ formatCurrency(getPriceDiff(item)) }} vs alt
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3 text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                                    <span>Inst: <strong class="text-slate-200">{{ item.installTime }}h</strong></span>
+                                    <span>Prog: <strong class="text-slate-200">{{ item.progTime }}h</strong></span>
+                                    <span>Effectif: <strong class="text-emerald-400">{{ formatCurrency(getEffectivePrice(item)) }}</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -666,31 +756,43 @@
                             </div>
                         </div>
 
-                        <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                            <div v-for="item in catalog.panels" :key="item.id" class="bg-navy-900/60 p-3 rounded-lg border border-slate-700/60 space-y-2 hover:border-accent-blue/50 transition">
+                        <div class="p-4 space-y-3 max-h-[550px] overflow-y-auto">
+                            <div v-for="item in catalog.panels" :key="item.id" class="bg-navy-900/60 p-3.5 rounded-lg border border-slate-700/60 space-y-2 hover:border-accent-blue/50 transition">
                                 <div class="flex items-center justify-between gap-2">
                                     <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
                                     <button @click="deleteCatalogItem('panels', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                                    <div class="col-span-2 sm:col-span-1">
-                                        <label class="text-[10px] text-slate-400 block">Détaillant :</label>
-                                        <input type="text" v-model="item.retailer" placeholder="Ex: Aartech" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-slate-300">
-                                    </div>
-                                    <div class="col-span-2 sm:col-span-1">
-                                        <label class="text-[10px] text-slate-400 block">Prix ($ CAD) :</label>
-                                        <input type="number" v-model.number="item.price" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-right font-bold text-amber-400">
+                                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Prix Aartech ($) :</label>
+                                        <input type="number" v-model.number="item.prices.aartech" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-indigo-300">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Inst. (h) :</label>
-                                        <input type="number" v-model.number="item.installTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
+                                        <label class="text-[10px] text-slate-400 block">Prix Amazon ($) :</label>
+                                        <input type="number" v-model.number="item.prices.amazon" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-amber-300">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prog. (h) :</label>
-                                        <input type="number" v-model.number="item.progTime" step="0.1" min="0" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-center text-slate-200">
+                                        <label class="text-[10px] text-slate-400 block">Choix Fournisseur :</label>
+                                        <select v-model="item.selectedSupplier" @change="globalSupplierMode = 'custom'" class="w-full bg-navy-800 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-amber-400 font-bold">
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices.aartech) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices.amazon) }})</option>
+                                        </select>
                                     </div>
+                                    <div class="flex items-end">
+                                        <span v-if="isCheapestSupplier(item)" class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded w-full text-center">
+                                            ✓ Meilleur prix
+                                        </span>
+                                        <span v-else class="text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-1 rounded w-full text-center">
+                                            +{{ formatCurrency(getPriceDiff(item)) }} vs alt
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3 text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                                    <span>Inst: <strong class="text-slate-200">{{ item.installTime }}h</strong></span>
+                                    <span>Prog: <strong class="text-slate-200">{{ item.progTime }}h</strong></span>
+                                    <span>Effectif: <strong class="text-emerald-400">{{ formatCurrency(getEffectivePrice(item)) }}</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -752,11 +854,11 @@
                         </div>
                     </div>
 
-                    <!-- FINANCIAL HIGHLIGHTS -->
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-200 print-text-dark uppercase tracking-wider mb-3 flex items-center space-x-2">
+                    <!-- FINANCIAL HIGHLIGHTS & SUPPLIER BREAKDOWN -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-bold text-slate-200 print-text-dark uppercase tracking-wider flex items-center space-x-2">
                             <i class="fa-solid fa-calculator text-amber-500"></i>
-                            <span>Synthèse Financière ($ CAD)</span>
+                            <span>Synthèse Financière & Économies ($ CAD)</span>
                         </h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -782,6 +884,39 @@
                                 <div class="text-xs font-semibold text-amber-400">TOTAL GLOBAL ESTIMÉ (TTC)</div>
                                 <div class="text-2xl font-black text-amber-400 mt-1">{{ formatCurrency(grandTotal) }}</div>
                                 <div class="text-[10px] text-amber-500/80 mt-1">{{ activeTaxLabel }}</div>
+                            </div>
+                        </div>
+
+                        <!-- SUPPLIER SPLIT SUMMARY CARDS -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                            <div class="p-3.5 bg-indigo-950/20 border border-indigo-500/30 rounded-xl flex items-center justify-between print-card">
+                                <div class="space-y-0.5">
+                                    <span class="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-store"></i> Aartech Canada
+                                    </span>
+                                    <div class="text-xs text-slate-400">{{ supplierBreakdown.aartech.count }} articles commandés</div>
+                                </div>
+                                <div class="text-base font-bold text-slate-100">{{ formatCurrency(supplierBreakdown.aartech.totalHT) }} HT</div>
+                            </div>
+
+                            <div class="p-3.5 bg-amber-950/20 border border-amber-500/30 rounded-xl flex items-center justify-between print-card">
+                                <div class="space-y-0.5">
+                                    <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                                        <i class="fa-brands fa-amazon"></i> Amazon.ca
+                                    </span>
+                                    <div class="text-xs text-slate-400">{{ supplierBreakdown.amazon.count }} articles commandés</div>
+                                </div>
+                                <div class="text-base font-bold text-slate-100">{{ formatCurrency(supplierBreakdown.amazon.totalHT) }} HT</div>
+                            </div>
+
+                            <div class="p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl flex items-center justify-between print-card">
+                                <div class="space-y-0.5">
+                                    <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-piggy-bank"></i> Économies Réalisées
+                                    </span>
+                                    <div class="text-[11px] text-emerald-300/80">vs Option la plus chère</div>
+                                </div>
+                                <div class="text-lg font-extrabold text-emerald-400">{{ formatCurrency(totalSavingsTTC) }} TTC</div>
                             </div>
                         </div>
                     </div>
@@ -850,7 +985,7 @@
                                     <tr>
                                         <th class="py-2.5 px-3">Modèle / Équipement</th>
                                         <th class="py-2.5 px-3">Catégorie</th>
-                                        <th class="py-2.5 px-3">Détaillant / Lieu d'achat</th>
+                                        <th class="py-2.5 px-3">Fournisseur Choisi</th>
                                         <th class="py-2.5 px-3 text-center">Quantité</th>
                                         <th class="py-2.5 px-3 text-right">Prix Unitaire</th>
                                         <th class="py-2.5 px-3 text-right">Montant Total ($ CAD)</th>
@@ -860,7 +995,7 @@
                                     <tr v-for="item in consolidatedBOM" :key="item.key">
                                         <td class="py-2 px-3 font-medium text-slate-200 print-text-dark">{{ item.name }}</td>
                                         <td class="py-2 px-3 text-slate-400 print-text-dark">{{ item.category }}</td>
-                                        <td class="py-2 px-3 text-amber-300 font-medium print-text-dark">{{ item.retailer }}</td>
+                                        <td class="py-2 px-3 text-amber-300 font-medium print-text-dark">{{ getSupplierLabel(item.selectedSupplier) }}</td>
                                         <td class="py-2 px-3 text-center font-bold text-amber-400 print-text-dark">{{ item.totalQty }}</td>
                                         <td class="py-2 px-3 text-right text-slate-300 print-text-dark">{{ formatCurrency(item.unitPrice) }}</td>
                                         <td class="py-2 px-3 text-right font-bold text-slate-100 print-text-dark">{{ formatCurrency(item.totalQty * item.unitPrice) }}</td>
@@ -1008,16 +1143,16 @@
                 </div>
             </div>
 
-            <!-- TAB 5: LISTE DE COMMANDE (BOM COMPLET) -->
+            <!-- TAB 5: LISTE DE COMMANDE (BOM COMPLET MULTI-FOURNISSEURS) -->
             <div v-show="activeTab === 'orderList'" class="space-y-6">
                 <!-- Action Controls Bar -->
                 <div class="no-print bg-navy-800/80 p-5 rounded-xl border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-cart-shopping text-amber-500"></i>
-                            <span>Liste de Commande Globale du Matériel</span>
+                            <span>Bon de Commande & Répartition par Fournisseur</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Nomenclature complète des équipements à commander, quantités totales, prix unitaires et montants totaux.</p>
+                        <p class="text-xs text-slate-400">Ventilation de vos achats entre Aartech Canada et Amazon.ca avec possibilité de modifier le fournisseur par article.</p>
                     </div>
 
                     <div class="flex items-center space-x-2">
@@ -1032,19 +1167,27 @@
                     </div>
                 </div>
 
-                <!-- SUMMARY CARDS FOR ORDER -->
+                <!-- SUPPLIER CARDS SUMMARY -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-navy-800/90 p-4 rounded-xl border border-slate-700 shadow">
-                        <div class="text-xs text-slate-400">Articles / Modèles Différents</div>
-                        <div class="text-xl font-bold text-slate-100 mt-1">{{ consolidatedBOM.length }} références</div>
+                    <div class="bg-indigo-950/20 p-4 rounded-xl border border-indigo-500/30 shadow">
+                        <div class="flex items-center justify-between text-xs text-indigo-300 font-bold">
+                            <span>🏢 Aartech Canada</span>
+                            <span class="bg-indigo-500/20 px-2 py-0.5 rounded border border-indigo-500/30">{{ supplierBreakdown.aartech.count }} articles</span>
+                        </div>
+                        <div class="text-2xl font-black text-slate-100 mt-2">{{ formatCurrency(supplierBreakdown.aartech.totalHT) }} <span class="text-xs text-slate-400 font-normal">HT</span></div>
                     </div>
-                    <div class="bg-navy-800/90 p-4 rounded-xl border border-slate-700 shadow">
-                        <div class="text-xs text-slate-400">Total Pièces à Commander</div>
-                        <div class="text-xl font-bold text-amber-400 mt-1">{{ totalDeviceCount }} unités</div>
+
+                    <div class="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 shadow">
+                        <div class="flex items-center justify-between text-xs text-amber-300 font-bold">
+                            <span>📦 Amazon.ca</span>
+                            <span class="bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30">{{ supplierBreakdown.amazon.count }} articles</span>
+                        </div>
+                        <div class="text-2xl font-black text-slate-100 mt-2">{{ formatCurrency(supplierBreakdown.amazon.totalHT) }} <span class="text-xs text-slate-400 font-normal">HT</span></div>
                     </div>
-                    <div class="bg-navy-800/90 p-4 rounded-xl border border-amber-500/40 shadow">
-                        <div class="text-xs text-slate-400">Total Matériel HT ($ CAD)</div>
-                        <div class="text-xl font-bold text-emerald-400 mt-1">{{ formatCurrency(lightingSubtotal + additionalSubtotal) }}</div>
+
+                    <div class="bg-emerald-950/30 p-4 rounded-xl border border-emerald-500/40 shadow">
+                        <div class="text-xs font-bold text-emerald-400">⚡ Économies Réalisées</div>
+                        <div class="text-2xl font-black text-emerald-400 mt-2">{{ formatCurrency(totalSavingsTTC) }} <span class="text-xs text-emerald-300/80 font-normal">TTC</span></div>
                     </div>
                 </div>
 
@@ -1053,7 +1196,7 @@
                     <div class="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
                         <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-boxes-packing text-amber-400"></i>
-                            <span>Détail du Bon de Commande par Équipement</span>
+                            <span>Détail du Bon de Commande par Équipement & Fournisseur</span>
                         </h3>
                     </div>
 
@@ -1063,9 +1206,9 @@
                                 <tr>
                                     <th class="py-3 px-4">Équipement / Modèle</th>
                                     <th class="py-3 px-4">Catégorie</th>
-                                    <th class="py-3 px-4">Détaillant / Lieu d'achat</th>
+                                    <th class="py-3 px-4">Fournisseur Sélectionné</th>
                                     <th class="py-3 px-4 text-center">Quantité Totale</th>
-                                    <th class="py-3 px-4 text-right">Prix Pièce ($ CAD)</th>
+                                    <th class="py-3 px-4 text-right">Prix Unitaire ($ CAD)</th>
                                     <th class="py-3 px-4 text-right">Prix Total ($ CAD)</th>
                                 </tr>
                             </thead>
@@ -1073,7 +1216,12 @@
                                 <tr v-for="item in consolidatedBOM" :key="item.key" class="hover:bg-slate-800/40 transition">
                                     <td class="py-3 px-4 font-semibold text-slate-100">{{ item.name }}</td>
                                     <td class="py-3 px-4 text-slate-400">{{ item.category }}</td>
-                                    <td class="py-3 px-4 text-amber-300 font-medium">{{ item.retailer }}</td>
+                                    <td class="py-3 px-4">
+                                        <select v-model="item.rawItem.selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-900 border border-slate-700 rounded px-2 py-1 text-xs text-amber-300 font-bold focus:outline-none">
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.rawItem.prices?.aartech || item.unitPrice) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.rawItem.prices?.amazon || item.unitPrice) }})</option>
+                                        </select>
+                                    </td>
                                     <td class="py-3 px-4 text-center">
                                         <span class="bg-navy-900 border border-slate-700 px-2.5 py-1 rounded font-bold text-amber-400 text-xs">
                                             {{ item.totalQty }}
@@ -1221,19 +1369,22 @@
                             <option value="Autre">Autre</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Lieu d'achat :</label>
-                        <input type="text" v-model="newAdditional.retailer" placeholder="Ex: Aartech Canada / Amazon.ca" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
-                    </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-slate-400 mb-1">Quantité :</label>
-                            <input type="number" v-model.number="newAdditional.qty" min="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                            <label class="block text-slate-400 mb-1">Prix Aartech ($) :</label>
+                            <input type="number" v-model.number="newAdditional.prices.aartech" step="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-slate-400 mb-1">Prix Unitaire ($ CAD) :</label>
-                            <input type="number" v-model.number="newAdditional.unitPrice" step="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                            <label class="block text-slate-400 mb-1">Prix Amazon ($) :</label>
+                            <input type="number" v-model.number="newAdditional.prices.amazon" step="1" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Fournisseur par défaut :</label>
+                        <select v-model="newAdditional.selectedSupplier" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                            <option value="aartech">Aartech Canada</option>
+                            <option value="amazon">Amazon.ca</option>
+                        </select>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -1264,13 +1415,22 @@
                         <label class="block text-slate-400 mb-1">Nom du modèle :</label>
                         <input type="text" v-model="newCatalogItem.name" placeholder="Ex: Interrupteur ZOOZ ZEN..." class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500">
                     </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Détaillant / Lieu d'achat :</label>
-                        <input type="text" v-model="newCatalogItem.retailer" placeholder="Ex: Aartech Canada" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Prix Aartech ($) :</label>
+                            <input type="number" v-model.number="newCatalogItem.prices.aartech" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Prix Amazon ($) :</label>
+                            <input type="number" v-model.number="newCatalogItem.prices.amazon" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Prix unitaire ($ CAD) :</label>
-                        <input type="number" v-model.number="newCatalogItem.price" step="0.5" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                        <label class="block text-slate-400 mb-1">Fournisseur Actif :</label>
+                        <select v-model="newCatalogItem.selectedSupplier" class="w-full bg-navy-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none">
+                            <option value="aartech">Aartech Canada</option>
+                            <option value="amazon">Amazon.ca</option>
+                        </select>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -1338,6 +1498,8 @@
                 
                 const commentsTextarea = ref(null);
 
+                const globalSupplierMode = ref('aartech'); // 'aartech' | 'amazon' | 'optimized' | 'custom'
+
                 const globalSwitchInst = ref(0.5);
                 const globalSwitchProg = ref(0.25);
                 const globalPanelInst = ref(0.5);
@@ -1354,32 +1516,30 @@
                     progRate: 105,
                     taxRegimeEquipment: 'QC',
                     taxRegimeLabor: 'QC',
-                    comments: '' // Nouveau champ pour les commentaires
+                    comments: ''
                 });
 
+                // Default Catalog with Exact Multi-Supplier Prices
                 const defaultCatalog = () => ({
                     switches: [
-                        { id: 'tapo_s505d', name: 'TP-Link Tapo S505D (Gradateur Matter Wi-Fi)', price: 24.99, retailer: 'Amazon.ca / TP-Link Canada', installTime: 0.5, progTime: 0.25 },
-                        { id: 'tapo_s505', name: 'TP-Link Tapo S505 (Interrupteur On/Off Matter Wi-Fi)', price: 19.99, retailer: 'Amazon.ca / TP-Link Canada', installTime: 0.5, progTime: 0.25 },
-                        { id: 'tapo_s500d', name: 'TP-Link Tapo S500D (Gradateur Smart Wi-Fi)', price: 22.99, retailer: 'Amazon.ca', installTime: 0.5, progTime: 0.25 },
-                        { id: 'tapo_s500', name: 'TP-Link Tapo S500 (Interrupteur Smart Wi-Fi)', price: 17.99, retailer: 'Amazon.ca', installTime: 0.5, progTime: 0.25 },
-                        { id: 'tapo_s515d', name: 'TP-Link Tapo S515D (Gradateur 3-Voies Smart)', price: 29.99, retailer: 'Amazon.ca', installTime: 0.75, progTime: 0.25 },
-                        { id: 'tapo_s515', name: 'TP-Link Tapo S515 (Interrupteur 3-Voies Smart)', price: 24.99, retailer: 'Amazon.ca', installTime: 0.75, progTime: 0.25 },
-                        { id: 'tapo_s200b', name: 'TP-Link Tapo S200B (Bouton Intelligent / Sub-1G)', price: 19.99, retailer: 'Amazon.ca', installTime: 0.25, progTime: 0.1 },
-                        { id: 'zooz_zen71', name: 'Zooz ZEN71 800LR (Interrupteur On/Off Z-Wave)', price: 45.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
-                        { id: 'zooz_zen72', name: 'Zooz ZEN72 800LR (Gradateur Dimmer Z-Wave)', price: 46.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
-                        { id: 'zooz_zen76', name: 'Zooz ZEN76 800LR (Interrupteur S2 800 Series)', price: 47.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
-                        { id: 'zooz_zen77', name: 'Zooz ZEN77 800LR (Gradateur S2 800 Series)', price: 51.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 },
-                        { id: 'zooz_zen32', name: 'Zooz ZEN32 800LR (Interrupteur Scènes 5-Boutons)', price: 54.95, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.5 },
-                        { id: 'zooz_zen51', name: 'Zooz ZEN51 800LR (Relais Contact Sec Encastré)', price: 42.95, retailer: 'Aartech Canada', installTime: 0.75, progTime: 0.25 }
+                        { id: 'zooz_zen32', name: 'Zooz ZEN32 800LR (Interrupteur Scènes 5-Boutons)', prices: { aartech: 54.95, amazon: 64.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.5 },
+                        { id: 'zooz_zen72', name: 'Zooz ZEN72 800LR (Gradateur Dimmer Z-Wave)', prices: { aartech: 46.95, amazon: 52.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen71', name: 'Zooz ZEN71 800LR (Interrupteur On/Off Z-Wave)', prices: { aartech: 45.95, amazon: 48.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen76', name: 'Zooz ZEN76 800LR (Interrupteur S2 800 Series)', prices: { aartech: 47.95, amazon: 59.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen77', name: 'Zooz ZEN77 800LR (Gradateur S2 800 Series)', prices: { aartech: 51.95, amazon: 59.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 },
+                        { id: 'zooz_zen51', name: 'Zooz ZEN51 800LR (Relais Contact Sec Encastré)', prices: { aartech: 42.95, amazon: 49.95 }, selectedSupplier: 'aartech', installTime: 0.75, progTime: 0.25 },
+                        { id: 'tapo_s505d', name: 'TP-Link Tapo S505D (Gradateur Matter Wi-Fi)', prices: { aartech: 29.99, amazon: 24.99 }, selectedSupplier: 'amazon', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s505', name: 'TP-Link Tapo S505 (Interrupteur On/Off Matter Wi-Fi)', prices: { aartech: 24.99, amazon: 19.99 }, selectedSupplier: 'amazon', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s500d', name: 'TP-Link Tapo S500D (Gradateur Smart Wi-Fi)', prices: { aartech: 26.99, amazon: 22.99 }, selectedSupplier: 'amazon', installTime: 0.5, progTime: 0.25 },
+                        { id: 'tapo_s500', name: 'TP-Link Tapo S500 (Interrupteur Smart Wi-Fi)', prices: { aartech: 21.99, amazon: 17.99 }, selectedSupplier: 'amazon', installTime: 0.5, progTime: 0.25 }
                     ],
                     panels: [
-                        { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', price: 29.99, retailer: 'Amazon.ca / TP-Link Canada', installTime: 0.25, progTime: 0.5 },
-                        { id: 'zooz_zbox', name: 'Zooz Z-Box Hub (Automate Domotique Z-Wave)', price: 144.95, retailer: 'Aartech Canada / Amazon.ca', installTime: 0.5, progTime: 1.5 },
-                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 (Hub Z-Wave & Zigbee Pro)', price: 219.00, retailer: 'Aartech Canada', installTime: 0.5, progTime: 2.0 },
-                        { id: 'zooz_zst39', name: 'Zooz ZST39 LR 800 (Clé USB Antenne Z-Wave)', price: 40.95, retailer: 'Aartech Canada', installTime: 0.25, progTime: 0.5 },
-                        { id: 'panel_7', name: 'Écran Tactile Mural 7" HD', price: 850.00, retailer: 'Distributeur Pro Canada', installTime: 1.0, progTime: 1.0 },
-                        { id: 'panel_10', name: 'Écran Maître 10" Ultra HD', price: 1350.00, retailer: 'Distributeur Pro Canada', installTime: 1.5, progTime: 1.5 }
+                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 (Hub Z-Wave & Zigbee Pro)', prices: { aartech: 219.00, amazon: 319.99 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 2.0 },
+                        { id: 'zooz_zbox', name: 'Zooz Z-Box Hub (Automate Domotique Z-Wave)', prices: { aartech: 144.95, amazon: 159.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 1.5 },
+                        { id: 'zooz_zst39', name: 'Zooz ZST39 LR 800 (Clé USB Antenne Z-Wave)', prices: { aartech: 40.95, amazon: 44.95 }, selectedSupplier: 'aartech', installTime: 0.25, progTime: 0.5 },
+                        { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', prices: { aartech: 34.99, amazon: 29.99 }, selectedSupplier: 'amazon', installTime: 0.25, progTime: 0.5 },
+                        { id: 'panel_7', name: 'Écran Tactile Mural 7" HD Pro', prices: { aartech: 850.00, amazon: 890.00 }, selectedSupplier: 'aartech', installTime: 1.0, progTime: 1.0 },
+                        { id: 'panel_10', name: 'Écran Maître 10" Ultra HD', prices: { aartech: 1350.00, amazon: 1390.00 }, selectedSupplier: 'aartech', installTime: 1.5, progTime: 1.5 }
                     ]
                 });
 
@@ -1400,43 +1560,111 @@
                         name: 'Salon / Séjour',
                         icon: 'fa-solid fa-couch',
                         switches: [{ modelId: 'zooz_zen72', qty: 3 }, { modelId: 'zooz_zen32', qty: 1 }],
-                        panels: [{ modelId: 'zooz_zbox', qty: 1 }],
-                        notes: 'Zooz ZEN72 pour lumières encastrées'
+                        panels: [{ modelId: 'hubitat_c8', qty: 1 }],
+                        notes: 'Zooz ZEN72 & Hubitat C-8'
                     },
                     {
                         id: 'room_2',
                         name: 'Cuisine & Salle à Manger',
                         icon: 'fa-solid fa-utensils',
-                        switches: [{ modelId: 'tapo_s505d', qty: 3 }, { modelId: 'tapo_s505', qty: 2 }],
+                        switches: [{ modelId: 'zooz_zen71', qty: 2 }, { modelId: 'tapo_s505d', qty: 2 }],
                         panels: [],
-                        notes: 'Variateurs Tapo Matter Wi-Fi'
+                        notes: 'Contrôle spots & suspensions'
                     }
                 ];
 
                 const rooms = ref(defaultRooms());
 
                 const additionalPresets = [
-                    { name: 'Zooz ZSE11 Multi-capteur 4-en-1', category: 'Capteurs & Prévention', price: 54.95, retailer: 'Aartech Canada', icon: 'fa-solid fa-eye', installTime: 0.5, progTime: 0.25 },
-                    { name: 'Zooz ZEN04 Prise Intelligente 800', category: 'Éclairage & Domotique', price: 37.99, retailer: 'Aartech Canada', icon: 'fa-solid fa-plug', installTime: 0.1, progTime: 0.1 },
-                    { name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', price: 280.00, retailer: 'Hydro-Québec / Amazon.ca', icon: 'fa-solid fa-temperature-arrow-up', installTime: 1.0, progTime: 0.5 },
-                    { name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', price: 340.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-lock', installTime: 1.5, progTime: 0.5 },
-                    { name: 'Caméra Extérieure 4K IR Vision Nuit', category: 'Sécurité & Accès', price: 220.00, retailer: 'Amazon.ca', icon: 'fa-solid fa-video', installTime: 1.5, progTime: 0.5 },
-                    { name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', price: 380.00, retailer: 'Aartech Canada', icon: 'fa-solid fa-faucet-drip', installTime: 2.0, progTime: 0.5 },
-                    { name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', price: 950.00, retailer: 'Master Électricien', icon: 'fa-solid fa-charging-station', installTime: 4.0, progTime: 0.5 }
+                    { name: 'Zooz ZSE11 Multi-capteur 4-en-1', category: 'Capteurs & Prévention', prices: { aartech: 54.95, amazon: 59.95 }, selectedSupplier: 'aartech', icon: 'fa-solid fa-eye', installTime: 0.5, progTime: 0.25 },
+                    { name: 'Zooz ZEN04 Prise Intelligente 800', category: 'Éclairage & Domotique', prices: { aartech: 37.99, amazon: 41.99 }, selectedSupplier: 'aartech', icon: 'fa-solid fa-plug', installTime: 0.1, progTime: 0.1 },
+                    { name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', prices: { aartech: 290.00, amazon: 280.00 }, selectedSupplier: 'amazon', icon: 'fa-solid fa-temperature-arrow-up', installTime: 1.0, progTime: 0.5 },
+                    { name: 'Serrure Biométrique Connectée', category: 'Sécurité & Accès', prices: { aartech: 360.00, amazon: 340.00 }, selectedSupplier: 'amazon', icon: 'fa-solid fa-lock', installTime: 1.5, progTime: 0.5 },
+                    { name: 'Caméra Extérieure 4K IR Vision Nuit', category: 'Sécurité & Accès', prices: { aartech: 240.00, amazon: 220.00 }, selectedSupplier: 'amazon', icon: 'fa-solid fa-video', installTime: 1.5, progTime: 0.5 },
+                    { name: 'Valve Principale d\'Eau Motorisée', category: 'Capteurs & Prévention', prices: { aartech: 380.00, amazon: 395.00 }, selectedSupplier: 'aartech', icon: 'fa-solid fa-faucet-drip', installTime: 2.0, progTime: 0.5 },
+                    { name: 'Borne de Recharge EV 48A Intelligente', category: 'Énergie & Borne EV', prices: { aartech: 950.00, amazon: 980.00 }, selectedSupplier: 'aartech', icon: 'fa-solid fa-charging-station', installTime: 4.0, progTime: 0.5 }
                 ];
 
                 const defaultAdditionalItems = () => [
-                    { id: 'add_1', name: 'Zooz ZST39 LR 800 Clé USB Antenne', category: 'Hubs & Antennes Z-Wave', retailer: 'Aartech Canada', qty: 1, unitPrice: 40.95, installTime: 0.25, progTime: 0.5 },
-                    { id: 'add_2', name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', retailer: 'Amazon.ca', qty: 2, unitPrice: 280.00, installTime: 1.0, progTime: 0.5 }
+                    { id: 'add_1', name: 'Zooz ZST39 LR 800 Clé USB Antenne', category: 'Hubs & Antennes Z-Wave', prices: { aartech: 40.95, amazon: 44.95 }, selectedSupplier: 'aartech', qty: 1, installTime: 0.25, progTime: 0.5 },
+                    { id: 'add_2', name: 'Thermostat Intelligent Multi-zone', category: 'Climatisation & Chauffage', prices: { aartech: 290.00, amazon: 280.00 }, selectedSupplier: 'amazon', qty: 2, installTime: 1.0, progTime: 0.5 }
                 ];
 
                 const additionalItems = ref(defaultAdditionalItems());
 
                 const newRoom = ref({ name: '', icon: 'fa-solid fa-couch' });
-                const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', retailer: 'Aartech Canada', qty: 1, unitPrice: 50, installTime: 0.5, progTime: 0.25 });
-                const newCatalogItem = ref({ name: '', price: 45, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 });
+                const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', prices: { aartech: 50, amazon: 55 }, selectedSupplier: 'aartech', qty: 1, installTime: 0.5, progTime: 0.25 });
+                const newCatalogItem = ref({ name: '', prices: { aartech: 45, amazon: 49 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 });
 
-                // Ajustement dynamique de la taille du champ commentaire
+                // Multi-supplier Price Helper Functions
+                const getEffectivePrice = (item) => {
+                    if (!item) return 0;
+                    if (item.prices && item.selectedSupplier) {
+                        return item.prices[item.selectedSupplier] || item.prices.aartech || item.prices.amazon || 0;
+                    }
+                    return item.price || item.unitPrice || 0;
+                };
+
+                const getSupplierLabel = (supplierKey) => {
+                    if (supplierKey === 'aartech') return 'Aartech Canada';
+                    if (supplierKey === 'amazon') return 'Amazon.ca';
+                    return supplierKey || 'Canada';
+                };
+
+                const isCheapestSupplier = (item) => {
+                    if (!item || !item.prices) return true;
+                    const pAartech = item.prices.aartech || Infinity;
+                    const pAmazon = item.prices.amazon || Infinity;
+                    if (item.selectedSupplier === 'aartech') return pAartech <= pAmazon;
+                    if (item.selectedSupplier === 'amazon') return pAmazon <= pAartech;
+                    return true;
+                };
+
+                const getPriceDiff = (item) => {
+                    if (!item || !item.prices) return 0;
+                    return Math.abs((item.prices.aartech || 0) - (item.prices.amazon || 0));
+                };
+
+                const getSwitchItem = (id) => catalog.value.switches.find(s => s.id === id);
+                const getPanelItem = (id) => catalog.value.panels.find(p => p.id === id);
+
+                const getItemPrice = (cat, id) => {
+                    const found = catalog.value[cat]?.find(m => m.id === id);
+                    return found ? getEffectivePrice(found) : 0;
+                };
+
+                const getItemName = (cat, id) => {
+                    const found = catalog.value[cat]?.find(m => m.id === id);
+                    return found ? found.name : id;
+                };
+
+                // Apply Global Supplier Switcher Strategy
+                const applyGlobalSupplier = (mode) => {
+                    globalSupplierMode.value = mode;
+
+                    const setSupplier = (item) => {
+                        if (!item.prices) return;
+                        if (mode === 'aartech') {
+                            item.selectedSupplier = 'aartech';
+                        } else if (mode === 'amazon') {
+                            item.selectedSupplier = 'amazon';
+                        } else if (mode === 'optimized') {
+                            const pAartech = item.prices.aartech || Infinity;
+                            const pAmazon = item.prices.amazon || Infinity;
+                            item.selectedSupplier = pAartech <= pAmazon ? 'aartech' : 'amazon';
+                        }
+                    };
+
+                    catalog.value.switches.forEach(setSupplier);
+                    catalog.value.panels.forEach(setSupplier);
+                    additionalItems.value.forEach(setSupplier);
+
+                    const label = mode === 'aartech' ? 'Aartech Canada' : (mode === 'amazon' ? 'Amazon.ca' : 'Mode Optimisé (Meilleur Prix)');
+                    showNotification(`Fournisseur appliqué à tous les équipements : ${label}`);
+                    triggerSave();
+                };
+
+                // Comments height auto-resizer
                 const adjustTextareaHeight = (e) => {
                     let target = e ? e.target : commentsTextarea.value;
                     if (target) {
@@ -1445,33 +1673,17 @@
                     }
                 };
 
-                // Forcer le redimensionnement quand on arrive sur l'onglet devis
                 watch(activeTab, (newVal) => {
                     if (newVal === 'summary') {
-                        nextTick(() => {
-                            adjustTextareaHeight();
-                        });
+                        nextTick(() => { adjustTextareaHeight(); });
                     }
                 });
                 
-                // Forcer le redimensionnement quand le texte du commentaire est modifié (ex: chargement cloud)
                 watch(() => project.value.comments, () => {
                     if (activeTab.value === 'summary') {
-                        nextTick(() => {
-                            adjustTextareaHeight();
-                        });
+                        nextTick(() => { adjustTextareaHeight(); });
                     }
                 });
-
-                const getItemPrice = (cat, id) => {
-                    const found = catalog.value[cat]?.find(m => m.id === id);
-                    return found ? found.price : 0;
-                };
-
-                const getItemName = (cat, id) => {
-                    const found = catalog.value[cat]?.find(m => m.id === id);
-                    return found ? found.name : id;
-                };
 
                 const calculateRoomSubtotal = (room) => {
                     let total = 0;
@@ -1500,53 +1712,134 @@
                 });
 
                 const additionalSubtotal = computed(() => {
-                    return additionalItems.value.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitPrice || 0)), 0);
+                    return additionalItems.value.reduce((sum, item) => sum + ((item.qty || 0) * getEffectivePrice(item)), 0);
                 });
 
                 const totalDeviceCount = computed(() => {
                     let count = 0;
-                    rooms.value.forEach(r => {
-                        count += calculateRoomDeviceCount(r);
-                    });
+                    rooms.value.forEach(r => { count += calculateRoomDeviceCount(r); });
                     additionalItems.value.forEach(item => count += (item.qty || 0));
                     return count;
                 });
 
                 const totalRoomSwitchesAndPanelsCount = computed(() => {
                     let count = 0;
-                    rooms.value.forEach(r => {
-                        count += calculateRoomDeviceCount(r);
-                    });
+                    rooms.value.forEach(r => { count += calculateRoomDeviceCount(r); });
                     return count;
                 });
 
-                const installLaborCost = computed(() => {
-                    return (project.value.installHours || 0) * (project.value.installRate || 0);
+                const installLaborCost = computed(() => (project.value.installHours || 0) * (project.value.installRate || 0));
+                const progLaborCost = computed(() => (project.value.progHours || 0) * (project.value.progRate || 0));
+                const laborCost = computed(() => installLaborCost.value + progLaborCost.value);
+                const subtotalHT = computed(() => lightingSubtotal.value + additionalSubtotal.value + laborCost.value);
+
+                // Consolidated BOM and Supplier Breakdown Computations
+                const consolidatedBOM = computed(() => {
+                    const map = {};
+
+                    rooms.value.forEach(r => {
+                        if (r.switches) {
+                            r.switches.forEach(sw => {
+                                const model = catalog.value.switches.find(m => m.id === sw.modelId);
+                                if (!model) return;
+                                const key = 'sw_' + sw.modelId;
+                                if (!map[key]) {
+                                    map[key] = {
+                                        key,
+                                        name: model.name,
+                                        category: 'Interrupteur / Gradateur',
+                                        selectedSupplier: model.selectedSupplier || 'aartech',
+                                        unitPrice: getEffectivePrice(model),
+                                        totalQty: 0,
+                                        rawItem: model
+                                    };
+                                }
+                                map[key].totalQty += (sw.qty || 0);
+                                map[key].unitPrice = getEffectivePrice(model);
+                            });
+                        }
+
+                        if (r.panels) {
+                            r.panels.forEach(p => {
+                                const model = catalog.value.panels.find(m => m.id === p.modelId);
+                                if (!model) return;
+                                const key = 'panel_' + p.modelId;
+                                if (!map[key]) {
+                                    map[key] = {
+                                        key,
+                                        name: model.name,
+                                        category: 'Hub / Panneau tactile',
+                                        selectedSupplier: model.selectedSupplier || 'aartech',
+                                        unitPrice: getEffectivePrice(model),
+                                        totalQty: 0,
+                                        rawItem: model
+                                    };
+                                }
+                                map[key].totalQty += (p.qty || 0);
+                                map[key].unitPrice = getEffectivePrice(model);
+                            });
+                        }
+                    });
+
+                    additionalItems.value.forEach(item => {
+                        const key = 'add_' + item.id;
+                        if (!map[key]) {
+                            map[key] = {
+                                key,
+                                name: item.name,
+                                category: item.category,
+                                selectedSupplier: item.selectedSupplier || 'aartech',
+                                unitPrice: getEffectivePrice(item),
+                                totalQty: 0,
+                                rawItem: item
+                            };
+                        }
+                        map[key].totalQty += (item.qty || 0);
+                        map[key].unitPrice = getEffectivePrice(item);
+                    });
+
+                    return Object.values(map);
                 });
 
-                const progLaborCost = computed(() => {
-                    return (project.value.progHours || 0) * (project.value.progRate || 0);
+                // Supplier breakdown for order splitting
+                const supplierBreakdown = computed(() => {
+                    const summary = {
+                        aartech: { count: 0, totalHT: 0 },
+                        amazon: { count: 0, totalHT: 0 }
+                    };
+
+                    consolidatedBOM.value.forEach(item => {
+                        const sup = item.rawItem.selectedSupplier || 'aartech';
+                        const totalLine = item.unitPrice * item.totalQty;
+                        if (summary[sup]) {
+                            summary[sup].count += item.totalQty;
+                            summary[sup].totalHT += totalLine;
+                        }
+                    });
+
+                    return summary;
                 });
 
-                const laborCost = computed(() => {
-                    return installLaborCost.value + progLaborCost.value;
-                });
-
-                const subtotalHT = computed(() => {
-                    return lightingSubtotal.value + additionalSubtotal.value + laborCost.value;
+                // Calculate total savings compared to the worst-case (most expensive) pricing
+                const worstCaseEquipmentSubtotal = computed(() => {
+                    let total = 0;
+                    consolidatedBOM.value.forEach(item => {
+                        const prices = item.rawItem.prices || { aartech: item.unitPrice, amazon: item.unitPrice };
+                        const maxPrice = Math.max(prices.aartech || 0, prices.amazon || 0);
+                        total += maxPrice * item.totalQty;
+                    });
+                    return total;
                 });
 
                 const taxDetails = computed(() => {
                     const equipRegime = project.value.taxRegimeEquipment || 'QC';
                     const laborRegime = project.value.taxRegimeLabor || 'QC';
-                    
                     const equipBase = lightingSubtotal.value + additionalSubtotal.value;
                     const laborBase = laborCost.value;
 
                     let tpsAmount = 0;
                     let tvqAmount = 0;
 
-                    // Taxes Matériel
                     if (equipRegime === 'QC') {
                         tpsAmount += equipBase * 0.05;
                         tvqAmount += equipBase * 0.09975;
@@ -1554,7 +1847,6 @@
                         tpsAmount += equipBase * 0.05;
                     }
 
-                    // Taxes Main-d'oeuvre
                     if (laborRegime === 'QC') {
                         tpsAmount += laborBase * 0.05;
                         tvqAmount += laborBase * 0.09975;
@@ -1565,16 +1857,21 @@
                     const details = [];
                     if (tpsAmount > 0) details.push({ name: 'Total TPS (5%)', amount: tpsAmount });
                     if (tvqAmount > 0) details.push({ name: 'Total TVQ (9.975%)', amount: tvqAmount });
-
                     return details;
                 });
 
-                const totalTaxes = computed(() => {
-                    return taxDetails.value.reduce((sum, t) => sum + t.amount, 0);
+                const totalTaxes = computed(() => taxDetails.value.reduce((sum, t) => sum + t.amount, 0));
+                const grandTotal = computed(() => subtotalHT.value + totalTaxes.value);
+
+                const worstCaseGrandTotalTTC = computed(() => {
+                    const equipWorst = worstCaseEquipmentSubtotal.value;
+                    const labor = laborCost.value;
+                    const subHT = equipWorst + labor;
+                    return subHT * 1.14975; // Approx tax factor
                 });
 
-                const grandTotal = computed(() => {
-                    return subtotalHT.value + totalTaxes.value;
+                const totalSavingsTTC = computed(() => {
+                    return Math.max(0, worstCaseGrandTotalTTC.value - grandTotal.value);
                 });
 
                 const activeTaxLabel = computed(() => {
@@ -1586,52 +1883,6 @@
                         return 'Sans taxe';
                     }
                     return 'Taxes distinctes Matériel/Main-d\'Œuvre';
-                });
-
-                const consolidatedBOM = computed(() => {
-                    const map = {};
-
-                    rooms.value.forEach(r => {
-                        if (r.switches) {
-                            r.switches.forEach(sw => {
-                                const model = catalog.value.switches.find(m => m.id === sw.modelId);
-                                const name = model ? model.name : sw.modelId;
-                                const price = model ? model.price : 0;
-                                const retailer = model ? (model.retailer || 'Canada') : 'Canada';
-                                const key = 'sw_' + sw.modelId;
-
-                                if (!map[key]) {
-                                    map[key] = { key, name, category: 'Interrupteur / Gradateur', retailer, unitPrice: price, totalQty: 0 };
-                                }
-                                map[key].totalQty += (sw.qty || 0);
-                            });
-                        }
-
-                        if (r.panels) {
-                            r.panels.forEach(p => {
-                                const model = catalog.value.panels.find(m => m.id === p.modelId);
-                                const name = model ? model.name : p.modelId;
-                                const price = model ? model.price : 0;
-                                const retailer = model ? (model.retailer || 'Canada') : 'Canada';
-                                const key = 'panel_' + p.modelId;
-
-                                if (!map[key]) {
-                                    map[key] = { key, name, category: 'Hub / Panneau tactile', retailer, unitPrice: price, totalQty: 0 };
-                                }
-                                map[key].totalQty += (p.qty || 0);
-                            });
-                        }
-                    });
-
-                    additionalItems.value.forEach(item => {
-                        const key = 'add_' + item.name.toLowerCase().replace(/\s+/g, '_');
-                        if (!map[key]) {
-                            map[key] = { key, name: item.name, category: item.category, retailer: item.retailer || 'Canada', unitPrice: item.unitPrice, totalQty: 0 };
-                        }
-                        map[key].totalQty += (item.qty || 0);
-                    });
-
-                    return Object.values(map);
                 });
 
                 // --- CLOUD METHODS ---
@@ -1652,6 +1903,7 @@
                             catalog: catalog.value,
                             rooms: rooms.value,
                             additionalItems: additionalItems.value,
+                            globalSupplierMode: globalSupplierMode.value,
                             grandTotal: grandTotal.value,
                             updatedAt: new Date().toISOString()
                         };
@@ -1688,18 +1940,16 @@
                     if (confirm(`Charger le devis #${est.project?.quoteNo || est.id} pour modification ?`)) {
                         if (est.project) {
                             project.value = est.project;
-                            // Adaptateur d'ancienne sauvegarde vers split taxes
                             if (est.project.taxRegime && !est.project.taxRegimeEquipment) {
                                 project.value.taxRegimeEquipment = est.project.taxRegime;
                                 project.value.taxRegimeLabor = est.project.taxRegime;
                             }
-                            if (est.project.comments === undefined) {
-                                project.value.comments = '';
-                            }
+                            if (est.project.comments === undefined) project.value.comments = '';
                         }
                         if (est.catalog) catalog.value = est.catalog;
                         if (est.rooms) rooms.value = est.rooms;
                         if (est.additionalItems) additionalItems.value = est.additionalItems;
+                        if (est.globalSupplierMode) globalSupplierMode.value = est.globalSupplierMode;
                         showCloudModal.value = false;
                         showNotification(`Devis #${project.value.quoteNo} chargé avec succès !`);
                     }
@@ -1719,7 +1969,6 @@
                 };
 
                 // --- UI METHODS ---
-                
                 const applyGlobalSwitchTime = () => {
                     catalog.value.switches.forEach(item => {
                         item.installTime = globalSwitchInst.value;
@@ -1787,28 +2036,17 @@
                     room.panels.push({ modelId: firstId, qty: 1 });
                 };
 
-                const removeSwitch = (room, index) => {
-                    room.switches.splice(index, 1);
-                };
-
-                const removePanel = (room, index) => {
-                    room.panels.splice(index, 1);
-                };
+                const removeSwitch = (room, index) => { room.switches.splice(index, 1); };
+                const removePanel = (room, index) => { room.panels.splice(index, 1); };
 
                 const decrementSwitchQty = (room, index) => {
-                    if (room.switches[index].qty > 1) {
-                        room.switches[index].qty--;
-                    } else {
-                        removeSwitch(room, index);
-                    }
+                    if (room.switches[index].qty > 1) room.switches[index].qty--;
+                    else removeSwitch(room, index);
                 };
 
                 const decrementPanelQty = (room, index) => {
-                    if (room.panels[index].qty > 1) {
-                        room.panels[index].qty--;
-                    } else {
-                        removePanel(room, index);
-                    }
+                    if (room.panels[index].qty > 1) room.panels[index].qty--;
+                    else removePanel(room, index);
                 };
 
                 const clearRoomEquipment = (room) => {
@@ -1823,9 +2061,9 @@
                         id: 'add_' + Date.now(),
                         name: newAdditional.value.name,
                         category: newAdditional.value.category,
-                        retailer: newAdditional.value.retailer || 'Canada',
+                        prices: { aartech: newAdditional.value.prices.aartech || 50, amazon: newAdditional.value.prices.amazon || 55 },
+                        selectedSupplier: newAdditional.value.selectedSupplier || 'aartech',
                         qty: newAdditional.value.qty || 1,
-                        unitPrice: newAdditional.value.unitPrice || 0,
                         installTime: newAdditional.value.installTime || 0,
                         progTime: newAdditional.value.progTime || 0
                     });
@@ -1842,9 +2080,9 @@
                             id: 'add_' + Date.now(),
                             name: preset.name,
                             category: preset.category,
-                            retailer: preset.retailer || 'Canada',
+                            prices: preset.prices || { aartech: 100, amazon: 110 },
+                            selectedSupplier: preset.selectedSupplier || 'aartech',
                             qty: 1,
-                            unitPrice: preset.price,
                             installTime: preset.installTime || 0.5,
                             progTime: preset.progTime || 0.25
                         });
@@ -1853,7 +2091,7 @@
 
                 const openAddCatalogModal = (category) => {
                     catalogModalCategory.value = category;
-                    newCatalogItem.value = { name: '', price: 45, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 };
+                    newCatalogItem.value = { name: '', prices: { aartech: 45, amazon: 50 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 };
                     showAddCatalogModal.value = true;
                 };
 
@@ -1864,8 +2102,8 @@
                     catalog.value[cat].push({
                         id: newId,
                         name: newCatalogItem.value.name,
-                        price: newCatalogItem.value.price || 0,
-                        retailer: newCatalogItem.value.retailer || 'Canada',
+                        prices: { aartech: newCatalogItem.value.prices.aartech || 0, amazon: newCatalogItem.value.prices.amazon || 0 },
+                        selectedSupplier: newCatalogItem.value.selectedSupplier || 'aartech',
                         installTime: newCatalogItem.value.installTime || 0,
                         progTime: newCatalogItem.value.progTime || 0
                     });
@@ -1876,29 +2114,38 @@
                     catalog.value[category] = catalog.value[category].filter(i => i.id !== itemId);
                 };
 
-                const resetCatalogToDefault = () => {
-                    catalog.value = defaultCatalog();
-                };
+                const resetCatalogToDefault = () => { catalog.value = defaultCatalog(); };
 
                 const resetToDefaults = () => {
                     if (confirm("Voulez-vous réinitialiser toutes les données du devis ?")) {
                         catalog.value = defaultCatalog();
                         rooms.value = defaultRooms();
                         additionalItems.value = defaultAdditionalItems();
+                        globalSupplierMode.value = 'aartech';
                     }
                 };
 
                 const copyOrderListToClipboard = () => {
-                    const header = "Équipement\tCatégorie\tDétaillant\tQuantité Totale\tPrix Pièce ($ CAD)\tPrix Total ($ CAD)\n";
+                    const header = "Équipement\tCatégorie\tFournisseur\tQuantité Totale\tPrix Unitaire ($ CAD)\tPrix Total ($ CAD)\n";
                     const rows = consolidatedBOM.value.map(item => 
-                        `${item.name}\t${item.category}\t${item.retailer}\t${item.totalQty}\t${item.unitPrice.toFixed(2)}\t${(item.totalQty * item.unitPrice).toFixed(2)}`
+                        `${item.name}\t${item.category}\t${getSupplierLabel(item.selectedSupplier)}\t${item.totalQty}\t${item.unitPrice.toFixed(2)}\t${(item.totalQty * item.unitPrice).toFixed(2)}`
                     ).join('\n');
                     
-                    navigator.clipboard.writeText(header + rows).then(() => {
-                        showNotification("Liste de commande copiée dans le presse-papier !");
-                    }).catch(err => {
-                        console.error("Erreur de copie :", err);
-                    });
+                    const text = header + rows;
+                    const el = document.createElement('textarea');
+                    el.value = text;
+                    el.setAttribute('readonly', '');
+                    el.style.position = 'absolute';
+                    el.style.left = '-9999px';
+                    document.body.appendChild(el);
+                    el.select();
+                    try {
+                        document.execCommand('copy');
+                        showNotification("Bon de commande copié dans le presse-papier !");
+                    } catch (err) {
+                        showNotification("Erreur lors de la copie.");
+                    }
+                    document.body.removeChild(el);
                 };
 
                 const triggerSave = () => {
@@ -1907,7 +2154,8 @@
                         project: project.value,
                         catalog: catalog.value,
                         rooms: rooms.value,
-                        additionalItems: additionalItems.value
+                        additionalItems: additionalItems.value,
+                        globalSupplierMode: globalSupplierMode.value
                     };
                     localStorage.setItem('domoti_estimate_cad_data', JSON.stringify(payload));
                     setTimeout(() => { saveStatus.value = false; }, 1200);
@@ -1918,20 +2166,11 @@
                         const raw = localStorage.getItem('domoti_estimate_cad_data');
                         if (raw) {
                             const parsed = JSON.parse(raw);
-                            if (parsed.project) {
-                                project.value = parsed.project;
-                                // Rétrocompatibilité : séparer l'ancienne variable de taxe si elle existe
-                                if (parsed.project.taxRegime && !parsed.project.taxRegimeEquipment) {
-                                    project.value.taxRegimeEquipment = parsed.project.taxRegime;
-                                    project.value.taxRegimeLabor = parsed.project.taxRegime;
-                                }
-                                if (parsed.project.comments === undefined) {
-                                    project.value.comments = '';
-                                }
-                            }
+                            if (parsed.project) project.value = parsed.project;
                             if (parsed.catalog) catalog.value = parsed.catalog;
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
+                            if (parsed.globalSupplierMode) globalSupplierMode.value = parsed.globalSupplierMode;
                         }
                     } catch (e) {
                         console.error("Erreur lors du chargement des données", e);
@@ -1943,7 +2182,8 @@
                         project: project.value,
                         catalog: catalog.value,
                         rooms: rooms.value,
-                        additionalItems: additionalItems.value
+                        additionalItems: additionalItems.value,
+                        globalSupplierMode: globalSupplierMode.value
                     };
                     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -1961,19 +2201,11 @@
                     reader.onload = (e) => {
                         try {
                             const parsed = JSON.parse(e.target.result);
-                            if (parsed.project) {
-                                project.value = parsed.project;
-                                if (parsed.project.taxRegime && !parsed.project.taxRegimeEquipment) {
-                                    project.value.taxRegimeEquipment = parsed.project.taxRegime;
-                                    project.value.taxRegimeLabor = parsed.project.taxRegime;
-                                }
-                                if (parsed.project.comments === undefined) {
-                                    project.value.comments = '';
-                                }
-                            }
+                            if (parsed.project) project.value = parsed.project;
                             if (parsed.catalog) catalog.value = parsed.catalog;
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
+                            if (parsed.globalSupplierMode) globalSupplierMode.value = parsed.globalSupplierMode;
                             triggerSave();
                             alert("Projet importé avec succès !");
                         } catch (err) {
@@ -1985,16 +2217,14 @@
 
                 const printQuote = () => {
                     activeTab.value = 'summary';
-                    setTimeout(() => {
-                        window.print();
-                    }, 200);
+                    setTimeout(() => { window.print(); }, 200);
                 };
 
                 const formatCurrency = (val) => {
                     return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
                 };
 
-                // OBSERVATEUR: Calcul automatique du temps total de main d'oeuvre
+                // OBSERVATION: Calcul automatique des heures d'installation et programmation
                 watch([catalog, rooms, additionalItems], () => {
                     let totalInst = 0;
                     let totalProg = 0;
@@ -2031,10 +2261,7 @@
                     triggerSave();
                 }, { immediate: true, deep: true });
 
-
-                watch(project, () => {
-                    triggerSave();
-                }, { deep: true });
+                watch(project, () => { triggerSave(); }, { deep: true });
 
                 onMounted(() => {
                     loadSavedData();
@@ -2052,6 +2279,7 @@
                     showAddAdditionalModal,
                     showAddCatalogModal,
                     commentsTextarea,
+                    globalSupplierMode,
                     globalSwitchInst,
                     globalSwitchProg,
                     globalPanelInst,
@@ -2065,6 +2293,13 @@
                     newRoom,
                     newAdditional,
                     newCatalogItem,
+                    getEffectivePrice,
+                    getSupplierLabel,
+                    isCheapestSupplier,
+                    getPriceDiff,
+                    getSwitchItem,
+                    getPanelItem,
+                    applyGlobalSupplier,
                     adjustTextareaHeight,
                     getItemPrice,
                     getItemName,
@@ -2080,6 +2315,8 @@
                     subtotalHT,
                     taxDetails,
                     grandTotal,
+                    totalSavingsTTC,
+                    supplierBreakdown,
                     activeTaxLabel,
                     consolidatedBOM,
                     saveToFirebase,
