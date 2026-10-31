@@ -99,6 +99,10 @@
             .print-border {
                 border-color: #cbd5e1 !important;
             }
+            textarea {
+                overflow: hidden !important;
+                resize: none !important;
+            }
         }
     </style>
 </head>
@@ -316,7 +320,7 @@
                                         <!-- Model Select -->
                                         <select v-model="sw.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
                                             <option v-for="m in catalog.switches" :key="m.id" :value="m.id">
-                                                {{ m.name }} — {{ formatCurrency(m.price) }} [{{ m.retailer || 'Canada' }}]
+                                                {{ m.name }} — {{ formatCurrency(m.price) }}
                                             </option>
                                         </select>
 
@@ -360,7 +364,7 @@
                                         <!-- Model Select -->
                                         <select v-model="panel.modelId" class="flex-1 bg-navy-800 border border-slate-700 text-xs rounded px-2 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
                                             <option v-for="m in catalog.panels" :key="m.id" :value="m.id">
-                                                {{ m.name }} — {{ formatCurrency(m.price) }} [{{ m.retailer || 'Canada' }}]
+                                                {{ m.name }} — {{ formatCurrency(m.price) }}
                                             </option>
                                         </select>
 
@@ -713,7 +717,7 @@
                 </div>
 
                 <!-- PROPOSAL SHEET DOCUMENT -->
-                <div id="print-area" class="bg-navy-800 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-8 shadow-2xl print-card">
+                <div id="print-area" class="bg-navy-800 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl print-card">
                     
                     <!-- HEADER -->
                     <div class="flex flex-col sm:flex-row justify-between items-start border-b border-slate-700 pb-6 print-border">
@@ -777,7 +781,7 @@
                             <div class="bg-amber-500/10 p-4 rounded-xl border border-amber-500/40 print-card glow-amber">
                                 <div class="text-xs font-semibold text-amber-400">TOTAL GLOBAL ESTIMÉ (TTC)</div>
                                 <div class="text-2xl font-black text-amber-400 mt-1">{{ formatCurrency(grandTotal) }}</div>
-                                <div class="text-[10px] text-amber-500/80 mt-1">Taxes incluses ({{ activeTaxLabel }})</div>
+                                <div class="text-[10px] text-amber-500/80 mt-1">{{ activeTaxLabel }}</div>
                             </div>
                         </div>
                     </div>
@@ -873,7 +877,7 @@
                             <span>Réglages Main-d'Œuvre et Régime Fiscal</span>
                         </h4>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                             <!-- Installation -->
                             <div class="bg-navy-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2">
                                 <div class="font-bold text-slate-200 flex items-center justify-between">
@@ -886,7 +890,7 @@
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <div>
                                         <label class="block text-[11px] text-slate-400 mb-1">Total calculé (h) :</label>
-                                        <input type="number" :value="project.installHours" readonly class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none cursor-not-allowed opacity-75" title="Les heures se calculent selon le temps assigné dans le catalogue par équipement">
+                                        <input type="number" :value="project.installHours" readonly class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none cursor-not-allowed opacity-75">
                                     </div>
                                     <div>
                                         <label class="block text-[11px] text-slate-400 mb-1">Taux ($ CAD/h) :</label>
@@ -907,7 +911,7 @@
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <div>
                                         <label class="block text-[11px] text-slate-400 mb-1">Total calculé (h) :</label>
-                                        <input type="number" :value="project.progHours" readonly class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none cursor-not-allowed opacity-75" title="Les heures se calculent selon le temps assigné dans le catalogue par équipement">
+                                        <input type="number" :value="project.progHours" readonly class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-amber-400 font-bold focus:outline-none cursor-not-allowed opacity-75">
                                     </div>
                                     <div>
                                         <label class="block text-[11px] text-slate-400 mb-1">Taux ($ CAD/h) :</label>
@@ -916,16 +920,42 @@
                                 </div>
                             </div>
 
-                            <!-- Taxes -->
+                            <!-- Taxes Matériel -->
                             <div class="bg-navy-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2">
-                                <label class="block font-bold text-slate-200">Taxes Applicables :</label>
-                                <select v-model="project.taxRegime" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-2 text-slate-200 focus:outline-none focus:border-amber-500 text-xs mt-1">
-                                    <option value="QC">Québec (TPS 5% + TVQ 9.975% = 14.975%)</option>
+                                <label class="block font-bold text-slate-200 text-[11px]"><i class="fa-solid fa-boxes-stacked text-amber-400 mr-1"></i>Taxes (Matériel) :</label>
+                                <select v-model="project.taxRegimeEquipment" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-amber-500 text-xs mt-1">
+                                    <option value="QC">Québec (TPS 5% + TVQ 9.975%)</option>
+                                    <option value="CA_TPS">Canada TPS 5% seulement</option>
+                                    <option value="NONE">Sans Taxe (0%)</option>
+                                </select>
+                            </div>
+
+                            <!-- Taxes Main d'oeuvre -->
+                            <div class="bg-navy-800/90 p-3.5 rounded-xl border border-slate-700 space-y-2">
+                                <label class="block font-bold text-slate-200 text-[11px]"><i class="fa-solid fa-user-clock text-amber-400 mr-1"></i>Taxes (Main-d'Œuvre) :</label>
+                                <select v-model="project.taxRegimeLabor" class="w-full bg-navy-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-amber-500 text-xs mt-1">
+                                    <option value="QC">Québec (TPS 5% + TVQ 9.975%)</option>
                                     <option value="CA_TPS">Canada TPS 5% seulement</option>
                                     <option value="NONE">Sans Taxe (0%)</option>
                                 </select>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- PROJECT COMMENTS (AUTO-RESIZING) -->
+                    <div class="bg-navy-900/40 p-4 rounded-xl border border-slate-700/60 print-card mt-2">
+                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center space-x-2">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Notes & Commentaires du Projet</span>
+                        </h3>
+                        <textarea 
+                            ref="commentsTextarea"
+                            v-model="project.comments" 
+                            @input="adjustTextareaHeight"
+                            class="w-full bg-transparent border-none text-slate-300 text-sm focus:outline-none resize-none overflow-hidden print-text-dark" 
+                            placeholder="Cliquez ici pour ajouter vos conditions, inclusions, exclusions ou commentaires spécifiques au projet..."
+                            style="min-height: 2.5rem;"
+                        ></textarea>
                     </div>
 
                     <!-- FINAL GRAND TOTAL TABLE RECAP -->
@@ -948,7 +978,7 @@
                                 <span class="font-bold">{{ formatCurrency(subtotalHT) }}</span>
                             </div>
                             <div v-for="tax in taxDetails" :key="tax.name" class="flex justify-between text-slate-400 print-text-dark">
-                                <span>{{ tax.name }} ({{ tax.rate }}%) :</span>
+                                <span>{{ tax.name }} :</span>
                                 <span>{{ formatCurrency(tax.amount) }}</span>
                             </div>
                             <div class="flex justify-between text-base font-black text-amber-400 pt-2 border-t-2 border-amber-500 print-text-dark">
@@ -1288,7 +1318,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const { createApp, ref, computed, watch, onMounted } = Vue;
+        const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
         createApp({
             setup() {
@@ -1306,7 +1336,8 @@
                 const showAddCatalogModal = ref(false);
                 const catalogModalCategory = ref('switches');
                 
-                // Variables pour les temps généraux
+                const commentsTextarea = ref(null);
+
                 const globalSwitchInst = ref(0.5);
                 const globalSwitchProg = ref(0.25);
                 const globalPanelInst = ref(0.5);
@@ -1321,7 +1352,9 @@
                     installRate: 85,
                     progHours: 0,
                     progRate: 105,
-                    taxRegime: 'QC'
+                    taxRegimeEquipment: 'QC',
+                    taxRegimeLabor: 'QC',
+                    comments: '' // Nouveau champ pour les commentaires
                 });
 
                 const defaultCatalog = () => ({
@@ -1403,6 +1436,33 @@
                 const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', retailer: 'Aartech Canada', qty: 1, unitPrice: 50, installTime: 0.5, progTime: 0.25 });
                 const newCatalogItem = ref({ name: '', price: 45, retailer: 'Aartech Canada', installTime: 0.5, progTime: 0.25 });
 
+                // Ajustement dynamique de la taille du champ commentaire
+                const adjustTextareaHeight = (e) => {
+                    let target = e ? e.target : commentsTextarea.value;
+                    if (target) {
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                    }
+                };
+
+                // Forcer le redimensionnement quand on arrive sur l'onglet devis
+                watch(activeTab, (newVal) => {
+                    if (newVal === 'summary') {
+                        nextTick(() => {
+                            adjustTextareaHeight();
+                        });
+                    }
+                });
+                
+                // Forcer le redimensionnement quand le texte du commentaire est modifié (ex: chargement cloud)
+                watch(() => project.value.comments, () => {
+                    if (activeTab.value === 'summary') {
+                        nextTick(() => {
+                            adjustTextareaHeight();
+                        });
+                    }
+                });
+
                 const getItemPrice = (cat, id) => {
                     const found = catalog.value[cat]?.find(m => m.id === id);
                     return found ? found.price : 0;
@@ -1477,21 +1537,36 @@
                 });
 
                 const taxDetails = computed(() => {
-                    const regime = project.value.taxRegime;
-                    const base = subtotalHT.value;
+                    const equipRegime = project.value.taxRegimeEquipment || 'QC';
+                    const laborRegime = project.value.taxRegimeLabor || 'QC';
+                    
+                    const equipBase = lightingSubtotal.value + additionalSubtotal.value;
+                    const laborBase = laborCost.value;
 
-                    if (regime === 'QC') {
-                        const tps = base * 0.05;
-                        const tvq = base * 0.09975;
-                        return [
-                            { name: 'TPS (5%)', rate: 5, amount: tps },
-                            { name: 'TVQ (9.975%)', rate: 9.975, amount: tvq }
-                        ];
-                    } else if (regime === 'CA_TPS') {
-                        return [{ name: 'TPS (5%)', rate: 5, amount: base * 0.05 }];
-                    } else {
-                        return [];
+                    let tpsAmount = 0;
+                    let tvqAmount = 0;
+
+                    // Taxes Matériel
+                    if (equipRegime === 'QC') {
+                        tpsAmount += equipBase * 0.05;
+                        tvqAmount += equipBase * 0.09975;
+                    } else if (equipRegime === 'CA_TPS') {
+                        tpsAmount += equipBase * 0.05;
                     }
+
+                    // Taxes Main-d'oeuvre
+                    if (laborRegime === 'QC') {
+                        tpsAmount += laborBase * 0.05;
+                        tvqAmount += laborBase * 0.09975;
+                    } else if (laborRegime === 'CA_TPS') {
+                        tpsAmount += laborBase * 0.05;
+                    }
+
+                    const details = [];
+                    if (tpsAmount > 0) details.push({ name: 'Total TPS (5%)', amount: tpsAmount });
+                    if (tvqAmount > 0) details.push({ name: 'Total TVQ (9.975%)', amount: tvqAmount });
+
+                    return details;
                 });
 
                 const totalTaxes = computed(() => {
@@ -1503,10 +1578,14 @@
                 });
 
                 const activeTaxLabel = computed(() => {
-                    const r = project.value.taxRegime;
-                    if (r === 'QC') return 'QC: TPS + TVQ (14.975%)';
-                    if (r === 'CA_TPS') return 'TPS: 5%';
-                    return '0%';
+                    const e = project.value.taxRegimeEquipment || 'QC';
+                    const l = project.value.taxRegimeLabor || 'QC';
+                    if (e === l) {
+                        if (e === 'QC') return 'QC: TPS + TVQ (14.975%)';
+                        if (e === 'CA_TPS') return 'TPS: 5%';
+                        return 'Sans taxe';
+                    }
+                    return 'Taxes distinctes Matériel/Main-d\'Œuvre';
                 });
 
                 const consolidatedBOM = computed(() => {
@@ -1607,7 +1686,17 @@
 
                 const loadEstimateFromCloud = (est) => {
                     if (confirm(`Charger le devis #${est.project?.quoteNo || est.id} pour modification ?`)) {
-                        if (est.project) project.value = est.project;
+                        if (est.project) {
+                            project.value = est.project;
+                            // Adaptateur d'ancienne sauvegarde vers split taxes
+                            if (est.project.taxRegime && !est.project.taxRegimeEquipment) {
+                                project.value.taxRegimeEquipment = est.project.taxRegime;
+                                project.value.taxRegimeLabor = est.project.taxRegime;
+                            }
+                            if (est.project.comments === undefined) {
+                                project.value.comments = '';
+                            }
+                        }
                         if (est.catalog) catalog.value = est.catalog;
                         if (est.rooms) rooms.value = est.rooms;
                         if (est.additionalItems) additionalItems.value = est.additionalItems;
@@ -1829,7 +1918,17 @@
                         const raw = localStorage.getItem('domoti_estimate_cad_data');
                         if (raw) {
                             const parsed = JSON.parse(raw);
-                            if (parsed.project) project.value = parsed.project;
+                            if (parsed.project) {
+                                project.value = parsed.project;
+                                // Rétrocompatibilité : séparer l'ancienne variable de taxe si elle existe
+                                if (parsed.project.taxRegime && !parsed.project.taxRegimeEquipment) {
+                                    project.value.taxRegimeEquipment = parsed.project.taxRegime;
+                                    project.value.taxRegimeLabor = parsed.project.taxRegime;
+                                }
+                                if (parsed.project.comments === undefined) {
+                                    project.value.comments = '';
+                                }
+                            }
                             if (parsed.catalog) catalog.value = parsed.catalog;
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
@@ -1862,7 +1961,16 @@
                     reader.onload = (e) => {
                         try {
                             const parsed = JSON.parse(e.target.result);
-                            if (parsed.project) project.value = parsed.project;
+                            if (parsed.project) {
+                                project.value = parsed.project;
+                                if (parsed.project.taxRegime && !parsed.project.taxRegimeEquipment) {
+                                    project.value.taxRegimeEquipment = parsed.project.taxRegime;
+                                    project.value.taxRegimeLabor = parsed.project.taxRegime;
+                                }
+                                if (parsed.project.comments === undefined) {
+                                    project.value.comments = '';
+                                }
+                            }
                             if (parsed.catalog) catalog.value = parsed.catalog;
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
@@ -1943,6 +2051,7 @@
                     showAddRoomModal,
                     showAddAdditionalModal,
                     showAddCatalogModal,
+                    commentsTextarea,
                     globalSwitchInst,
                     globalSwitchProg,
                     globalPanelInst,
@@ -1956,6 +2065,7 @@
                     newRoom,
                     newAdditional,
                     newCatalogItem,
+                    adjustTextareaHeight,
                     getItemPrice,
                     getItemName,
                     calculateRoomSubtotal,
