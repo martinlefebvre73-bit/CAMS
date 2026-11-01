@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DomotiEstimate Pro - Multi-Fournisseurs & Estimation Domotique</title>
+    <title>DomotiEstimate Pro - Multi-Fournisseurs Canada & Estimation Domotique</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -117,7 +117,7 @@
                         <i class="fa-solid fa-house-signal"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold text-slate-100 leading-tight">DomotiEstimate Pro <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Multi-Fournisseurs</span></h1>
+                        <h1 class="text-lg font-bold text-slate-100 leading-tight">DomotiEstimate Pro <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Canada</span></h1>
                         <p class="text-xs text-slate-400 hidden sm:block">Comparateur Aartech vs Amazon.ca & Estimation Domotique (Firebase cams-cf723)</p>
                     </div>
                 </div>
@@ -289,7 +289,7 @@
                         <h2 class="text-base font-semibold text-slate-100 flex items-center space-x-2">
                             <span>Configuration de la Domotique par Pièce</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Entrez, ajustez ou retirez les équipements (ZOOZ, Tapo, etc.) et les panneaux de contrôle par pièce.</p>
+                        <p class="text-xs text-slate-400">Entrez, ajustez ou retirez les équipements (ZOOZ, Tapo, Hubitat) et les panneaux de contrôle par pièce.</p>
                     </div>
 
                     <button @click="showAddRoomModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-semibold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition shadow">
@@ -518,7 +518,7 @@
                             <i class="fa-solid fa-microchip text-amber-500"></i>
                             <span>Équipements & Modules Domotiques Additionnels</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Thermostats, caméras, clés USB Z-Wave, Hubs, capteurs et bornes de recharge EV avec choix du fournisseur.</p>
+                        <p class="text-xs text-slate-400">Thermostats, caméras, clés USB Z-Wave, Hubs, capteurs et bornes de recharge EV avec choix du fournisseur canadien.</p>
                     </div>
 
                     <button @click="showAddAdditionalModal = true" class="bg-amber-500 hover:bg-amber-600 text-navy-900 font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition">
@@ -599,8 +599,8 @@
                                     </td>
                                     <td class="py-3 px-4">
                                         <select v-model="item.selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-900 border border-slate-700 rounded px-2 py-1 text-xs text-amber-300 font-medium focus:outline-none">
-                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices?.aartech || item.unitPrice || 0) }})</option>
-                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices?.amazon || item.unitPrice || 0) }})</option>
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices?.aartech || 0) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices?.amazon || 0) }})</option>
                                         </select>
                                     </td>
                                     <td class="py-3 px-4">
@@ -641,9 +641,9 @@
                     <div>
                         <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-tags text-amber-500"></i>
-                            <span>Catalogue Domotique Multi-Fournisseurs (Aartech & Amazon)</span>
+                            <span>Catalogue Domotique Multi-Fournisseurs (Aartech Canada & Amazon.ca)</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Gérez les tarifs unitaires d'Aartech Canada et Amazon.ca, sélectionnez le fournisseur actif et allouez le temps de main-d'œuvre.</p>
+                        <p class="text-xs text-slate-400">Gérez les tarifs unitaires canadiens actuels, sélectionnez le fournisseur actif et allouez le temps de main-d'œuvre.</p>
                     </div>
 
                     <button @click="resetCatalogToDefault" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition">
@@ -694,11 +694,11 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prix Aartech ($) :</label>
+                                        <label class="text-[10px] text-slate-400 block">Aartech ($ CAD) :</label>
                                         <input type="number" v-model.number="item.prices.aartech" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-indigo-300">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prix Amazon ($) :</label>
+                                        <label class="text-[10px] text-slate-400 block">Amazon ($ CAD) :</label>
                                         <input type="number" v-model.number="item.prices.amazon" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-amber-300">
                                     </div>
                                     <div>
@@ -766,11 +766,11 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prix Aartech ($) :</label>
+                                        <label class="text-[10px] text-slate-400 block">Aartech ($ CAD) :</label>
                                         <input type="number" v-model.number="item.prices.aartech" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-indigo-300">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] text-slate-400 block">Prix Amazon ($) :</label>
+                                        <label class="text-[10px] text-slate-400 block">Amazon ($ CAD) :</label>
                                         <input type="number" v-model.number="item.prices.amazon" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-amber-300">
                                     </div>
                                     <div>
@@ -1533,7 +1533,7 @@
                         { id: 'tapo_s500', name: 'TP-Link Tapo S500 (Interrupteur Smart Wi-Fi)', prices: { aartech: 21.99, amazon: 17.99 }, selectedSupplier: 'amazon', installTime: 0.5, progTime: 0.25 }
                     ],
                     panels: [
-                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 (Hub Z-Wave & Zigbee Pro)', prices: { aartech: 219.00, amazon: 319.99 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 2.0 },
+                        { id: 'hubitat_c8', name: 'Hubitat Elevation C-8 Pro (Hub Z-Wave & Zigbee Pro)', prices: { aartech: 269.99, amazon: 319.99 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 2.0 },
                         { id: 'zooz_zbox', name: 'Zooz Z-Box Hub (Automate Domotique Z-Wave)', prices: { aartech: 144.95, amazon: 159.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 1.5 },
                         { id: 'zooz_zst39', name: 'Zooz ZST39 LR 800 (Clé USB Antenne Z-Wave)', prices: { aartech: 40.95, amazon: 44.95 }, selectedSupplier: 'aartech', installTime: 0.25, progTime: 0.5 },
                         { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', prices: { aartech: 34.99, amazon: 29.99 }, selectedSupplier: 'amazon', installTime: 0.25, progTime: 0.5 },
@@ -1560,7 +1560,7 @@
                         icon: 'fa-solid fa-couch',
                         switches: [{ modelId: 'zooz_zen72', qty: 3 }, { modelId: 'zooz_zen32', qty: 1 }],
                         panels: [{ modelId: 'hubitat_c8', qty: 1 }],
-                        notes: 'Zooz ZEN72 & Hubitat C-8'
+                        notes: 'Zooz ZEN72 & Hubitat C-8 Pro'
                     },
                     {
                         id: 'room_2',
