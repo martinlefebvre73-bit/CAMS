@@ -1966,11 +1966,7 @@ DOCTYPE html>
                             }
                             if (est.project.comments === undefined) project.value.comments = '';
                         }
-                        if (est.catalog) {
-                            if (est.catalog.switches) est.catalog.switches.forEach(sanitizePrices);
-                            if (est.catalog.panels) est.catalog.panels.forEach(sanitizePrices);
-                            catalog.value = est.catalog;
-                        }
+                        
                         if (est.rooms) rooms.value = est.rooms;
                         if (est.additionalItems) {
                             est.additionalItems.forEach(sanitizePrices);
@@ -2200,11 +2196,7 @@ DOCTYPE html>
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed.project) project.value = parsed.project;
-                            if (parsed.catalog) {
-                                if (parsed.catalog.switches) parsed.catalog.switches.forEach(sanitizePrices);
-                                if (parsed.catalog.panels) parsed.catalog.panels.forEach(sanitizePrices);
-                                catalog.value = parsed.catalog;
-                            }
+                            
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) {
                                 parsed.additionalItems.forEach(sanitizePrices);
@@ -2242,11 +2234,7 @@ DOCTYPE html>
                         try {
                             const parsed = JSON.parse(e.target.result);
                             if (parsed.project) project.value = parsed.project;
-                            if (parsed.catalog) {
-                                if (parsed.catalog.switches) parsed.catalog.switches.forEach(sanitizePrices);
-                                if (parsed.catalog.panels) parsed.catalog.panels.forEach(sanitizePrices);
-                                catalog.value = parsed.catalog;
-                            }
+                           
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) {
                                 parsed.additionalItems.forEach(sanitizePrices);
