@@ -1,4 +1,4 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -798,6 +798,78 @@ DOCTYPE html>
                         </div>
                     </div>
 
+                    <!-- CATEGORY: ÉQUIPEMENTS AUDIO & MULTIMÉDIA -->
+                    <div class="bg-navy-800/90 rounded-xl border border-slate-700/80 overflow-hidden shadow-lg">
+                        <div class="px-4 py-3 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
+                                <i class="fa-solid fa-music text-amber-400"></i>
+                                <span>Équipements Audio & Multimédia</span>
+                            </h3>
+                            <button @click="openAddCatalogModal('audio')" class="text-xs text-amber-400 hover:underline font-medium">
+                                + Ajouter modèle
+                            </button>
+                        </div>
+                        
+                        <!-- NEW BAR FOR BULK TIME APPLY -->
+                        <div class="bg-slate-700/30 px-4 py-2 border-b border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <span class="text-[11px] text-slate-300 font-medium"><i class="fa-solid fa-stopwatch mr-1 text-amber-500/70"></i> Temps général pour la catégorie :</span>
+                            <div class="flex items-center space-x-3">
+                                <div class="flex items-center space-x-1.5">
+                                    <label class="text-[10px] text-slate-400">Inst. (h):</label>
+                                    <input type="number" v-model.number="globalAudioInst" step="0.1" min="0" class="w-14 bg-navy-900 border border-slate-600 rounded px-1.5 py-0.5 text-xs text-center text-amber-400 font-bold focus:outline-none">
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <label class="text-[10px] text-slate-400">Prog. (h):</label>
+                                    <input type="number" v-model.number="globalAudioProg" step="0.1" min="0" class="w-14 bg-navy-900 border border-slate-600 rounded px-1.5 py-0.5 text-xs text-center text-amber-400 font-bold focus:outline-none">
+                                </div>
+                                <button @click="applyGlobalAudioTime" class="bg-slate-600 hover:bg-slate-500 text-slate-100 px-2 py-1 rounded text-[10px] font-bold transition">
+                                    Appliquer à tous
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 space-y-3 max-h-[550px] overflow-y-auto">
+                            <div v-for="item in catalog.audio" :key="item.id" class="bg-navy-900/60 p-3.5 rounded-lg border border-slate-700/60 space-y-2 hover:border-amber-500/50 transition">
+                                <div class="flex items-center justify-between gap-2">
+                                    <input type="text" v-model="item.name" class="bg-transparent font-semibold text-xs text-slate-200 w-full focus:outline-none focus:bg-navy-800 rounded px-1 -ml-1">
+                                    <button @click="deleteCatalogItem('audio', item.id)" class="text-slate-500 hover:text-rose-400 p-1">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Aartech ($ CAD) :</label>
+                                        <input type="number" v-model.number="item.prices.aartech" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-indigo-300">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Amazon ($ CAD) :</label>
+                                        <input type="number" v-model.number="item.prices.amazon" step="0.5" class="w-full bg-navy-800 border border-slate-700 rounded px-2 py-0.5 text-xs font-semibold text-amber-300">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 block">Choix Fournisseur :</label>
+                                        <select v-model="item.selectedSupplier" @change="globalSupplierMode = 'custom'" class="w-full bg-navy-800 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-amber-400 font-bold">
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices.aartech) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices.amazon) }})</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <span v-if="isCheapestSupplier(item)" class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded w-full text-center">
+                                            ✓ Meilleur prix
+                                        </span>
+                                        <span v-else class="text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-1 rounded w-full text-center">
+                                            +{{ formatCurrency(getPriceDiff(item)) }} vs alt
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3 text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                                    <span>Inst: <strong class="text-slate-200">{{ item.installTime }}h</strong></span>
+                                    <span>Prog: <strong class="text-slate-200">{{ item.progTime }}h</strong></span>
+                                    <span>Effectif: <strong class="text-emerald-400">{{ formatCurrency(getEffectivePrice(item)) }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -1504,6 +1576,8 @@ DOCTYPE html>
                 const globalSwitchProg = ref(0.25);
                 const globalPanelInst = ref(0.5);
                 const globalPanelProg = ref(1.0);
+                const globalAudioInst = ref(1.0);
+                const globalAudioProg = ref(0.5);
 
                 const project = ref({
                     clientName: 'Client Résidentiel',
@@ -1539,6 +1613,11 @@ DOCTYPE html>
                         { id: 'tapo_h100', name: 'TP-Link Tapo H100 / H200 (Hub Domotique Sub-1G)', prices: { aartech: 34.99, amazon: 29.99 }, selectedSupplier: 'amazon', installTime: 0.25, progTime: 0.5 },
                         { id: 'panel_7', name: 'Écran Tactile Mural 7" HD Pro', prices: { aartech: 850.00, amazon: 890.00 }, selectedSupplier: 'aartech', installTime: 1.0, progTime: 1.0 },
                         { id: 'panel_10', name: 'Écran Maître 10" Ultra HD', prices: { aartech: 1350.00, amazon: 1390.00 }, selectedSupplier: 'aartech', installTime: 1.5, progTime: 1.5 }
+                    ],
+                    audio: [
+                        { id: 'audio_amp_multi', name: 'Amplificateur Multi-Zone Connecté', prices: { aartech: 499.00, amazon: 479.00 }, selectedSupplier: 'amazon', installTime: 1.0, progTime: 1.0 },
+                        { id: 'audio_hp_encastrable', name: 'Haut-Parleur Encastrable Plafond (Paire)', prices: { aartech: 189.95, amazon: 199.95 }, selectedSupplier: 'aartech', installTime: 1.0, progTime: 0.25 },
+                        { id: 'audio_soundbar', name: 'Barre de Son Domotique Intelligente', prices: { aartech: 349.99, amazon: 329.99 }, selectedSupplier: 'amazon', installTime: 0.75, progTime: 0.5 }
                     ]
                 });
 
@@ -1670,6 +1749,7 @@ DOCTYPE html>
 
                     catalog.value.switches.forEach(setSupplier);
                     catalog.value.panels.forEach(setSupplier);
+                    if (catalog.value.audio) catalog.value.audio.forEach(setSupplier);
                     additionalItems.value.forEach(setSupplier);
 
                     if (mode === 'optimized') {
@@ -1966,7 +2046,7 @@ DOCTYPE html>
                             }
                             if (est.project.comments === undefined) project.value.comments = '';
                         }
-                        
+                        // Catalogue non écrasé pour préserver le catalogue d'équipements de l'application
                         if (est.rooms) rooms.value = est.rooms;
                         if (est.additionalItems) {
                             est.additionalItems.forEach(sanitizePrices);
@@ -2008,6 +2088,17 @@ DOCTYPE html>
                     });
                     showNotification("Temps général appliqué à tous les panneaux.");
                     triggerSave();
+                };
+
+                const applyGlobalAudioTime = () => {
+                    if (catalog.value.audio) {
+                        catalog.value.audio.forEach(item => {
+                            item.installTime = globalAudioInst.value;
+                            item.progTime = globalAudioProg.value;
+                        });
+                        showNotification("Temps général appliqué à tous les équipements audio.");
+                        triggerSave();
+                    }
                 };
 
                 const confirmAddRoom = () => {
@@ -2135,6 +2226,7 @@ DOCTYPE html>
                         progTime: newCatalogItem.value.progTime || 0
                     };
                     sanitizePrices(item);
+                    if (!catalog.value[cat]) catalog.value[cat] = [];
                     catalog.value[cat].push(item);
                     showAddCatalogModal.value = false;
                 };
@@ -2155,10 +2247,12 @@ DOCTYPE html>
                 };
 
                 const copyOrderListToClipboard = () => {
-                    const header = "Équipement\tCatégorie\tFournisseur\tQuantité Totale\tPrix Unitaire ($ CAD)\tPrix Total ($ CAD)\n";
+                    const header = "Équipement	Catégorie	Fournisseur	Quantité Totale	Prix Unitaire ($ CAD)	Prix Total ($ CAD)
+";
                     const rows = consolidatedBOM.value.map(item => 
-                        `${item.name}\t${item.category}\t${getSupplierLabel(item.selectedSupplier)}\t${item.totalQty}\t${item.unitPrice.toFixed(2)}\t${(item.totalQty * item.unitPrice).toFixed(2)}`
-                    ).join('\n');
+                        `${item.name}	${item.category}	${getSupplierLabel(item.selectedSupplier)}	${item.totalQty}	${item.unitPrice.toFixed(2)}	${(item.totalQty * item.unitPrice).toFixed(2)}`
+                    ).join('
+');
                     
                     const text = header + rows;
                     const el = document.createElement('textarea');
@@ -2196,7 +2290,7 @@ DOCTYPE html>
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed.project) project.value = parsed.project;
-                            
+                            // Catalogue non écrasé pour préserver les modèles généraux
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) {
                                 parsed.additionalItems.forEach(sanitizePrices);
@@ -2234,7 +2328,7 @@ DOCTYPE html>
                         try {
                             const parsed = JSON.parse(e.target.result);
                             if (parsed.project) project.value = parsed.project;
-                           
+                            // Catalogue non écrasé lors de l'import d'un projet
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) {
                                 parsed.additionalItems.forEach(sanitizePrices);
@@ -2318,6 +2412,8 @@ DOCTYPE html>
                     globalSwitchProg,
                     globalPanelInst,
                     globalPanelProg,
+                    globalAudioInst,
+                    globalAudioProg,
                     project,
                     catalog,
                     rooms,
@@ -2359,6 +2455,7 @@ DOCTYPE html>
                     deleteEstimateFromCloud,
                     applyGlobalSwitchTime,
                     applyGlobalPanelTime,
+                    applyGlobalAudioTime,
                     confirmAddRoom,
                     addPresetRoom,
                     duplicateRoom,
