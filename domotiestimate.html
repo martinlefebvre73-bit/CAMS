@@ -1674,7 +1674,7 @@
                 const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', prices: { aartech: 50, amazon: 55 }, selectedSupplier: 'aartech', qty: 1, installTime: 0.5, progTime: 0.25 });
                 const newCatalogItem = ref({ name: '', prices: { aartech: 45, amazon: 49 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 });
 
-                // Robust Helper Functions with Backward Compatibility
+                // Helper Functions
                 const sanitizePrices = (item) => {
                     if (!item) return { aartech: 0, amazon: 0 };
                     if (!item.prices) {
@@ -2046,7 +2046,6 @@
                             }
                             if (est.project.comments === undefined) project.value.comments = '';
                         }
-                        // Catalogue non écrasé pour préserver le catalogue d'équipements de l'application
                         if (est.rooms) rooms.value = est.rooms;
                         if (est.additionalItems) {
                             est.additionalItems.forEach(sanitizePrices);
@@ -2102,7 +2101,10 @@
                 };
 
                 const confirmAddRoom = () => {
-                    if (!newRoom.value.name.trim()) return;
+                    if (!newRoom.value.name || !newRoom.value.name.trim()) {
+                        alert("Veuillez entrer un nom de pièce.");
+                        return;
+                    }
                     rooms.value.push({
                         id: 'room_' + Date.now(),
                         name: newRoom.value.name,
@@ -2170,7 +2172,10 @@
                 };
 
                 const confirmAddAdditional = () => {
-                    if (!newAdditional.value.name.trim()) return;
+                    if (!newAdditional.value.name || !newAdditional.value.name.trim()) {
+                        alert("Veuillez saisir une désignation.");
+                        return;
+                    }
                     const item = {
                         id: 'add_' + Date.now(),
                         name: newAdditional.value.name,
@@ -2214,21 +2219,30 @@
                 };
 
                 const confirmAddCatalogItem = () => {
-                    if (!newCatalogItem.value.name.trim()) return;
-                    const cat = catalogModalCategory.value;
-                    const newId = cat + '_' + Date.now();
-                    const item = {
-                        id: newId,
-                        name: newCatalogItem.value.name,
-                        prices: { aartech: newCatalogItem.value.prices.aartech || 0, amazon: newCatalogItem.value.prices.amazon || 0 },
-                        selectedSupplier: newCatalogItem.value.selectedSupplier || 'aartech',
-                        installTime: newCatalogItem.value.installTime || 0,
-                        progTime: newCatalogItem.value.progTime || 0
-                    };
-                    sanitizePrices(item);
-                    if (!catalog.value[cat]) catalog.value[cat] = [];
-                    catalog.value[cat].push(item);
-                    showAddCatalogModal.value = false;
+                    try {
+                        if (!newCatalogItem.value.name || !newCatalogItem.value.name.trim()) {
+                            alert("Veuillez entrer le nom du modèle.");
+                            return;
+                        }
+                        const cat = catalogModalCategory.value;
+                        const newId = cat + '_' + Date.now();
+                        const item = {
+                            id: newId,
+                            name: newCatalogItem.value.name.trim(),
+                            prices: { aartech: newCatalogItem.value.prices.aartech || 0, amazon: newCatalogItem.value.prices.amazon || 0 },
+                            selectedSupplier: newCatalogItem.value.selectedSupplier || 'aartech',
+                            installTime: newCatalogItem.value.installTime || 0,
+                            progTime: newCatalogItem.value.progTime || 0
+                        };
+                        sanitizePrices(item);
+                        if (!catalog.value[cat]) catalog.value[cat] = [];
+                        catalog.value[cat].push(item);
+                        showNotification(`Modèle "${item.name}" ajouté au catalogue.`);
+                    } catch (err) {
+                        console.error("Erreur lors de l'ajout au catalogue :", err);
+                    } finally {
+                        showAddCatalogModal.value = false;
+                    }
                 };
 
                 const deleteCatalogItem = (category, itemId) => {
@@ -2247,12 +2261,10 @@
                 };
 
                 const copyOrderListToClipboard = () => {
-                    const header = "Équipement	Catégorie	Fournisseur	Quantité Totale	Prix Unitaire ($ CAD)	Prix Total ($ CAD)
-";
+                    const header = "Équipement\tCatégorie\tFournisseur\tQuantité Totale\tPrix Unitaire ($ CAD)\tPrix Total ($ CAD)\n";
                     const rows = consolidatedBOM.value.map(item => 
-                        `${item.name}	${item.category}	${getSupplierLabel(item.selectedSupplier)}	${item.totalQty}	${item.unitPrice.toFixed(2)}	${(item.totalQty * item.unitPrice).toFixed(2)}`
-                    ).join('
-');
+                        `${item.name}\t${item.category}\t${getSupplierLabel(item.selectedSupplier)}\t${item.totalQty}\t${item.unitPrice.toFixed(2)}\t${(item.totalQty * item.unitPrice).toFixed(2)}`
+                    ).join('\n');
                     
                     const text = header + rows;
                     const el = document.createElement('textarea');
@@ -2290,7 +2302,6 @@
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed.project) project.value = parsed.project;
-                            // Catalogue non écrasé pour préserver les modèles généraux
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) {
                                 parsed.additionalItems.forEach(sanitizePrices);
@@ -2328,7 +2339,6 @@
                         try {
                             const parsed = JSON.parse(e.target.result);
                             if (parsed.project) project.value = parsed.project;
-                            // Catalogue non écrasé lors de l'import d'un projet
                             if (parsed.rooms) rooms.value = parsed.rooms;
                             if (parsed.additionalItems) {
                                 parsed.additionalItems.forEach(sanitizePrices);
