@@ -387,8 +387,8 @@
                                             <span class="flex items-center gap-1">
                                                 Fournisseur: 
                                                 <select v-model="getSwitchItem(sw.modelId).selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-950 border border-slate-700 rounded text-[11px] text-amber-300 px-1.5 py-0.5">
-                                                    <option value="aartech">Aartech ({{ formatCurrency(getSwitchItem(sw.modelId).prices.aartech) }})</option>
-                                                    <option value="amazon">Amazon ({{ formatCurrency(getSwitchItem(sw.modelId).prices.amazon) }})</option>
+                                                    <option value="aartech">Aartech ({{ formatCurrency(getSwitchItem(sw.modelId).prices?.aartech || 0) }})</option>
+                                                    <option value="amazon">Amazon ({{ formatCurrency(getSwitchItem(sw.modelId).prices?.amazon || 0) }})</option>
                                                 </select>
                                             </span>
                                             <span :class="isCheapestSupplier(getSwitchItem(sw.modelId)) ? 'text-emerald-400 font-semibold' : 'text-amber-400'">
@@ -447,8 +447,8 @@
                                             <span class="flex items-center gap-1">
                                                 Fournisseur: 
                                                 <select v-model="getPanelItem(panel.modelId).selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-950 border border-slate-700 rounded text-[11px] text-amber-300 px-1.5 py-0.5">
-                                                    <option value="aartech">Aartech ({{ formatCurrency(getPanelItem(panel.modelId).prices.aartech) }})</option>
-                                                    <option value="amazon">Amazon ({{ formatCurrency(getPanelItem(panel.modelId).prices.amazon) }})</option>
+                                                    <option value="aartech">Aartech ({{ formatCurrency(getPanelItem(panel.modelId).prices?.aartech || 0) }})</option>
+                                                    <option value="amazon">Amazon ({{ formatCurrency(getPanelItem(panel.modelId).prices?.amazon || 0) }})</option>
                                                 </select>
                                             </span>
                                             <span :class="isCheapestSupplier(getPanelItem(panel.modelId)) ? 'text-emerald-400 font-semibold' : 'text-amber-400'">
@@ -599,8 +599,8 @@
                                     </td>
                                     <td class="py-3 px-4">
                                         <select v-model="item.selectedSupplier" @change="globalSupplierMode = 'custom'" class="bg-navy-900 border border-slate-700 rounded px-2 py-1 text-xs text-amber-300 font-medium focus:outline-none">
-                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices?.aartech || item.unitPrice) }})</option>
-                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices?.amazon || item.unitPrice) }})</option>
+                                            <option value="aartech">Aartech ({{ formatCurrency(item.prices?.aartech || item.unitPrice || 0) }})</option>
+                                            <option value="amazon">Amazon ({{ formatCurrency(item.prices?.amazon || item.unitPrice || 0) }})</option>
                                         </select>
                                     </td>
                                     <td class="py-3 px-4">
@@ -1498,7 +1498,7 @@
                 
                 const commentsTextarea = ref(null);
 
-                const globalSupplierMode = ref('aartech'); // 'aartech' | 'amazon' | 'optimized' | 'custom'
+                const globalSupplierMode = ref('aartech');
 
                 const globalSwitchInst = ref(0.5);
                 const globalSwitchProg = ref(0.25);
@@ -1519,7 +1519,6 @@
                     comments: ''
                 });
 
-                // Default Catalog with Exact Multi-Supplier Prices
                 const defaultCatalog = () => ({
                     switches: [
                         { id: 'zooz_zen32', name: 'Zooz ZEN32 800LR (Interrupteur Scènes 5-Boutons)', prices: { aartech: 54.95, amazon: 64.95 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.5 },
@@ -1596,13 +1595,23 @@
                 const newAdditional = ref({ name: '', category: 'Éclairage & Domotique', prices: { aartech: 50, amazon: 55 }, selectedSupplier: 'aartech', qty: 1, installTime: 0.5, progTime: 0.25 });
                 const newCatalogItem = ref({ name: '', prices: { aartech: 45, amazon: 49 }, selectedSupplier: 'aartech', installTime: 0.5, progTime: 0.25 });
 
-                // Multi-supplier Price Helper Functions
+                // Robust Helper Functions with Backward Compatibility
+                const sanitizePrices = (item) => {
+                    if (!item) return { aartech: 0, amazon: 0 };
+                    if (!item.prices) {
+                        const legacyPrice = item.price || item.unitPrice || 0;
+                        item.prices = { aartech: legacyPrice, amazon: legacyPrice };
+                    }
+                    if (item.prices.aartech === undefined) item.prices.aartech = item.price || 0;
+                    if (item.prices.amazon === undefined) item.prices.amazon = item.price || item.prices.aartech || 0;
+                    if (!item.selectedSupplier) item.selectedSupplier = 'aartech';
+                    return item.prices;
+                };
+
                 const getEffectivePrice = (item) => {
                     if (!item) return 0;
-                    if (item.prices && item.selectedSupplier) {
-                        return item.prices[item.selectedSupplier] || item.prices.aartech || item.prices.amazon || 0;
-                    }
-                    return item.price || item.unitPrice || 0;
+                    const p = sanitizePrices(item);
+                    return p[item.selectedSupplier] !== undefined ? p[item.selectedSupplier] : (p.aartech || p.amazon || 0);
                 };
 
                 const getSupplierLabel = (supplierKey) => {
@@ -1612,17 +1621,19 @@
                 };
 
                 const isCheapestSupplier = (item) => {
-                    if (!item || !item.prices) return true;
-                    const pAartech = item.prices.aartech || Infinity;
-                    const pAmazon = item.prices.amazon || Infinity;
+                    if (!item) return true;
+                    const p = sanitizePrices(item);
+                    const pAartech = p.aartech ?? Infinity;
+                    const pAmazon = p.amazon ?? Infinity;
                     if (item.selectedSupplier === 'aartech') return pAartech <= pAmazon;
                     if (item.selectedSupplier === 'amazon') return pAmazon <= pAartech;
                     return true;
                 };
 
                 const getPriceDiff = (item) => {
-                    if (!item || !item.prices) return 0;
-                    return Math.abs((item.prices.aartech || 0) - (item.prices.amazon || 0));
+                    if (!item) return 0;
+                    const p = sanitizePrices(item);
+                    return Math.abs((p.aartech || 0) - (p.amazon || 0));
                 };
 
                 const getSwitchItem = (id) => catalog.value.switches.find(s => s.id === id);
@@ -1638,19 +1649,19 @@
                     return found ? found.name : id;
                 };
 
-                // Apply Global Supplier Switcher Strategy
                 const applyGlobalSupplier = (mode) => {
                     globalSupplierMode.value = mode;
 
                     const setSupplier = (item) => {
-                        if (!item.prices) return;
+                        if (!item) return;
+                        sanitizePrices(item);
                         if (mode === 'aartech') {
                             item.selectedSupplier = 'aartech';
                         } else if (mode === 'amazon') {
                             item.selectedSupplier = 'amazon';
                         } else if (mode === 'optimized') {
-                            const pAartech = item.prices.aartech || Infinity;
-                            const pAmazon = item.prices.amazon || Infinity;
+                            const pAartech = item.prices.aartech ?? Infinity;
+                            const pAmazon = item.prices.amazon ?? Infinity;
                             item.selectedSupplier = pAartech <= pAmazon ? 'aartech' : 'amazon';
                         }
                     };
@@ -1664,7 +1675,6 @@
                     triggerSave();
                 };
 
-                // Comments height auto-resizer
                 const adjustTextareaHeight = (e) => {
                     let target = e ? e.target : commentsTextarea.value;
                     if (target) {
@@ -1733,7 +1743,6 @@
                 const laborCost = computed(() => installLaborCost.value + progLaborCost.value);
                 const subtotalHT = computed(() => lightingSubtotal.value + additionalSubtotal.value + laborCost.value);
 
-                // Consolidated BOM and Supplier Breakdown Computations
                 const consolidatedBOM = computed(() => {
                     const map = {};
 
@@ -1742,13 +1751,14 @@
                             r.switches.forEach(sw => {
                                 const model = catalog.value.switches.find(m => m.id === sw.modelId);
                                 if (!model) return;
+                                sanitizePrices(model);
                                 const key = 'sw_' + sw.modelId;
                                 if (!map[key]) {
                                     map[key] = {
                                         key,
                                         name: model.name,
                                         category: 'Interrupteur / Gradateur',
-                                        selectedSupplier: model.selectedSupplier || 'aartech',
+                                        selectedSupplier: model.selectedSupplier,
                                         unitPrice: getEffectivePrice(model),
                                         totalQty: 0,
                                         rawItem: model
@@ -1763,13 +1773,14 @@
                             r.panels.forEach(p => {
                                 const model = catalog.value.panels.find(m => m.id === p.modelId);
                                 if (!model) return;
+                                sanitizePrices(model);
                                 const key = 'panel_' + p.modelId;
                                 if (!map[key]) {
                                     map[key] = {
                                         key,
                                         name: model.name,
                                         category: 'Hub / Panneau tactile',
-                                        selectedSupplier: model.selectedSupplier || 'aartech',
+                                        selectedSupplier: model.selectedSupplier,
                                         unitPrice: getEffectivePrice(model),
                                         totalQty: 0,
                                         rawItem: model
@@ -1782,13 +1793,14 @@
                     });
 
                     additionalItems.value.forEach(item => {
+                        sanitizePrices(item);
                         const key = 'add_' + item.id;
                         if (!map[key]) {
                             map[key] = {
                                 key,
                                 name: item.name,
                                 category: item.category,
-                                selectedSupplier: item.selectedSupplier || 'aartech',
+                                selectedSupplier: item.selectedSupplier,
                                 unitPrice: getEffectivePrice(item),
                                 totalQty: 0,
                                 rawItem: item
@@ -1801,7 +1813,6 @@
                     return Object.values(map);
                 });
 
-                // Supplier breakdown for order splitting
                 const supplierBreakdown = computed(() => {
                     const summary = {
                         aartech: { count: 0, totalHT: 0 },
@@ -1814,18 +1825,20 @@
                         if (summary[sup]) {
                             summary[sup].count += item.totalQty;
                             summary[sup].totalHT += totalLine;
+                        } else {
+                            summary.aartech.count += item.totalQty;
+                            summary.aartech.totalHT += totalLine;
                         }
                     });
 
                     return summary;
                 });
 
-                // Calculate total savings compared to the worst-case (most expensive) pricing
                 const worstCaseEquipmentSubtotal = computed(() => {
                     let total = 0;
                     consolidatedBOM.value.forEach(item => {
-                        const prices = item.rawItem.prices || { aartech: item.unitPrice, amazon: item.unitPrice };
-                        const maxPrice = Math.max(prices.aartech || 0, prices.amazon || 0);
+                        const p = sanitizePrices(item.rawItem);
+                        const maxPrice = Math.max(p.aartech || 0, p.amazon || 0);
                         total += maxPrice * item.totalQty;
                     });
                     return total;
@@ -1946,9 +1959,16 @@
                             }
                             if (est.project.comments === undefined) project.value.comments = '';
                         }
-                        if (est.catalog) catalog.value = est.catalog;
+                        if (est.catalog) {
+                            if (est.catalog.switches) est.catalog.switches.forEach(sanitizePrices);
+                            if (est.catalog.panels) est.catalog.panels.forEach(sanitizePrices);
+                            catalog.value = est.catalog;
+                        }
                         if (est.rooms) rooms.value = est.rooms;
-                        if (est.additionalItems) additionalItems.value = est.additionalItems;
+                        if (est.additionalItems) {
+                            est.additionalItems.forEach(sanitizePrices);
+                            additionalItems.value = est.additionalItems;
+                        }
                         if (est.globalSupplierMode) globalSupplierMode.value = est.globalSupplierMode;
                         showCloudModal.value = false;
                         showNotification(`Devis #${project.value.quoteNo} chargé avec succès !`);
@@ -2057,7 +2077,7 @@
 
                 const confirmAddAdditional = () => {
                     if (!newAdditional.value.name.trim()) return;
-                    additionalItems.value.push({
+                    const item = {
                         id: 'add_' + Date.now(),
                         name: newAdditional.value.name,
                         category: newAdditional.value.category,
@@ -2066,7 +2086,9 @@
                         qty: newAdditional.value.qty || 1,
                         installTime: newAdditional.value.installTime || 0,
                         progTime: newAdditional.value.progTime || 0
-                    });
+                    };
+                    sanitizePrices(item);
+                    additionalItems.value.push(item);
                     newAdditional.value.name = '';
                     showAddAdditionalModal.value = false;
                 };
@@ -2076,16 +2098,18 @@
                     if (existing) {
                         existing.qty++;
                     } else {
-                        additionalItems.value.push({
+                        const item = {
                             id: 'add_' + Date.now(),
                             name: preset.name,
                             category: preset.category,
-                            prices: preset.prices || { aartech: 100, amazon: 110 },
+                            prices: preset.prices ? { ...preset.prices } : { aartech: 100, amazon: 110 },
                             selectedSupplier: preset.selectedSupplier || 'aartech',
                             qty: 1,
                             installTime: preset.installTime || 0.5,
                             progTime: preset.progTime || 0.25
-                        });
+                        };
+                        sanitizePrices(item);
+                        additionalItems.value.push(item);
                     }
                 };
 
@@ -2099,14 +2123,16 @@
                     if (!newCatalogItem.value.name.trim()) return;
                     const cat = catalogModalCategory.value;
                     const newId = cat + '_' + Date.now();
-                    catalog.value[cat].push({
+                    const item = {
                         id: newId,
                         name: newCatalogItem.value.name,
                         prices: { aartech: newCatalogItem.value.prices.aartech || 0, amazon: newCatalogItem.value.prices.amazon || 0 },
                         selectedSupplier: newCatalogItem.value.selectedSupplier || 'aartech',
                         installTime: newCatalogItem.value.installTime || 0,
                         progTime: newCatalogItem.value.progTime || 0
-                    });
+                    };
+                    sanitizePrices(item);
+                    catalog.value[cat].push(item);
                     showAddCatalogModal.value = false;
                 };
 
@@ -2167,9 +2193,16 @@
                         if (raw) {
                             const parsed = JSON.parse(raw);
                             if (parsed.project) project.value = parsed.project;
-                            if (parsed.catalog) catalog.value = parsed.catalog;
+                            if (parsed.catalog) {
+                                if (parsed.catalog.switches) parsed.catalog.switches.forEach(sanitizePrices);
+                                if (parsed.catalog.panels) parsed.catalog.panels.forEach(sanitizePrices);
+                                catalog.value = parsed.catalog;
+                            }
                             if (parsed.rooms) rooms.value = parsed.rooms;
-                            if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
+                            if (parsed.additionalItems) {
+                                parsed.additionalItems.forEach(sanitizePrices);
+                                additionalItems.value = parsed.additionalItems;
+                            }
                             if (parsed.globalSupplierMode) globalSupplierMode.value = parsed.globalSupplierMode;
                         }
                     } catch (e) {
@@ -2202,9 +2235,16 @@
                         try {
                             const parsed = JSON.parse(e.target.result);
                             if (parsed.project) project.value = parsed.project;
-                            if (parsed.catalog) catalog.value = parsed.catalog;
+                            if (parsed.catalog) {
+                                if (parsed.catalog.switches) parsed.catalog.switches.forEach(sanitizePrices);
+                                if (parsed.catalog.panels) parsed.catalog.panels.forEach(sanitizePrices);
+                                catalog.value = parsed.catalog;
+                            }
                             if (parsed.rooms) rooms.value = parsed.rooms;
-                            if (parsed.additionalItems) additionalItems.value = parsed.additionalItems;
+                            if (parsed.additionalItems) {
+                                parsed.additionalItems.forEach(sanitizePrices);
+                                additionalItems.value = parsed.additionalItems;
+                            }
                             if (parsed.globalSupplierMode) globalSupplierMode.value = parsed.globalSupplierMode;
                             triggerSave();
                             alert("Projet importé avec succès !");
@@ -2224,7 +2264,6 @@
                     return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(val || 0);
                 };
 
-                // OBSERVATION: Calcul automatique des heures d'installation et programmation
                 watch([catalog, rooms, additionalItems], () => {
                     let totalInst = 0;
                     let totalProg = 0;
